@@ -389,26 +389,26 @@
 <!-- MAIN CHAT INTERFACE & WORKSPACE -->
 <main class="flex-1 flex flex-col h-full h-[100dvh] bg-[#000000] relative overflow-hidden min-w-0">
 <!-- Top Minimalist Bar -->
-<header class="h-14 border-b border-[#292929] px-3 sm:px-6 flex items-center justify-between bg-black/90 backdrop-blur-md z-30 shrink-0">
-<div class="flex items-center gap-2 sm:gap-3 min-w-0">
+<header class="h-14 sm:h-16 border-b border-[#202024] px-2.5 sm:px-4 md:px-6 flex items-center justify-between bg-black/95 backdrop-blur-md z-30 shrink-0">
+<div class="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
 <!-- Mobile Sidebar Toggle -->
-<button class="md:hidden p-2 rounded-lg text-[#A1A1AA] hover:text-white hover:bg-[#202020] transition-colors min-w-[38px] min-h-[38px] flex items-center justify-center active:scale-95" id="open-sidebar-btn" aria-label="Open Sidebar">
-<span class="material-symbols-outlined text-[21px]">menu</span>
+<button class="md:hidden w-9 h-9 rounded-xl text-[#A1A1AA] hover:text-white bg-[#121215] border border-[#27272a] hover:border-[#3f3f46] transition-all flex items-center justify-center active:scale-95 cursor-pointer shrink-0 shadow-sm" id="open-sidebar-btn" aria-label="Open Sidebar">
+<span class="material-symbols-outlined text-[20px]">menu</span>
 </button>
 <!-- Desktop Sidebar Collapse Toggle -->
-<button class="hidden md:flex p-2 rounded-lg text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#181818] transition-colors min-w-[36px] min-h-[36px] items-center justify-center" id="toggle-desktop-sidebar-btn" title="Toggle Sidebar">
+<button class="hidden md:flex w-9 h-9 rounded-xl text-[#A1A1AA] hover:text-[#F5F5F5] bg-[#121215] border border-[#27272a] hover:border-[#3f3f46] transition-all items-center justify-center active:scale-95 cursor-pointer shrink-0 shadow-sm" id="toggle-desktop-sidebar-btn" title="Toggle Sidebar">
 <span class="material-symbols-outlined text-[19px]">dock_to_right</span>
 </button>
 <!-- Model Selector Dropdown -->
 <div class="relative min-w-0" id="model-selector-wrapper">
-<button class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#0c0c0d] hover:bg-[#18181b] border border-[#292929] text-xs font-medium text-[#F5F5F5] transition-all max-w-[180px] xs:max-w-[240px] sm:max-w-none cursor-pointer active:scale-95 select-none" id="model-dropdown-btn" type="button" aria-expanded="false" aria-haspopup="true" onclick="toggleModelDropdown(event)">
+<button class="flex items-center gap-1.5 sm:gap-2 h-9 px-2.5 sm:px-3 rounded-xl bg-[#121215] hover:bg-[#18181c] border border-[#27272a] text-xs font-medium text-[#F5F5F5] transition-all max-w-[130px] xs:max-w-[170px] sm:max-w-none cursor-pointer active:scale-95 select-none shrink-0 shadow-sm" id="model-dropdown-btn" type="button" aria-expanded="false" aria-haspopup="true" onclick="toggleModelDropdown(event)">
 <span class="w-2 h-2 rounded-full bg-[#FF3038] shadow-[0_0_8px_#FF3038] shrink-0" id="model-status-indicator"></span>
-<span class="font-mono text-xs truncate" id="selected-model-label">Friday v1 The Jr Hacker</span>
-<span class="material-symbols-outlined text-[16px] text-[#A1A1AA] transition-transform duration-200 shrink-0" id="model-dropdown-chevron">expand_more</span>
+<span class="font-mono text-[11px] sm:text-xs truncate font-medium" id="selected-model-label">Friday v1 The Jr Hacker</span>
+<span class="material-symbols-outlined text-[15px] text-[#A1A1AA] transition-transform duration-200 shrink-0" id="model-dropdown-chevron">expand_more</span>
 </button>
 
-<!-- Dropdown Popover Menu -->
-<div class="absolute left-0 mt-2 w-72 sm:w-84 bg-[#0d0d0f] border border-[#27272a] rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.85)] py-2 px-1.5 z-50 hidden backdrop-blur-xl animate-fadeIn transition-all select-none" id="model-dropdown-menu" role="menu">
+<!-- Dropdown Popover Menu (Positioned cleanly on mobile & desktop) -->
+<div class="fixed sm:absolute left-2.5 right-2.5 sm:left-0 sm:right-auto top-[58px] sm:top-auto sm:mt-2 sm:w-84 max-w-[calc(100vw-20px)] bg-[#0d0d0f] border border-[#27272a] rounded-2xl shadow-[0_16px_50px_rgba(0,0,0,0.9)] py-2 px-1.5 z-50 hidden backdrop-blur-xl animate-fadeIn transition-all select-none" id="model-dropdown-menu" role="menu">
 <div class="px-3 py-1.5 mb-1 border-b border-[#202023] flex items-center justify-between">
 <span class="text-[10px] font-mono uppercase tracking-wider text-[#71717A]">Neural Engine Selection</span>
 <span class="text-[9px] font-mono text-[#FF3038] bg-[#FF3038]/10 px-1.5 py-0.5 rounded border border-[#FF3038]/20">FRIDAY Neural Core</span>
@@ -420,21 +420,26 @@
 </div>
 </div>
 <!-- Right Header Actions -->
-<div class="flex items-center gap-1 sm:gap-2 shrink-0">
-<button class="p-2 rounded-lg text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#181818] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center active:scale-95" onclick="toggleShareModal()" title="Export Audit Log">
-<span class="material-symbols-outlined text-[19px]">ios_share</span>
+<div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
+<!-- Upgrade Pill Button -->
+<button onclick="showPricingModal()" class="h-9 px-2.5 sm:px-3 rounded-xl bg-gradient-to-r from-[#FF3038]/25 to-[#FF3038]/15 hover:from-[#FF3038]/35 hover:to-[#FF3038]/25 border border-[#FF3038]/50 text-[#FF3038] text-[11px] sm:text-xs font-mono font-bold flex items-center gap-1 active:scale-95 cursor-pointer transition-all shadow-[0_0_12px_rgba(255,48,56,0.2)] shrink-0" title="Upgrade Arsenal">
+<span class="material-symbols-outlined text-[15px]">bolt</span>
+<span>Upgrade</span>
 </button>
-<button class="p-2 rounded-lg text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#181818] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center active:scale-95" onclick="startNewChat()" title="Clear / New Chat">
+<button class="w-9 h-9 rounded-xl bg-[#121215] border border-[#27272a] hover:border-[#3f3f46] text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#18181c] transition-all flex items-center justify-center active:scale-95 cursor-pointer shrink-0 shadow-sm" onclick="toggleShareModal()" title="Export Audit Log">
+<span class="material-symbols-outlined text-[18px]">ios_share</span>
+</button>
+<button class="w-9 h-9 rounded-xl bg-[#121215] border border-[#27272a] hover:border-[#3f3f46] text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#18181c] transition-all flex items-center justify-center active:scale-95 cursor-pointer shrink-0 shadow-sm" onclick="startNewChat()" title="New Chat">
 <span class="material-symbols-outlined text-[19px]">add</span>
 </button>
 </div>
 </header>
 <!-- CONTENT SCROLLER: Switches between Welcome State & Active Conversation -->
-<div class="flex-1 overflow-y-auto px-3 sm:px-6 md:px-8 py-4 sm:py-6 flex flex-col items-center touch-scroll" id="chat-scroller">
+<div class="flex-1 overflow-y-auto px-2.5 sm:px-6 md:px-8 py-3 sm:py-6 flex flex-col items-center touch-scroll" id="chat-scroller">
 <!-- 1. WELCOME STATE (Centered, clean, uncluttered, responsive) -->
-<div class="w-full max-w-3xl my-auto flex flex-col items-center text-center py-6 sm:py-8" id="welcome-view">
+<div class="w-full max-w-3xl my-auto flex flex-col items-center text-center py-4 sm:py-8" id="welcome-view">
 <!-- Mandated Prominent Circular Friday Emblem -->
-<div class="mb-5 sm:mb-6 relative">
+<div class="mb-3.5 sm:mb-6 relative">
 <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-[#FF3038]/50 bg-[#121316] p-2 sm:p-2.5 flex items-center justify-center shadow-[0_0_24px_rgba(255,48,56,0.25)] ring-1 ring-white/5">
 <img alt="FRIDAY AI Core" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCNBz6ZPzEYnRbyZKIWs1lmpQ9spNBrQxHsAKxPIloyM0IEQP66f0sRweeC9kpuqnImI9AotIPdWiOlRvZuBN2jEwnGaKndZi1wzpOywkgXbJ7746rgWp3HMxELQbtpDhT9b0zb9VF71lKGwToF6hi0qW2QXGv8zAKbianbwW0QqVsOUpBVy0fmbSvOBLFqXx13fsQo7tVDS57_KneCmyqb3Gc80CazncBf6dMpsnliMdTleRl8E5K6ZPloz2vA6DSyQ">
 </div>
@@ -442,78 +447,79 @@
             AI
           </div>
 </div>
-<h1 class="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-[#F5F5F5] font-heading px-2" id="welcome-heading">
+<h1 class="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-[#F5F5F5] font-heading px-2 leading-tight" id="welcome-heading">
           What's on your mind today?
         </h1>
-<p class="text-xs sm:text-sm text-[#71717A] mt-2 max-w-md font-mono px-2">
+<p class="text-xs sm:text-sm text-[#71717A] mt-1.5 sm:mt-2 max-w-md font-mono px-2">
           Offensive Security &amp; Pentesting Assistant
         </p>
-<!-- Fast Prompt Suggestion Cards (Responsive Grid) -->
-<div class="w-full max-w-2xl mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 text-left px-1">
-<button class="prompt-card p-3 sm:p-3.5 rounded-xl flex items-start gap-3 group text-left cursor-pointer" onclick="usePrompt('Generate a cross-platform Python reverse shell with reconnection handling.')">
-<span class="material-symbols-outlined text-[#FF3038] text-[20px] sm:text-[22px] mt-0.5 group-hover:scale-110 transition-transform shrink-0">terminal</span>
+
+<!-- Desktop / Web View Prompt Suggestion Cards (Shown only once in web view, hidden on mobile) -->
+<div class="w-full max-w-2xl mt-8 hidden md:grid md:grid-cols-2 gap-3 text-left px-1">
+<button class="prompt-card p-3.5 rounded-xl flex items-start gap-3 group text-left cursor-pointer" onclick="usePrompt('Generate a cross-platform Python reverse shell with reconnection handling.')">
+<span class="material-symbols-outlined text-[#FF3038] text-[22px] mt-0.5 group-hover:scale-110 transition-transform shrink-0">terminal</span>
 <div class="flex flex-col min-w-0">
-<span class="text-xs sm:text-sm font-medium text-[#F5F5F5] group-hover:text-[#FF3038] transition-colors">Reverse Shell Scaffold</span>
+<span class="text-sm font-medium text-[#F5F5F5] group-hover:text-[#FF3038] transition-colors">Reverse Shell Scaffold</span>
 <span class="text-[11px] text-[#71717A] truncate">Python payload with retry loop</span>
 </div>
 </button>
-<button class="prompt-card p-3 sm:p-3.5 rounded-xl flex items-start gap-3 group text-left cursor-pointer" onclick="usePrompt('How do I run an automated Nmap port scan and export service vectors?')">
-<span class="material-symbols-outlined text-[#FF3038] text-[20px] sm:text-[22px] mt-0.5 group-hover:scale-110 transition-transform shrink-0">radar</span>
+<button class="prompt-card p-3.5 rounded-xl flex items-start gap-3 group text-left cursor-pointer" onclick="usePrompt('How do I run an automated Nmap port scan and export service vectors?')">
+<span class="material-symbols-outlined text-[#FF3038] text-[22px] mt-0.5 group-hover:scale-110 transition-transform shrink-0">radar</span>
 <div class="flex flex-col min-w-0">
-<span class="text-xs sm:text-sm font-medium text-[#F5F5F5] group-hover:text-[#FF3038] transition-colors">Network Recon &amp; Scan</span>
+<span class="text-sm font-medium text-[#F5F5F5] group-hover:text-[#FF3038] transition-colors">Network Recon &amp; Scan</span>
 <span class="text-[11px] text-[#71717A] truncate">Nmap service fingerprinting</span>
 </div>
 </button>
-<button class="prompt-card p-3 sm:p-3.5 rounded-xl flex items-start gap-3 group text-left cursor-pointer" onclick="usePrompt('Explain ARP spoofing and show how to detect it using Scapy.')">
-<span class="material-symbols-outlined text-[#FF3038] text-[20px] sm:text-[22px] mt-0.5 group-hover:scale-110 transition-transform shrink-0">shield</span>
+<button class="prompt-card p-3.5 rounded-xl flex items-start gap-3 group text-left cursor-pointer" onclick="usePrompt('Explain ARP spoofing and show how to detect it using Scapy.')">
+<span class="material-symbols-outlined text-[#FF3038] text-[22px] mt-0.5 group-hover:scale-110 transition-transform shrink-0">shield</span>
 <div class="flex flex-col min-w-0">
-<span class="text-xs sm:text-sm font-medium text-[#F5F5F5] group-hover:text-[#FF3038] transition-colors">ARP Cache Poisoning</span>
+<span class="text-sm font-medium text-[#F5F5F5] group-hover:text-[#FF3038] transition-colors">ARP Cache Poisoning</span>
 <span class="text-[11px] text-[#71717A] truncate">Mechanics &amp; Scapy detection</span>
 </div>
 </button>
-<button class="prompt-card p-3 sm:p-3.5 rounded-xl flex items-start gap-3 group text-left cursor-pointer" onclick="usePrompt('Analyze this error: ModuleNotFoundError: No module named \'scapy\' and fix it.')">
-<span class="material-symbols-outlined text-[#FF3038] text-[20px] sm:text-[22px] mt-0.5 group-hover:scale-110 transition-transform shrink-0">bug_report</span>
+<button class="prompt-card p-3.5 rounded-xl flex items-start gap-3 group text-left cursor-pointer" onclick="usePrompt('Analyze this error: ModuleNotFoundError: No module named \'scapy\' and fix it.')">
+<span class="material-symbols-outlined text-[#FF3038] text-[22px] mt-0.5 group-hover:scale-110 transition-transform shrink-0">bug_report</span>
 <div class="flex flex-col min-w-0">
-<span class="text-xs sm:text-sm font-medium text-[#F5F5F5] group-hover:text-[#FF3038] transition-colors">Debug Environment Error</span>
+<span class="text-sm font-medium text-[#F5F5F5] group-hover:text-[#FF3038] transition-colors">Debug Environment Error</span>
 <span class="text-[11px] text-[#71717A] truncate">Resolve missing security libs</span>
 </div>
 </button>
 </div>
 </div>
 <!-- 2. CONVERSATION VIEW (messages injected dynamically by JavaScript) -->
-<div class="w-full max-w-4xl flex flex-col gap-4 sm:gap-6 py-2 sm:py-4 hidden min-w-0" id="conversation-view">
+<div class="w-full max-w-4xl flex flex-col gap-3.5 sm:gap-6 py-2 sm:py-4 hidden min-w-0" id="conversation-view">
 <!-- Messages are appended here by sendMessage() / renderAssistantMessage() -->
 </div>
 </div>
-<!-- CHAT MESSAGE COMPOSER (Card background: #202020, rounded-2xl, max-w-4xl, border #292929) -->
-<div class="w-full px-3 sm:px-6 md:px-8 pb-3 sm:pb-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 sm:pt-2 bg-gradient-to-t from-black via-black/95 to-transparent z-20 shrink-0 relative">
-<div class="max-w-4xl mx-auto flex flex-col gap-1.5 sm:gap-2 relative">
+<!-- CHAT MESSAGE COMPOSER -->
+<div class="w-full px-2.5 sm:px-4 md:px-8 pb-3 sm:pb-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 bg-gradient-to-t from-black via-black/95 to-transparent z-20 shrink-0 relative">
+<div class="max-w-3xl sm:max-w-4xl mx-auto flex flex-col gap-1.5 relative">
 <!-- Floating Scroll to Bottom Button -->
-<button id="scroll-bottom-btn" type="button" onclick="handleScrollToBottomClick()" class="absolute -top-11 right-2 sm:right-4 z-30 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#18181b]/90 hover:bg-[#222226] border border-[#2e2e33] hover:border-[#FF3038]/50 text-[#A1A1AA] hover:text-white shadow-[0_4px_20px_rgba(0,0,0,0.6)] backdrop-blur-md flex items-center justify-center transition-all duration-200 opacity-0 pointer-events-none active:scale-95 cursor-pointer group" title="Scroll to latest message">
+<button id="scroll-bottom-btn" type="button" onclick="handleScrollToBottomClick()" class="absolute -top-12 right-2 sm:right-4 z-30 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#16161b] hover:bg-[#202028] border border-[#2e2e38] text-[#A1A1AA] hover:text-white shadow-[0_4px_20px_rgba(0,0,0,0.7)] backdrop-blur-md flex items-center justify-center transition-all duration-200 opacity-0 pointer-events-none active:scale-95 cursor-pointer group" title="Scroll to latest message">
   <span class="material-symbols-outlined text-[18px] group-hover:translate-y-0.5 transition-transform text-[#FF3038]">arrow_downward</span>
 </button>
-<div class="bg-[#202020] rounded-2xl border border-[#292929] focus-within:border-[#FF3038]/60 focus-within:shadow-[0_0_20px_rgba(255,48,56,0.15)] transition-all shadow-2xl p-2 sm:p-3 flex flex-col gap-1.5 sm:gap-2">
-<!-- Textarea (Auto-expanding, text-base on mobile prevents iOS zoom, sm:text-sm) -->
-<textarea class="w-full bg-transparent text-[#F5F5F5] placeholder-[#71717A] text-base sm:text-sm resize-none outline-none border-none p-1 sm:p-1.5 focus:ring-0 leading-relaxed font-sans" id="chat-input" onkeydown="handleKeyDown(event)" placeholder="Ask FRIDAY anything..." rows="1"></textarea>
+<div class="bg-[#141417] rounded-2xl border border-[#27272a] focus-within:border-[#FF3038]/60 focus-within:shadow-[0_0_20px_rgba(255,48,56,0.18)] transition-all shadow-xl p-2.5 sm:p-3 flex flex-col gap-2">
+<!-- Textarea (Auto-expanding, text-[16px] on mobile prevents iOS zoom, sm:text-sm) -->
+<textarea class="w-full bg-transparent text-[#F5F5F5] placeholder-[#71717A] text-[16px] sm:text-sm resize-none outline-none border-none p-1 sm:p-1.5 focus:ring-0 leading-relaxed font-sans min-h-[40px] max-h-[140px] sm:max-h-[160px]" id="chat-input" onkeydown="handleKeyDown(event)" placeholder="Ask FRIDAY anything..." rows="1"></textarea>
 <!-- Action Bar Inside Composer -->
-<div class="flex items-center justify-between pt-1">
+<div class="flex items-center justify-between pt-0.5">
 <!-- Left Controls: Attachment -->
-<div class="flex items-center gap-1 sm:gap-2 flex-wrap">
-<button class="p-1.5 sm:p-2 rounded-lg text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#2c2c2c] transition-colors flex items-center justify-center min-w-[36px] min-h-[36px] active:scale-95" title="Attach Payload, PCAP or Code">
-<span class="material-symbols-outlined text-[19px]">add</span>
+<div class="flex items-center gap-1.5">
+<button type="button" class="w-9 h-9 rounded-xl bg-[#1b1b22] hover:bg-[#252530] border border-[#2a2a34] text-[#A1A1AA] hover:text-[#F5F5F5] transition-all flex items-center justify-center active:scale-95 cursor-pointer shadow-sm" title="Attach Payload, PCAP or Code">
+<span class="material-symbols-outlined text-[18px]">add</span>
 </button>
 </div>
 <!-- Right Controls: Voice & Stop / Send button -->
-<div class="flex items-center gap-1.5 sm:gap-2">
-<button class="p-2 rounded-xl text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#2c2c2c] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center active:scale-95" title="Voice Comms">
-<span class="material-symbols-outlined text-[19px]">mic</span>
+<div class="flex items-center gap-2">
+<button type="button" class="w-9 h-9 rounded-xl bg-[#1b1b22] hover:bg-[#252530] border border-[#2a2a34] text-[#A1A1AA] hover:text-[#F5F5F5] transition-all flex items-center justify-center active:scale-95 cursor-pointer shadow-sm" title="Voice Comms">
+<span class="material-symbols-outlined text-[18px]">mic</span>
 </button>
 <!-- Send button (default) -->
-<button class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#FF3038] hover:bg-[#e02028] text-white flex items-center justify-center transition-all shadow-[0_0_12px_rgba(255,48,56,0.4)] active:scale-95 shrink-0" id="send-btn" onclick="sendMessage()" title="Send Message">
+<button class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#FF3038] hover:bg-[#e02028] text-white flex items-center justify-center transition-all shadow-[0_0_14px_rgba(255,48,56,0.45)] active:scale-95 shrink-0 cursor-pointer" id="send-btn" onclick="sendMessage()" title="Send Message">
 <span class="material-symbols-outlined text-[18px]">arrow_upward</span>
 </button>
 <!-- Stop button (shown while streaming) -->
-<button class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-[#FF3038]/60 text-[#FF3038] hidden items-center justify-center transition-all active:scale-95 shrink-0" id="stop-btn" onclick="stopStreaming()" title="Stop Generation">
+<button class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-[#FF3038] bg-[#FF3038]/15 text-[#FF3038] hidden items-center justify-center transition-all active:scale-95 shrink-0 cursor-pointer shadow-[0_0_14px_rgba(255,48,56,0.3)]" id="stop-btn" onclick="stopStreaming()" title="Stop Generation">
 <span class="material-symbols-outlined text-[18px]">stop</span>
 </button>
 </div>
@@ -521,9 +527,9 @@
 </div>
 <!-- Privacy & Disclaimer Footnote -->
 <div class="text-center px-2">
-<span class="text-[10px] sm:text-[11px] text-[#71717A] font-sans line-clamp-1 sm:line-clamp-none">
-            FRIDAY can make mistakes. Verify critical exploit vectors &amp; code before authorized deployment.
-          </span>
+<span class="text-[9px] sm:text-[10px] text-[#52525B] font-mono truncate block">
+  FRIDAY can make mistakes. Verify critical exploit vectors &amp; code before deployment.
+</span>
 </div>
 </div>
 </div>
@@ -580,8 +586,18 @@
           </div>
         </div>
 
+        <!-- Mobile Plan Switcher Tabs (Allows 1-tap switching on mobile without huge vertical scroll) -->
+        <div class="grid grid-cols-2 p-1 rounded-xl bg-[#09090c] border border-[#27272a] md:hidden gap-1" id="mobile-plan-tabs">
+          <button type="button" onclick="setMobilePlanTab('model1')" id="mobile-plan-tab-model1" class="py-2 px-2 rounded-lg text-xs font-mono font-medium transition-all text-[#A1A1AA] text-center cursor-pointer">
+            Starter Pro (₹2,499)
+          </button>
+          <button type="button" onclick="setMobilePlanTab('model2')" id="mobile-plan-tab-model2" class="py-2 px-2 rounded-lg text-xs font-mono font-bold transition-all bg-[#FF3038]/20 text-[#FF3038] border border-[#FF3038]/40 text-center cursor-pointer shadow-[0_0_12px_rgba(255,48,56,0.2)]">
+            ★ Advanced (₹4,999)
+          </button>
+        </div>
+
         <!-- Plans Grid (injected by renderPricingCards) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="pricing-cards-grid">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4" id="pricing-cards-grid">
           <!-- Dynamically populated -->
         </div>
 
@@ -2870,6 +2886,7 @@
       filtered.forEach(plan => {
         const isAdv = plan.model_tier === 'model2';
         const card = document.createElement('div');
+        card.id = isAdv ? 'pricing-card-adv' : 'pricing-card-jr';
         card.className = `pricing-card p-4 sm:p-5 flex flex-col justify-between gap-4 ${isAdv ? 'pricing-card-adv shimmer' : 'pricing-card-jr shimmer-gold'}`;
 
         const features = plan.features.map(f =>
@@ -2948,10 +2965,54 @@
         `;
         grid.appendChild(card);
       });
+      setMobilePlanTab(activeMobilePlan);
     } catch (err) {
       grid.innerHTML = `<div class="col-span-1 md:col-span-2 text-center text-xs font-mono text-[#FF3038] py-8">Failed to load plans. Please try again.</div>`;
     }
   }
+
+  let activeMobilePlan = 'model2';
+
+  function setMobilePlanTab(tier) {
+    activeMobilePlan = tier;
+    const tabJr = document.getElementById('mobile-plan-tab-model1');
+    const tabAdv = document.getElementById('mobile-plan-tab-model2');
+    const cardJr = document.getElementById('pricing-card-jr');
+    const cardAdv = document.getElementById('pricing-card-adv');
+
+    if (tier === 'model1') {
+      tabJr?.classList.add('bg-[#FFB300]/20', 'text-[#FFB300]', 'border', 'border-[#FFB300]/40', 'font-bold');
+      tabJr?.classList.remove('text-[#A1A1AA]');
+      tabAdv?.classList.remove('bg-[#FF3038]/20', 'text-[#FF3038]', 'border', 'border-[#FF3038]/40', 'font-bold', 'shadow-[0_0_12px_rgba(255,48,56,0.2)]');
+      tabAdv?.classList.add('text-[#A1A1AA]');
+
+      if (window.innerWidth < 768) {
+        if (cardJr) cardJr.style.display = 'flex';
+        if (cardAdv) cardAdv.style.display = 'none';
+      }
+    } else {
+      tabAdv?.classList.add('bg-[#FF3038]/20', 'text-[#FF3038]', 'border', 'border-[#FF3038]/40', 'font-bold', 'shadow-[0_0_12px_rgba(255,48,56,0.2)]');
+      tabAdv?.classList.remove('text-[#A1A1AA]');
+      tabJr?.classList.remove('bg-[#FFB300]/20', 'text-[#FFB300]', 'border', 'border-[#FFB300]/40', 'font-bold');
+      tabJr?.classList.add('text-[#A1A1AA]');
+
+      if (window.innerWidth < 768) {
+        if (cardAdv) cardAdv.style.display = 'flex';
+        if (cardJr) cardJr.style.display = 'none';
+      }
+    }
+  }
+
+  window.addEventListener('resize', () => {
+    const cardJr = document.getElementById('pricing-card-jr');
+    const cardAdv = document.getElementById('pricing-card-adv');
+    if (window.innerWidth >= 768) {
+      if (cardJr) cardJr.style.display = 'flex';
+      if (cardAdv) cardAdv.style.display = 'flex';
+    } else {
+      setMobilePlanTab(activeMobilePlan);
+    }
+  });
 
   async function openCheckoutReview(planId) {
     try {
@@ -3171,6 +3232,7 @@
   window.stopStreaming = stopStreaming;
   window.usePrompt = usePrompt;
   window.copyDynCode = copyDynCode;
+  window.setMobilePlanTab = setMobilePlanTab;
 
   // ─── Init ────────────────────────────────────────────────────────────────
   renderModelDropdown();
