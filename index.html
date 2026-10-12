@@ -888,8 +888,8 @@
       const parsed = new URL(backendParam);
       localStorage.setItem('friday_backend_url', parsed.origin);
     } catch (_) {}
-  }
-  const BACKEND_URL = window.FRIDAY_BACKEND_URL || localStorage.getItem('friday_backend_url') || (isLocalHost ? 'http://127.0.0.1:8000' : window.location.origin);
+  const PRODUCTION_DEFAULT_BACKEND = 'https://powerpoint-deal-loved-filling.trycloudflare.com';
+  const BACKEND_URL = window.FRIDAY_BACKEND_URL || localStorage.getItem('friday_backend_url') || (isLocalHost ? 'http://127.0.0.1:8000' : PRODUCTION_DEFAULT_BACKEND);
 
   // ─── Firebase Initialization & Configuration ──────────────────────────────
   const firebaseConfig = {
