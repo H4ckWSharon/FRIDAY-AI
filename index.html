@@ -777,21 +777,41 @@
         <img alt="FRIDAY AI" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcN1eRjJArxV6rgrKmESKWs6pNIIgghz2t08lwPHUbguzKUi6_QBkU6zT2Alm2IBhnUq5gJooHVbDYG5riYM9mTAd0ESKoFB_W7ofJEOdvKes4PoKqQ6WVDiu1mvJFhvhPDnO_TLp6O9JInIaI90cgk4l-ucK4jUIi3tQs4KaRFKhTHD-RnluE92sypzaKlZKRApmkyQVRLZX1VjzzTnzvdQZqhmEdoOHihdVh4zvOOVtYyxb5yWK1azp9GQahS68FJg">
       </div>
       <div class="flex items-center gap-2 mt-1">
-        <h2 class="font-heading font-bold text-lg text-[#F5F5F5] tracking-wide">FRIDAY AI</h2>
-        <span class="text-[9px] font-mono bg-[#FF3038]/20 text-[#FF3038] px-1.5 py-0.5 rounded font-bold uppercase">Sign In</span>
+        <h2 class="font-heading font-bold text-lg text-[#F5F5F5] tracking-wide" id="auth-modal-title">FRIDAY AI</h2>
+        <span class="text-[9px] font-mono bg-[#FF3038]/20 text-[#FF3038] px-1.5 py-0.5 rounded font-bold uppercase" id="auth-modal-badge">Sign In</span>
       </div>
-      <p class="text-xs font-mono text-[#A1A1AA]">Sign in to chat with FRIDAY and save encrypted session history</p>
+      <p class="text-xs font-mono text-[#A1A1AA]" id="auth-modal-subtext">Sign in to save chat history and unlock your daily intelligence quota</p>
+    </div>
+
+    <!-- Segmented Tab Switcher (Sign In vs Create Account) -->
+    <div class="grid grid-cols-2 p-1 rounded-xl bg-[#141418] border border-[#27272a] gap-1">
+      <button type="button" id="tab-auth-signin" onclick="setAuthMode('signin')"
+        class="py-2 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer bg-[#FF3038] text-white shadow-[0_0_12px_rgba(255,48,56,0.3)]">
+        Sign In
+      </button>
+      <button type="button" id="tab-auth-signup" onclick="setAuthMode('signup')"
+        class="py-2 text-xs font-mono font-medium rounded-lg transition-all cursor-pointer text-[#A1A1AA] hover:text-[#F5F5F5]">
+        Create Account
+      </button>
     </div>
 
     <!-- Error/Alert Banner -->
-    <div id="auth-error-banner" class="hidden p-3 rounded-xl bg-[#260e10] border border-[#FF3038]/40 text-[#FF6B6B] text-xs font-mono flex items-center gap-2">
-      <span class="material-symbols-outlined text-[16px] shrink-0">error</span>
-      <span id="auth-error-text" class="flex-1">Authentication error</span>
+    <div id="auth-error-banner" class="hidden p-3 rounded-xl bg-[#260e10] border border-[#FF3038]/40 text-[#FF6B6B] text-xs font-mono flex flex-col gap-2">
+      <div class="flex items-start gap-2">
+        <span class="material-symbols-outlined text-[16px] shrink-0 mt-0.5">error</span>
+        <span id="auth-error-text" class="flex-1 leading-snug">Authentication error</span>
+      </div>
+      <div id="auth-error-action" class="hidden pt-1 border-t border-[#FF3038]/20">
+        <button type="button" onclick="setAuthMode('signup')" class="text-left text-xs font-mono font-semibold text-white hover:text-[#FF3038] underline transition-colors cursor-pointer flex items-center gap-1">
+          <span>Don't have an account yet? Click here to switch to Create Account</span>
+          <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+        </button>
+      </div>
     </div>
 
     <!-- Authentication Options (Google & Email) -->
     <div class="flex flex-col gap-3 my-1">
-      <button id="google-login-btn" onclick="handleGoogleSignIn()" class="w-full py-3 px-4 rounded-xl bg-[#16161a] hover:bg-[#22222a] border border-[#33333d] hover:border-[#FF3038]/60 text-sm font-medium text-white transition-all flex items-center justify-center gap-3 active:scale-[0.98] shadow-[0_0_20px_rgba(255,48,56,0.15)] group cursor-pointer">
+      <button id="google-login-btn" onclick="handleGoogleSignIn()" class="w-full py-2.5 px-4 rounded-xl bg-[#16161a] hover:bg-[#22222a] border border-[#33333d] hover:border-[#FF3038]/60 text-xs sm:text-sm font-medium text-white transition-all flex items-center justify-center gap-3 active:scale-[0.98] shadow-[0_0_20px_rgba(255,48,56,0.15)] group cursor-pointer">
         <svg class="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -801,7 +821,7 @@
         <span class="font-medium tracking-wide">Continue with Google</span>
       </button>
 
-      <div class="flex items-center gap-3 my-1">
+      <div class="flex items-center gap-3 my-0.5">
         <div class="h-px flex-1 bg-[#26262e]"></div>
         <span class="text-[10px] font-mono tracking-wider text-[#71717A] uppercase">or continue with email</span>
         <div class="h-px flex-1 bg-[#26262e]"></div>
@@ -829,7 +849,7 @@
       <div class="flex items-center justify-center gap-1.5 text-xs font-mono text-[#A1A1AA] pt-1">
         <span id="auth-switch-text">Don't have an account?</span>
         <button type="button" id="auth-switch-btn" onclick="toggleAuthMode()" class="text-[#FF3038] hover:underline font-medium cursor-pointer">
-          Sign Up
+          Create Account
         </button>
       </div>
     </div>
@@ -891,6 +911,16 @@
   }
   const PRODUCTION_DEFAULT_BACKEND = 'https://powerpoint-deal-loved-filling.trycloudflare.com';
   const BACKEND_URL = window.FRIDAY_BACKEND_URL || localStorage.getItem('friday_backend_url') || (isLocalHost ? 'http://127.0.0.1:8000' : PRODUCTION_DEFAULT_BACKEND);
+  const BACKEND_URL_SUB = BACKEND_URL;
+
+  function getGuestId() {
+    let gid = localStorage.getItem('friday_guest_id');
+    if (!gid) {
+      gid = 'guest_' + Math.random().toString(36).substring(2, 12);
+      localStorage.setItem('friday_guest_id', gid);
+    }
+    return gid;
+  }
 
   // ─── Firebase Initialization & Configuration ──────────────────────────────
   const firebaseConfig = {
@@ -951,12 +981,20 @@
     if (banner) banner.classList.add('hidden');
   }
 
-  function showAuthError(msg) {
+  function showAuthError(msg, showSignupAction = false) {
     const banner = document.getElementById('auth-error-banner');
     const textEl = document.getElementById('auth-error-text');
+    const actionEl = document.getElementById('auth-error-action');
     if (banner && textEl) {
       textEl.textContent = msg;
       banner.classList.remove('hidden');
+      if (actionEl) {
+        if (showSignupAction) {
+          actionEl.classList.remove('hidden');
+        } else {
+          actionEl.classList.add('hidden');
+        }
+      }
     }
   }
 
@@ -977,7 +1015,7 @@
       console.error('Firebase Google sign-in error:', error);
       if (error.code !== 'auth/popup-closed-by-user') {
         if (error.code === 'auth/unauthorized-domain' || error.message?.includes('unauthorized-domain')) {
-          showAuthError(`Domain unauthorized: Add "${window.location.hostname}" in Firebase Console (friday-ai-27647) > Authentication > Settings > Authorized Domains.`);
+          showAuthError(`Domain unauthorized for Google OAuth: Add "${window.location.hostname}" in Firebase Console (friday-ai-27647) > Authentication > Settings > Authorized Domains. Meanwhile, use the "Create Account" tab below to sign up instantly!`, true);
         } else if (error.code === 'auth/api-key-not-valid' || error.message?.includes('api-key-not-valid')) {
           showAuthError('Firebase Web API key is invalid or truncated. Check Firebase Console > Project Settings > General > Web API Key.');
         } else {
@@ -1124,26 +1162,52 @@
   // ─── Email & Password Authentication (Firebase) ──────────────────────────
   let authMode = 'signin'; // 'signin' | 'signup'
 
-  function toggleAuthMode() {
-    authMode = authMode === 'signin' ? 'signup' : 'signin';
+  function setAuthMode(mode) {
+    authMode = mode;
+    const signinTab = document.getElementById('tab-auth-signin');
+    const signupTab = document.getElementById('tab-auth-signup');
     const submitBtn = document.getElementById('auth-submit-btn');
     const switchText = document.getElementById('auth-switch-text');
     const switchBtn = document.getElementById('auth-switch-btn');
     const pwdInput = document.getElementById('auth-password');
+    const badge = document.getElementById('auth-modal-badge');
+    const subtext = document.getElementById('auth-modal-subtext');
 
     if (authMode === 'signup') {
-      if (submitBtn) submitBtn.textContent = 'Create Account';
+      signinTab?.classList.remove('bg-[#FF3038]', 'text-white', 'shadow-[0_0_12px_rgba(255,48,56,0.3)]');
+      signinTab?.classList.add('text-[#A1A1AA]');
+      signupTab?.classList.add('bg-[#FF3038]', 'text-white', 'shadow-[0_0_12px_rgba(255,48,56,0.3)]');
+      signupTab?.classList.remove('text-[#A1A1AA]');
+      if (submitBtn) submitBtn.textContent = 'Create Free Account';
       if (switchText) switchText.textContent = 'Already have an account?';
       if (switchBtn) switchBtn.textContent = 'Sign In';
-      if (pwdInput) pwdInput.autocomplete = 'new-password';
+      if (badge) badge.textContent = 'Sign Up';
+      if (subtext) subtext.textContent = 'Create an account to save session history & sync across devices';
+      if (pwdInput) {
+        pwdInput.autocomplete = 'new-password';
+        pwdInput.placeholder = 'At least 6 characters';
+      }
     } else {
+      signupTab?.classList.remove('bg-[#FF3038]', 'text-white', 'shadow-[0_0_12px_rgba(255,48,56,0.3)]');
+      signupTab?.classList.add('text-[#A1A1AA]');
+      signinTab?.classList.add('bg-[#FF3038]', 'text-white', 'shadow-[0_0_12px_rgba(255,48,56,0.3)]');
+      signinTab?.classList.remove('text-[#A1A1AA]');
       if (submitBtn) submitBtn.textContent = 'Sign In';
       if (switchText) switchText.textContent = "Don't have an account?";
-      if (switchBtn) switchBtn.textContent = 'Sign Up';
-      if (pwdInput) pwdInput.autocomplete = 'current-password';
+      if (switchBtn) switchBtn.textContent = 'Create Account';
+      if (badge) badge.textContent = 'Sign In';
+      if (subtext) subtext.textContent = 'Sign in to access your saved session history & subscription';
+      if (pwdInput) {
+        pwdInput.autocomplete = 'current-password';
+        pwdInput.placeholder = '••••••••';
+      }
     }
     const banner = document.getElementById('auth-error-banner');
     if (banner) banner.classList.add('hidden');
+  }
+
+  function toggleAuthMode() {
+    setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
   }
 
   async function handleEmailAuth(e) {
@@ -1174,12 +1238,20 @@
     } catch (error) {
       console.error('Firebase Email auth error:', error);
       let msg = error.message;
+      let showSignupPrompt = false;
+
       if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        msg = 'Incorrect email or password. Please try again.';
+        if (authMode === 'signin') {
+          msg = 'Incorrect email or password. If you do not have an account yet, switch to Create Account:';
+          showSignupPrompt = true;
+        } else {
+          msg = 'Could not create account with these credentials. Please check your email and password format.';
+        }
       } else if (error.code === 'auth/user-not-found') {
-        msg = 'No account found with this email. Click "Sign Up" below.';
+        msg = 'No account found with this email. Click below to Create Account:';
+        showSignupPrompt = true;
       } else if (error.code === 'auth/email-already-in-use') {
-        msg = 'This email is already registered. Click "Sign In" below.';
+        msg = 'This email is already registered. Click the "Sign In" tab above to log in.';
       } else if (error.code === 'auth/weak-password') {
         msg = 'Password should be at least 6 characters.';
       } else if (error.code === 'auth/invalid-email') {
@@ -1189,7 +1261,7 @@
       } else if (error.code === 'auth/unauthorized-domain' || error.message?.includes('unauthorized-domain')) {
         msg = `Domain unauthorized: Add "${window.location.hostname}" in Firebase Console (friday-ai-27647) > Authentication > Settings > Authorized Domains.`;
       }
-      showAuthError(msg);
+      showAuthError(msg, showSignupPrompt);
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -1566,13 +1638,8 @@
 
   // ─── Prompt Pill ─────────────────────────────────────────────────────────
   function usePrompt(text) {
-    const user = auth.currentUser || currentFirebaseUser;
-    if (!user) {
-      showToast('Please sign up or sign in to continue chatting with FRIDAY', 'warning');
-      showAuthModal('Sign up or sign in to continue chatting with FRIDAY.');
-      return;
-    }
     chatInput.value = text;
+    autoResizeInput();
     sendMessage();
   }
 
@@ -1616,10 +1683,12 @@
     if (!text || isStreaming) return;
 
     const user = auth.currentUser || currentFirebaseUser;
-    if (!user) {
-      showToast('Please sign up or sign in to continue chatting with FRIDAY', 'warning');
-      showAuthModal('Sign up or sign in to continue chatting with FRIDAY.');
-      return;
+    const isGuest = !user;
+    const guestId = isGuest ? getGuestId() : null;
+
+    if (isGuest && !localStorage.getItem('friday_guest_notified')) {
+      showToast('⚡ Guest session active (5 free chats/day). Sign up anytime to save history!', 'info');
+      localStorage.setItem('friday_guest_notified', 'true');
     }
 
     // Create or reuse conversation ID — registers backend record in background
@@ -1778,6 +1847,9 @@
       conversation_id: currentConversationId,
       stream: true,
     };
+    if (guestId) {
+      payload.guest_id = guestId;
+    }
     if (currentSelectedModel) {
       payload.model = currentSelectedModel;
     }
@@ -1790,14 +1862,22 @@
     if (!response.ok) {
       clearTimeout(orbTimer);
       if (response.status === 401) {
-        showAuthModal();
-        throw new Error('Authentication required or session expired. Please sign in with Google.');
+        showAuthModal('Sign up or sign in to continue chatting with FRIDAY.');
+        throw new Error('Authentication required or session expired. Please sign in or create an account.');
       }
       // Subscription limit / access gate errors
       if (response.status === 403 || response.status === 429) {
         let errDetail = {};
         try { errDetail = await response.json(); } catch {}
         const det = errDetail.detail || errDetail;
+        if (response.status === 429) {
+          if (isGuest) {
+            showAuthModal('Daily free guest limit reached (5 chats/day). Create a free account or upgrade to continue!');
+          } else {
+            showPricingModal();
+          }
+          throw new Error(typeof det === 'string' ? det : (det.message || 'Daily limit reached (5 chats/day). Upgrade to continue.'));
+        }
         if (det.upgrade_required) {
           showPricingModal();
           throw new Error(det.message || 'Upgrade required to use this model.');
@@ -2639,7 +2719,6 @@
   // (Global window bindings declared at the bottom of script)
 
   // ─── Subscription System ─────────────────────────────────────────────────
-  const BACKEND_URL_SUB = BACKEND_URL;
   let subscriptionStatus = null;   // cached subscription status
   let billingYearly = false;       // default: show monthly plans (₹2,499/mo & ₹4,999/mo)
 
@@ -3082,6 +3161,7 @@
   window.showAuthModal = showAuthModal;
   window.hideAuthModal = hideAuthModal;
   window.toggleAuthMode = toggleAuthMode;
+  window.setAuthMode = setAuthMode;
   window.handleGoogleSignIn = handleGoogleSignIn;
   window.handleEmailAuth = handleEmailAuth;
   window.showUserProfileModal = showUserProfileModal;
