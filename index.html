@@ -879,9 +879,17 @@
   const stopBtn          = document.getElementById('stop-btn');
   const recentsList      = document.getElementById('recents-list');
 
-  // ─── Backend URL (Auto-detects local dev vs production) ───────────────────
+  // ─── Backend URL (Auto-detects local dev vs production & query overrides) ─
   const isLocalHost = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
-  const BACKEND_URL = window.FRIDAY_BACKEND_URL || (isLocalHost ? 'http://127.0.0.1:8000' : window.location.origin);
+  const urlParams = new URLSearchParams(window.location.search);
+  const backendParam = urlParams.get('backend');
+  if (backendParam) {
+    try {
+      const parsed = new URL(backendParam);
+      localStorage.setItem('friday_backend_url', parsed.origin);
+    } catch (_) {}
+  }
+  const BACKEND_URL = window.FRIDAY_BACKEND_URL || localStorage.getItem('friday_backend_url') || (isLocalHost ? 'http://127.0.0.1:8000' : window.location.origin);
 
   // ─── Firebase Initialization & Configuration ──────────────────────────────
   const firebaseConfig = {
