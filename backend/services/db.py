@@ -228,7 +228,7 @@ def init_db() -> None:
 
                         CREATE TABLE IF NOT EXISTS subscriptions (
                             id                  TEXT PRIMARY KEY,
-                            user_id             TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                            user_id             TEXT NOT NULL REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE,
                             plan_id             TEXT NOT NULL,
                             status              TEXT NOT NULL DEFAULT 'active',
                             model_tier          TEXT NOT NULL DEFAULT 'free',
@@ -245,7 +245,7 @@ def init_db() -> None:
 
                         CREATE TABLE IF NOT EXISTS daily_usage (
                             id      BIGSERIAL PRIMARY KEY,
-                            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                            user_id TEXT NOT NULL REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE,
                             date    TEXT NOT NULL,
                             count   INTEGER NOT NULL DEFAULT 0,
                             UNIQUE(user_id, date)
@@ -417,23 +417,43 @@ def upsert_firebase_user(
             new_name = clean_name if clean_name else by_email["name"]
             new_avatar = avatar if avatar is not None else by_email["avatar"]
 
-            # Safely re-point foreign key references
-            if is_postgres():
-                conn.execute(
-                    "UPDATE users SET id = ?, name = ?, avatar = ?, provider = ? WHERE email = ?",
-                    (user_id, new_name, new_avatar, provider, normalized_email),
-                )
+            if old_id != user_id:
+                try:
+                    if is_postgres():
+                        conn.execute(
+                            "UPDATE users SET id = ?, name = ?, avatar = ?, provider = ? WHERE email = ?",
+                            (user_id, new_name, new_avatar, provider, normalized_email),
+                        )
+                    else:
+                        conn.execute("PRAGMA foreign_keys = OFF")
+                        conn.execute("UPDATE conversations SET user_id = ? WHERE user_id = ?", (user_id, old_id))
+                        conn.execute("UPDATE daily_usage SET user_id = ? WHERE user_id = ?", (user_id, old_id))
+                        conn.execute("UPDATE subscriptions SET user_id = ? WHERE user_id = ?", (user_id, old_id))
+                        conn.execute(
+                            "UPDATE users SET id = ?, name = ?, avatar = ?, provider = ? WHERE email = ?",
+                            (user_id, new_name, new_avatar, provider, normalized_email),
+                        )
+                        conn.execute("PRAGMA foreign_keys = ON")
+                    migrated = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+                    if migrated:
+                        return dict(migrated)
+                except Exception as exc:
+                    logger.warning("Could not re-point user id from %s to %s (%s). Preserving existing user record.", old_id, user_id, exc)
+                    conn.execute(
+                        "UPDATE users SET name = ?, avatar = ?, provider = ? WHERE email = ?",
+                        (new_name, new_avatar, provider, normalized_email),
+                    )
+                    preserved = conn.execute("SELECT * FROM users WHERE id = ?", (old_id,)).fetchone()
+                    if preserved:
+                        return dict(preserved)
             else:
-                conn.execute("PRAGMA foreign_keys = OFF")
-                conn.execute("UPDATE conversations SET user_id = ? WHERE user_id = ?", (user_id, old_id))
                 conn.execute(
-                    "UPDATE users SET id = ?, name = ?, avatar = ?, provider = ? WHERE email = ?",
-                    (user_id, new_name, new_avatar, provider, normalized_email),
+                    "UPDATE users SET name = ?, avatar = ?, provider = ? WHERE id = ?",
+                    (new_name, new_avatar, provider, user_id),
                 )
-                conn.execute("PRAGMA foreign_keys = ON")
-            migrated = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
-            if migrated:
-                return dict(migrated)
+                updated = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+                if updated:
+                    return dict(updated)
 
         # 3. Fresh user creation
         conn.execute(
