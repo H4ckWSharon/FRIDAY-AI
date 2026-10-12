@@ -977,7 +977,7 @@
       console.error('Firebase Google sign-in error:', error);
       if (error.code !== 'auth/popup-closed-by-user') {
         if (error.code === 'auth/unauthorized-domain' || error.message?.includes('unauthorized-domain')) {
-          showAuthError('Domain unauthorized: Add "localhost" and "127.0.0.1" in Firebase Console > Authentication > Settings > Authorized Domains.');
+          showAuthError(`Domain unauthorized: Add "${window.location.hostname}" in Firebase Console (friday-ai-27647) > Authentication > Settings > Authorized Domains.`);
         } else if (error.code === 'auth/api-key-not-valid' || error.message?.includes('api-key-not-valid')) {
           showAuthError('Firebase Web API key is invalid or truncated. Check Firebase Console > Project Settings > General > Web API Key.');
         } else {
@@ -1186,6 +1186,8 @@
         msg = 'Please enter a valid email address.';
       } else if (error.code === 'auth/operation-not-allowed') {
         msg = 'Email/Password sign-in is not enabled in Firebase Console. Please enable it in Authentication > Sign-in method.';
+      } else if (error.code === 'auth/unauthorized-domain' || error.message?.includes('unauthorized-domain')) {
+        msg = `Domain unauthorized: Add "${window.location.hostname}" in Firebase Console (friday-ai-27647) > Authentication > Settings > Authorized Domains.`;
       }
       showAuthError(msg);
     } finally {
@@ -2634,25 +2636,7 @@
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
-  // Explicit global bindings for inline handlers
-  window.openDeleteModal = openDeleteModal;
-  window.closeDeleteModal = closeDeleteModal;
-  window.confirmDeleteConversation = confirmDeleteConversation;
-  window.deleteConversation = deleteConversation;
-  window.renameConversation = renameConversation;
-  window.loadConversationById = loadConversationById;
-  window.startNewChat = startNewChat;
-  window.toggleWebSearch = toggleWebSearch;
-  window.toggleSearchModal = toggleSearchModal;
-  window.toggleShareModal = toggleShareModal;
-  window.toggleModelDropdown = toggleModelDropdown;
-  window.closeModelDropdown = closeModelDropdown;
-  window.selectModel = selectModel;
-  window.handleScrollToBottomClick = handleScrollToBottomClick;
-  window.showPricingModal = showPricingModal;
-  window.hidePricingModal = hidePricingModal;
-  window.toggleBilling = toggleBilling;
-  window.startCheckout = startCheckout;
+  // (Global window bindings declared at the bottom of script)
 
   // ─── Subscription System ─────────────────────────────────────────────────
   const BACKEND_URL_SUB = BACKEND_URL;
@@ -3070,6 +3054,42 @@
   document.getElementById('pricing-modal')?.addEventListener('click', function(e) {
     if (e.target === this) hidePricingModal();
   });
+
+  // ─── Global Window Bindings for all Inline HTML Handlers ──────────────────
+  window.openDeleteModal = openDeleteModal;
+  window.closeDeleteModal = closeDeleteModal;
+  window.confirmDeleteConversation = confirmDeleteConversation;
+  window.deleteConversation = deleteConversation;
+  window.renameConversation = renameConversation;
+  window.loadConversationById = loadConversationById;
+  window.startNewChat = startNewChat;
+  window.toggleWebSearch = toggleWebSearch;
+  window.toggleSearchModal = toggleSearchModal;
+  window.toggleShareModal = toggleShareModal;
+  window.toggleModelDropdown = toggleModelDropdown;
+  window.closeModelDropdown = closeModelDropdown;
+  window.selectModel = selectModel;
+  window.handleScrollToBottomClick = handleScrollToBottomClick;
+  window.showPricingModal = showPricingModal;
+  window.hidePricingModal = hidePricingModal;
+  window.toggleBilling = toggleBilling;
+  window.setBilling = setBilling;
+  window.startCheckout = startCheckout;
+  window.openCheckoutReview = openCheckoutReview;
+  window.backToPlansView = backToPlansView;
+  window.highlightPaymentMethod = highlightPaymentMethod;
+  window.proceedToPaymentFromCheckout = proceedToPaymentFromCheckout;
+  window.showAuthModal = showAuthModal;
+  window.hideAuthModal = hideAuthModal;
+  window.toggleAuthMode = toggleAuthMode;
+  window.handleGoogleSignIn = handleGoogleSignIn;
+  window.handleEmailAuth = handleEmailAuth;
+  window.showUserProfileModal = showUserProfileModal;
+  window.logoutOperator = logoutOperator;
+  window.sendMessage = sendMessage;
+  window.stopStreaming = stopStreaming;
+  window.usePrompt = usePrompt;
+  window.copyDynCode = copyDynCode;
 
   // ─── Init ────────────────────────────────────────────────────────────────
   renderModelDropdown();
