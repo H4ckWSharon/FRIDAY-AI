@@ -516,10 +516,20 @@ def create_conversation(
         conv_id = str(uuid.uuid4())
     now = _now()
     with get_db() as conn:
-        conn.execute(
-            "INSERT INTO conversations (id, user_id, title, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-            (conv_id, user_id, title, now, now),
-        )
+        try:
+            conn.execute(
+                "INSERT INTO conversations (id, user_id, title, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+                (conv_id, user_id, title, now, now),
+            )
+        except Exception as exc:
+            if user_id:
+                logger.warning("Failed to insert conversation with user_id=%s (%s), falling back to user_id=None", user_id, exc)
+                conn.execute(
+                    "INSERT INTO conversations (id, user_id, title, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+                    (conv_id, None, title, now, now),
+                )
+            else:
+                raise
     return {
         "id": conv_id,
         "user_id": user_id,
