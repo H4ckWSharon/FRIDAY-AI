@@ -1847,8 +1847,9 @@
       conversation_id: currentConversationId,
       stream: true,
     };
-    if (guestId) {
-      payload.guest_id = guestId;
+    const activeGuestId = (!auth.currentUser && !currentFirebaseUser) ? getGuestId() : null;
+    if (activeGuestId) {
+      payload.guest_id = activeGuestId;
     }
     if (currentSelectedModel) {
       payload.model = currentSelectedModel;
@@ -1871,7 +1872,7 @@
         try { errDetail = await response.json(); } catch {}
         const det = errDetail.detail || errDetail;
         if (response.status === 429) {
-          if (isGuest) {
+          if (!auth.currentUser && !currentFirebaseUser) {
             showAuthModal('Daily free guest limit reached (5 chats/day). Create a free account or upgrade to continue!');
           } else {
             showPricingModal();
