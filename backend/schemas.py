@@ -13,7 +13,7 @@ from typing import Literal
 class ChatMessage(BaseModel):
     """A single turn in the conversation history."""
     role: Literal["user", "assistant", "system"]
-    content: str = Field(..., min_length=1)
+    content: str = Field(..., min_length=1, max_length=65536, description="Message text (max 64KB)")
 
 
 class ChatRequest(BaseModel):
@@ -22,14 +22,16 @@ class ChatRequest(BaseModel):
     'messages' is the full conversation so far (oldest first).
     'conversation_id' links this request to a stored conversation for persistence.
     """
-    messages: list[ChatMessage] = Field(..., min_length=1)
+    messages: list[ChatMessage] = Field(..., min_length=1, max_length=100, description="Turns history (max 100)")
     conversation_id: str | None = Field(
         default=None,
+        max_length=128,
         description="UUID of the conversation to persist messages to. "
                     "If omitted, messages are not persisted.",
     )
     model: str | None = Field(
         default=None,
+        max_length=256,
         description="Override the default model. Leave null to use server default.",
     )
     stream: bool = Field(
@@ -53,8 +55,9 @@ class ChatResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     ollama_reachable: bool
+    database_reachable: bool = True
     model: str
-    version: str = "1.0.0"
+    version: str = "2.0.0"
 
 
 # ─── Models ─────────────────────────────────────────────────────────────────

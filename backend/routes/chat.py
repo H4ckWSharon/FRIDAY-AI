@@ -10,7 +10,7 @@ from fastapi.responses import StreamingResponse
 
 from config import get_settings, get_allowed_model_ids, get_available_models
 from schemas import ChatRequest, ChatResponse, ModelListResponse
-from services.ollama import chat_stream, chat_complete
+from services.ollama import chat_stream, chat_complete, acquire_inference_capacity
 from services import db as db_service
 from services.execution_intelligence import detect_lifecycle_intent, get_stage_directive, LifecycleStage
 from services.subscription import (
@@ -25,6 +25,10 @@ from routes.auth import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# Keep strong references to background persistence tasks to avoid GC in Python 3.11+
+_background_tasks: set[asyncio.Task] = set()
+
 
 # ─── The "Uncensored" Black Hat System Prompt ─────────────────────────────────
 # This prompt is engineered to strip away "helpful assistant" fluff and force
@@ -364,7 +368,7 @@ async def _quick_stream_generator(
     """Yield a quick-route response as an SSE stream with instantaneous first token."""
     # Persist in background thread without delaying stream initialization
     if conversation_id:
-        asyncio.create_task(
+        task = asyncio.create_task(
             asyncio.to_thread(
                 _persist_quick_turn_sync,
                 conversation_id,
@@ -373,6 +377,8 @@ async def _quick_stream_generator(
                 response_text,
             )
         )
+        _background_tasks.add(task)
+        task.add_done_callback(_background_tasks.discard)
 
     words = response_text.split(" ")
     for i, word in enumerate(words):
@@ -480,11 +486,17 @@ async def _stream_generator(
     full_response: list[str] = []
 
     try:
-        async for chunk in chat_stream(messages, model):
-            full_response.append(chunk)
-            yield _sse("chunk", json.dumps({"text": chunk}))
+        async with acquire_inference_capacity(user_id):
+            async for chunk in chat_stream(messages, model):
+                full_response.append(chunk)
+                yield _sse("chunk", json.dumps({"text": chunk}))
 
-        yield _sse("done", json.dumps({"text": ""}))
+            yield _sse("done", json.dumps({"text": ""}))
+
+    except HTTPException as exc:
+        logger.warning("Inference governor rejection: %s", exc.detail)
+        msg = exc.detail if isinstance(exc.detail, str) else exc.detail.get("message", "Service temporarily overloaded.")
+        yield _sse("error", json.dumps({"message": msg}))
 
     except httpx.TimeoutException:
         logger.error("FRIDAY request timed out")
@@ -637,8 +649,9 @@ async def chat(request: ChatRequest, user: dict = Depends(get_current_user)):
 
     # Non-streaming path
     try:
-        raw_content = await chat_complete(messages, model)
-        content = _sanitize_response(raw_content)
+        async with acquire_inference_capacity(user_id):
+            raw_content = await chat_complete(messages, model)
+            content = _sanitize_response(raw_content)
 
         # Persist non-streaming turn in thread pool
         if request.conversation_id:
@@ -656,6 +669,8 @@ async def chat(request: ChatRequest, user: dict = Depends(get_current_user)):
             conversation_id=request.conversation_id,
         )
 
+    except HTTPException:
+        raise
     except httpx.TimeoutException:
         raise HTTPException(status_code=504, detail="FRIDAY took too long to respond. Please try again.")
     except httpx.ConnectError:

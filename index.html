@@ -2391,6 +2391,7 @@
           : 'text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#141414]'
       }`;
       item.dataset.convId = conv.id;
+      item.dataset.convTitle = conv.title || 'New Conversation';
       const safeTitle = escapeHtml(conv.title || 'New Conversation');
       item.innerHTML = `
         <div class="flex items-center gap-2 truncate flex-1 min-w-0 pr-1">
@@ -2398,14 +2399,28 @@
           <span class="truncate font-normal history-item-title">${safeTitle}</span>
         </div>
         <div class="flex items-center opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-opacity gap-0.5 shrink-0">
-          <button type="button" class="p-1.5 hover:text-[#FF3038] text-[#A1A1AA] transition-colors rounded hover:bg-[#202020] active:scale-95 cursor-pointer" title="Rename" onclick="renameConversation(event, '${conv.id}')">
+          <button type="button" data-action="rename" class="p-1.5 hover:text-[#FF3038] text-[#A1A1AA] transition-colors rounded hover:bg-[#202020] active:scale-95 cursor-pointer" title="Rename">
             <span class="material-symbols-outlined text-[15px]">edit</span>
           </button>
-          <button type="button" class="p-1.5 hover:text-[#FF3038] text-[#A1A1AA] transition-colors rounded hover:bg-[#202020] active:scale-95 cursor-pointer" title="Delete conversation" onclick="openDeleteModal(event, '${conv.id}', '${safeTitle.replace(/'/g, "\\'")}')">
+          <button type="button" data-action="delete" class="p-1.5 hover:text-[#FF3038] text-[#A1A1AA] transition-colors rounded hover:bg-[#202020] active:scale-95 cursor-pointer" title="Delete conversation">
             <span class="material-symbols-outlined text-[15px]">delete</span>
           </button>
         </div>
       `;
+      const renameBtn = item.querySelector('[data-action="rename"]');
+      if (renameBtn) {
+        renameBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          renameConversation(e, conv.id);
+        });
+      }
+      const deleteBtn = item.querySelector('[data-action="delete"]');
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openDeleteModal(e, conv.id, conv.title || 'New Conversation');
+        });
+      }
       item.addEventListener('click', (e) => {
         if (e.target.closest('button')) return; // ignore rename/delete buttons
         loadConversationById(conv.id, conv.title);

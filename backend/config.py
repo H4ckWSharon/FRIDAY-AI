@@ -55,6 +55,11 @@ class Settings(BaseSettings):
     # System prompt is always included and does NOT count toward this limit.
     max_history_turns: int = 10
 
+    # Inference Concurrency & Capacity (Tuned for host Intel i7-8700 CPU Inference)
+    max_concurrent_inferences: int = 2
+    max_inference_queue: int = 10
+    max_user_concurrent_inferences: int = 1
+
     # Database connection URL (PostgreSQL / Supabase / Neon)
     # If set, PostgreSQL is used for persistence. If None/empty, SQLite is used.
     database_url: Optional[str] = None

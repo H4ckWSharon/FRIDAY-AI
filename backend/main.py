@@ -64,13 +64,49 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Security headers middleware for production
+import uuid
+import time
+from fastapi.responses import JSONResponse
+
+# Max allowable request payload size: 10 MB
+MAX_REQUEST_BODY_BYTES = 10 * 1024 * 1024
+
+
 @app.middleware("http")
-async def add_security_headers(request, call_next):
+async def security_and_telemetry_middleware(request, call_next):
+    req_id = request.headers.get("X-Request-ID") or f"req_{uuid.uuid4().hex[:12]}"
+    request.state.request_id = req_id
+
+    # Payload size check from Content-Length header
+    content_length = request.headers.get("content-length")
+    if content_length:
+        try:
+            if int(content_length) > MAX_REQUEST_BODY_BYTES:
+                return JSONResponse(
+                    status_code=413,
+                    content={"detail": "Payload too large. Maximum request size is 10MB."},
+                    headers={"X-Request-ID": req_id},
+                )
+        except ValueError:
+            pass
+
+    start_time = time.time()
     response = await call_next(request)
+    duration_ms = round((time.time() - start_time) * 1000, 2)
+
+    # Attach observability headers
+    response.headers["X-Request-ID"] = req_id
+    response.headers["X-Response-Time"] = f"{duration_ms}ms"
+
+    # Attach OWASP security headers
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=()"
+    if request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
     return response
 
 # CORS — allow the browser to call this backend

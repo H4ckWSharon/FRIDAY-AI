@@ -6,13 +6,81 @@ The rest of the app never calls Ollama directly; it always goes through this mod
 
 import logging
 import json
-from typing import AsyncIterator
+import asyncio
+from typing import AsyncIterator, Optional
+from contextlib import asynccontextmanager
 
 import httpx
+from fastapi import HTTPException
 
 from config import get_settings
 
 logger = logging.getLogger(__name__)
+
+# ─── Inference Capacity Governor ─────────────────────────────────────────────
+_inference_semaphore: Optional[asyncio.Semaphore] = None
+_user_active_inferences: dict[str, int] = {}
+_waiting_count: int = 0
+_governor_lock = asyncio.Lock()
+
+
+def get_inference_semaphore() -> asyncio.Semaphore:
+    global _inference_semaphore
+    if _inference_semaphore is None:
+        settings = get_settings()
+        _inference_semaphore = asyncio.Semaphore(settings.max_concurrent_inferences)
+    return _inference_semaphore
+
+
+@asynccontextmanager
+async def acquire_inference_capacity(user_id: Optional[str] = None):
+    """
+    Guarantees bounded CPU inference capacity, prevents server starvation,
+    enforces per-user generation concurrency, and provides instant backpressure.
+    """
+    global _waiting_count
+    settings = get_settings()
+    uid = user_id or "anonymous"
+
+    async with _governor_lock:
+        active_for_user = _user_active_inferences.get(uid, 0)
+        if active_for_user >= settings.max_user_concurrent_inferences:
+            raise HTTPException(
+                status_code=429,
+                detail="You have another active generation in progress. Please wait for it to complete.",
+            )
+
+        sem = get_inference_semaphore()
+        if _waiting_count >= settings.max_inference_queue:
+            raise HTTPException(
+                status_code=503,
+                detail="FRIDAY neural engine is currently operating at peak capacity. Please retry shortly.",
+                headers={"Retry-After": "5"},
+            )
+        _waiting_count += 1
+
+    try:
+        await sem.acquire()
+    except Exception:
+        async with _governor_lock:
+            _waiting_count = max(0, _waiting_count - 1)
+        raise
+
+    async with _governor_lock:
+        _waiting_count = max(0, _waiting_count - 1)
+        _user_active_inferences[uid] = _user_active_inferences.get(uid, 0) + 1
+
+    try:
+        yield
+    finally:
+        sem.release()
+        async with _governor_lock:
+            current = _user_active_inferences.get(uid, 1) - 1
+            if current <= 0:
+                _user_active_inferences.pop(uid, None)
+            else:
+                _user_active_inferences[uid] = current
+
 
 # ─── Shared HTTP Client ──────────────────────────────────────────────────────
 _client: httpx.AsyncClient | None = None

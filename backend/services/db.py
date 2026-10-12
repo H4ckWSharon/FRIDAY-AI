@@ -509,12 +509,23 @@ def create_conversation(
     }
 
 
+def check_db_reachable() -> bool:
+    """Return True if the database is operational and responds to a ping query."""
+    try:
+        with get_db() as conn:
+            row = conn.execute("SELECT 1 as alive").fetchone()
+            return bool(row)
+    except Exception as exc:
+        logger.warning("Database health check ping failed: %s", exc)
+        return False
+
+
 def get_conversation(conv_id: str, user_id: Optional[str] = None) -> Optional[dict]:
     """Return a conversation row or None if not found or unauthorized."""
     with get_db() as conn:
         if user_id:
             row = conn.execute(
-                "SELECT * FROM conversations WHERE id = ? AND (user_id = ? OR user_id IS NULL)",
+                "SELECT * FROM conversations WHERE id = ? AND user_id = ?",
                 (conv_id, user_id),
             ).fetchone()
         else:
@@ -544,7 +555,7 @@ def update_conversation_title(conv_id: str, title: str, user_id: Optional[str] =
     with get_db() as conn:
         if user_id:
             cursor = conn.execute(
-                "UPDATE conversations SET title = ?, updated_at = ? WHERE id = ? AND (user_id = ? OR user_id IS NULL)",
+                "UPDATE conversations SET title = ?, updated_at = ? WHERE id = ? AND user_id = ?",
                 (title, _now(), conv_id, user_id),
             )
         else:
@@ -560,7 +571,7 @@ def delete_conversation(conv_id: str, user_id: Optional[str] = None) -> bool:
     with get_db() as conn:
         if user_id:
             cursor = conn.execute(
-                "DELETE FROM conversations WHERE id = ? AND (user_id = ? OR user_id IS NULL)",
+                "DELETE FROM conversations WHERE id = ? AND user_id = ?",
                 (conv_id, user_id),
             )
         else:

@@ -133,27 +133,8 @@ def get_current_user(authorization: Optional[str] = Header(None)) -> dict:
     return user_record
 
 
-def get_optional_current_user(authorization: Optional[str] = Header(None)) -> Optional[dict]:
-    """Return authenticated user record if valid token provided, otherwise None."""
-    if not authorization or not authorization.startswith("Bearer "):
-        return None
-    token = authorization[7:].strip()
-    if not token:
-        return None
-    verified = verify_firebase_token(token)
-    if not verified or not verified.get("uid"):
-        return None
-    uid = verified["uid"]
-    email = verified.get("email") or f"{uid}@firebase.user"
-    name = verified.get("name") or "Operator"
-    picture = verified.get("picture")
-    return upsert_firebase_user(
-        user_id=uid,
-        email=email,
-        name=name,
-        avatar=picture,
-        provider="google-firebase",
-    )
+# Backwards-compatible alias for routes
+get_optional_current_user = get_current_user_optional
 
 
 # ─── Endpoints ───────────────────────────────────────────────────────────────
