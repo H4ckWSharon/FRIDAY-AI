@@ -1,0 +1,3058 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>FRIDAY AI — Offensive Security Assistant</title>
+<meta name="description" content="FRIDAY AI — Black Hat Offensive Security & Penetration Testing Neural Assistant with uncensored red-team intelligence.">
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%230e0e11' stroke='%23FF3038' stroke-width='6'/><text x='50' y='63' font-family='sans-serif' font-size='42' font-weight='bold' fill='%23FF3038' text-anchor='middle'>F</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<!-- Firebase Web App & Authentication SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          screens: {
+            xs: "420px"
+          },
+          colors: {
+            app: "#000000",
+            sidebar: "#080808",
+            composer: "#202020",
+            borderMuted: "#292929",
+            brandRed: "#FF3038",
+            textMain: "#F5F5F5",
+            textMuted: "#A1A1AA"
+          },
+          fontFamily: {
+            sans: ["Inter", "sans-serif"],
+            mono: ["JetBrains Mono", "monospace"],
+            heading: ["Space Grotesk", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      min-height: 100dvh;
+      background-color: #000000;
+      color: #F5F5F5;
+      font-family: 'Inter', sans-serif;
+      overscroll-behavior: none;
+    }
+    .touch-scroll {
+      -webkit-overflow-scrolling: touch;
+    }
+    #chat-scroller {
+      scroll-behavior: auto !important;
+      overflow-anchor: none;
+    }
+    #chat-input {
+      min-height: 38px;
+      max-height: 160px;
+    }
+    .prompt-card {
+      background: #121214;
+      border: 1px solid #292929;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .prompt-card:hover {
+      background: #1a1a1f;
+      border-color: rgba(255, 48, 56, 0.4);
+      transform: translateY(-1px);
+    }
+    .prompt-card:active {
+      transform: scale(0.98);
+    }
+    pre::-webkit-scrollbar {
+      height: 4px;
+    }
+    pre::-webkit-scrollbar-thumb {
+      background: #2b2b2b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #262626;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #333333;
+    }
+
+    /* ─── Thinking Orb (Minimal) ─────────────────────────────────────────── */
+    .thinking-orb-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: rgba(13, 13, 16, 0.75);
+      border: 1px solid rgba(255, 48, 56, 0.22);
+      width: fit-content;
+    }
+
+    .thinking-orb-box {
+      position: relative;
+      width: 14px;
+      height: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .thinking-orb {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ff4d54 0%, #ff3038 50%, #990000 100%);
+      box-shadow:
+        0 0 6px 1px rgba(255, 48, 56, 0.6),
+        0 0 12px 2px rgba(255, 48, 56, 0.25);
+      flex-shrink: 0;
+      opacity: 0.35;
+      transform: scale(0.85);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .thinking-active .thinking-orb {
+      opacity: 1;
+      transform: scale(1);
+      animation: orb-pulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes orb-pulse {
+      0%, 100% { box-shadow: 0 0 5px 1px rgba(255,48,56,0.55); transform: scale(0.92); }
+      50%      { box-shadow: 0 0 10px 3px rgba(255,48,56,0.85), 0 0 14px 4px rgba(255,48,56,0.3); transform: scale(1.12); }
+    }
+
+    .thinking-orb-ring {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 48, 56, 0.45);
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.7);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .thinking-active .thinking-orb-ring {
+      animation: ring-expand 1.8s ease-in-out infinite;
+    }
+
+    @keyframes ring-expand {
+      0%   { transform: translate(-50%, -50%) scale(0.7); opacity: 0.7; }
+      70%  { transform: translate(-50%, -50%) scale(1.5); opacity: 0;   }
+      100% { transform: translate(-50%, -50%) scale(0.7); opacity: 0;   }
+    }
+
+    .thinking-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #A1A1AA;
+      letter-spacing: 0.05em;
+      opacity: 0.6;
+      transition: opacity 0.3s ease;
+    }
+
+    .thinking-active .thinking-label {
+      opacity: 1;
+      animation: label-flicker 2.5s ease-in-out infinite;
+    }
+
+    @keyframes label-flicker {
+      0%, 100% { opacity: 0.75; }
+      50%      { opacity: 1;    }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn {
+      animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* ─── Delete History Item Animation ───────────────────────────────────── */
+    @keyframes deleteSlideFade {
+      0% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        max-height: 52px;
+        margin-bottom: 4px;
+      }
+      40% {
+        opacity: 0.3;
+        transform: translateX(-16px) scale(0.96);
+        background-color: rgba(255, 48, 56, 0.12);
+        border-color: rgba(255, 48, 56, 0.4);
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(-40px) scale(0.88);
+        max-height: 0;
+        margin-top: 0;
+        margin-bottom: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        border-width: 0;
+      }
+    }
+    .chat-item-deleting {
+      animation: deleteSlideFade 0.32s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+      pointer-events: none !important;
+      overflow: hidden !important;
+    }
+
+    /* ─── Subscription Badge ──────────────────────────────────────────────── */
+    .sub-badge-free     { background: rgba(113,113,122,0.15); border-color: rgba(113,113,122,0.3); color: #A1A1AA; }
+    .sub-badge-model1   { background: rgba(255,160,0,0.12);  border-color: rgba(255,160,0,0.3);  color: #FFB300; }
+    .sub-badge-model2   { background: rgba(255,48,56,0.12);   border-color: rgba(255,48,56,0.3);  color: #FF3038; }
+
+    /* ─── High-End Responsive Pricing & Payment Method Design ──────────────── */
+    .pricing-modal-box {
+      background: #09090c;
+      border: 1px solid #27272a;
+      box-shadow: 0 0 70px rgba(0, 0, 0, 0.85), 0 0 35px rgba(255, 48, 56, 0.12);
+    }
+    .pricing-card {
+      background: linear-gradient(180deg, #101014 0%, #09090c 100%);
+      border: 1px solid #27272a;
+      border-radius: 18px;
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .pricing-card:hover {
+      transform: translateY(-2px);
+    }
+    .pricing-card-jr {
+      border-color: rgba(255, 179, 0, 0.3);
+    }
+    .pricing-card-jr:hover {
+      border-color: rgba(255, 179, 0, 0.65);
+      box-shadow: 0 12px 35px -10px rgba(255, 179, 0, 0.22), 0 0 25px rgba(255, 179, 0, 0.08);
+    }
+    .pricing-card-adv {
+      border-color: rgba(255, 48, 56, 0.45);
+      background: linear-gradient(180deg, #130c0e 0%, #0a0809 100%);
+    }
+    .pricing-card-adv:hover {
+      border-color: rgba(255, 48, 56, 0.8);
+      box-shadow: 0 14px 40px -10px rgba(255, 48, 56, 0.35), 0 0 30px rgba(255, 48, 56, 0.12);
+    }
+    @keyframes shimmer {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
+    .shimmer::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 48, 56, 0.08), transparent);
+      animation: shimmer 3.2s ease infinite;
+      pointer-events: none;
+    }
+    .shimmer-gold::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 179, 0, 0.06), transparent);
+      animation: shimmer 3.8s ease infinite;
+      pointer-events: none;
+    }
+    .payment-chip {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      transition: all 0.2s ease;
+    }
+    .payment-chip:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+    .payment-method-card {
+      background: rgba(18, 18, 22, 0.6);
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+    }
+    .payment-method-card:hover {
+      border-color: #3f3f46;
+      background: rgba(24, 24, 30, 0.8);
+    }
+    .view-fade-in {
+      animation: viewFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes viewFadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bg-black text-[#F5F5F5] antialiased flex h-screen h-[100dvh] min-h-[100dvh] w-screen overflow-hidden selection:bg-[#FF3038]/30 selection:text-white">
+<!-- Mobile Overlay Backdrop -->
+<div class="fixed inset-0 bg-black/75 backdrop-blur-sm z-40 hidden md:hidden transition-opacity duration-200" id="mobile-backdrop"></div>
+<!-- STREAMLINED LEFT SIDEBAR (Collapsible on Desktop, Drawer on Mobile) -->
+<aside class="fixed md:static inset-y-0 left-0 w-[270px] bg-[#080808] border-r border-[#292929] z-50 flex flex-col justify-between transition-all duration-200 ease-in-out -translate-x-full md:translate-x-0 shrink-0 select-none" id="sidebar">
+<div class="flex flex-col h-full overflow-hidden">
+<!-- Brand Header -->
+<div class="p-3.5 flex items-center justify-between border-b border-[#292929]/50 shrink-0">
+<div class="flex items-center gap-2.5 min-w-0">
+<!-- Circular Logo -->
+<div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden border border-[#FF3038]/40 bg-[#0d0e11] p-1 flex items-center justify-center shadow-[0_0_12px_rgba(255,48,56,0.3)] shrink-0">
+<img alt="FRIDAY AI" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcN1eRjJArxV6rgrKmESKWs6pNIIgghz2t08lwPHUbguzKUi6_QBkU6zT2Alm2IBhnUq5gJooHVbDYG5riYM9mTAd0ESKoFB_W7ofJEOdvKes4PoKqQ6WVDiu1mvJFhvhPDnO_TLp6O9JInIaI90cgk4l-ucK4jUIi3tQs4KaRFKhTHD-RnluE92sypzaKlZKRApmkyQVRLZX1VjzzTnzvdQZqhmEdoOHihdVh4zvOOVtYyxb5yWK1azp9GQahS68FJg">
+</div>
+<div class="flex flex-col min-w-0 truncate">
+<span class="font-heading font-bold text-sm tracking-wide text-[#F5F5F5] flex items-center gap-1.5 truncate">
+              FRIDAY v1
+              <span class="w-1.5 h-1.5 rounded-full bg-[#FF3038] animate-pulse shrink-0"></span>
+</span>
+<span class="text-[9px] font-mono tracking-wider text-[#A1A1AA] uppercase truncate">AI Assistant</span>
+</div>
+</div>
+<!-- Close Mobile Sidebar Button -->
+<button class="p-2 rounded-lg text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#202020] transition-colors md:hidden min-w-[36px] min-h-[36px] flex items-center justify-center active:scale-95" id="close-sidebar-btn" title="Close Sidebar" aria-label="Close Sidebar">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+</div>
+<!-- Primary Sidebar Actions: + New Chat & Search -->
+<div class="p-3 flex flex-col gap-2 shrink-0">
+<button class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-[#202020] hover:bg-[#282828] text-[#F5F5F5] border border-[#292929] hover:border-[#FF3038]/50 transition-all group shadow-sm active:scale-[0.98]" onclick="startNewChat()">
+<span class="flex items-center gap-2 text-sm font-medium">
+<span class="material-symbols-outlined text-[18px] text-[#FF3038] group-hover:scale-110 transition-transform">edit_square</span>
+            New Chat
+          </span>
+<kbd class="hidden sm:inline text-[10px] font-mono text-[#A1A1AA] bg-[#121212] px-1.5 py-0.5 rounded border border-[#292929]">⌘N</kbd>
+</button>
+<button class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#161616] transition-colors text-xs font-mono active:scale-[0.98]" onclick="toggleSearchModal()">
+<span class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[17px]">search</span>
+            Search logs...
+          </span>
+<kbd class="hidden sm:inline text-[9px] bg-[#1a1a1a] px-1.5 py-0.5 rounded text-[#71717A]">⌘K</kbd>
+</button>
+</div>
+<!-- Recents Header & Scrollable List -->
+<div class="flex-1 overflow-y-auto px-2 py-1 flex flex-col gap-0.5 touch-scroll" id="recents-list">
+</div>
+<!-- Bottom Profile Area -->
+<div class="p-3 border-t border-[#292929] bg-[#080808] shrink-0" id="sidebar-user-area">
+  <div class="flex items-center justify-between p-2 rounded-xl hover:bg-[#141414] transition-colors cursor-pointer group">
+    <div class="flex items-center gap-2.5 min-w-0" onclick="showUserProfileModal()" title="Operator Profile">
+      <div class="w-8 h-8 rounded-full bg-[#1c1c1f] border border-[#292929] flex items-center justify-center text-xs font-mono text-[#F5F5F5] group-hover:border-[#FF3038]/60 transition-colors shrink-0 overflow-hidden" id="user-avatar-container">
+        <span class="font-bold text-[#FF3038]" id="user-avatar-initials">U</span>
+      </div>
+      <div class="flex flex-col min-w-0">
+        <span class="text-xs font-medium text-[#F5F5F5] truncate" id="user-display-name">Guest</span>
+        <span class="text-[10px] font-mono text-[#A1A1AA] flex items-center gap-1 truncate" id="user-display-email">
+          <span class="w-1.5 h-1.5 rounded-full bg-zinc-500 shrink-0"></span>
+          <span class="truncate">Sign In to Save History</span>
+        </span>
+      </div>
+    </div>
+    <button class="p-1.5 rounded-lg text-[#71717A] hover:text-[#FF3038] hover:bg-[#1f1f23] transition-colors" title="Sign Out" onclick="logoutOperator()">
+      <span class="material-symbols-outlined text-[18px]">logout</span>
+    </button>
+  </div>
+  <!-- Subscription Status Badge -->
+  <div class="mt-2 px-1" id="sub-status-area">
+    <button onclick="showPricingModal()" class="w-full flex items-center justify-between px-3 py-1.5 rounded-lg border transition-all hover:scale-[1.01] active:scale-[0.99] sub-badge-free" id="sub-status-badge" title="View Plans">
+      <span class="flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-[14px]">workspace_premium</span>
+        <span class="text-[10px] font-mono font-semibold" id="sub-badge-label">Free Plan</span>
+      </span>
+      <span class="text-[9px] font-mono opacity-70" id="sub-badge-detail">5 chats/day</span>
+    </button>
+  </div>
+</div>
+</div>
+</aside>
+<!-- MAIN CHAT INTERFACE & WORKSPACE -->
+<main class="flex-1 flex flex-col h-full h-[100dvh] bg-[#000000] relative overflow-hidden min-w-0">
+<!-- Top Minimalist Bar -->
+<header class="h-14 border-b border-[#292929] px-3 sm:px-6 flex items-center justify-between bg-black/90 backdrop-blur-md z-30 shrink-0">
+<div class="flex items-center gap-2 sm:gap-3 min-w-0">
+<!-- Mobile Sidebar Toggle -->
+<button class="md:hidden p-2 rounded-lg text-[#A1A1AA] hover:text-white hover:bg-[#202020] transition-colors min-w-[38px] min-h-[38px] flex items-center justify-center active:scale-95" id="open-sidebar-btn" aria-label="Open Sidebar">
+<span class="material-symbols-outlined text-[21px]">menu</span>
+</button>
+<!-- Desktop Sidebar Collapse Toggle -->
+<button class="hidden md:flex p-2 rounded-lg text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#181818] transition-colors min-w-[36px] min-h-[36px] items-center justify-center" id="toggle-desktop-sidebar-btn" title="Toggle Sidebar">
+<span class="material-symbols-outlined text-[19px]">dock_to_right</span>
+</button>
+<!-- Model Selector Dropdown -->
+<div class="relative min-w-0" id="model-selector-wrapper">
+<button class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#0c0c0d] hover:bg-[#18181b] border border-[#292929] text-xs font-medium text-[#F5F5F5] transition-all max-w-[180px] xs:max-w-[240px] sm:max-w-none cursor-pointer active:scale-95 select-none" id="model-dropdown-btn" type="button" aria-expanded="false" aria-haspopup="true" onclick="toggleModelDropdown(event)">
+<span class="w-2 h-2 rounded-full bg-[#FF3038] shadow-[0_0_8px_#FF3038] shrink-0" id="model-status-indicator"></span>
+<span class="font-mono text-xs truncate" id="selected-model-label">Friday v1 The Jr Hacker</span>
+<span class="material-symbols-outlined text-[16px] text-[#A1A1AA] transition-transform duration-200 shrink-0" id="model-dropdown-chevron">expand_more</span>
+</button>
+
+<!-- Dropdown Popover Menu -->
+<div class="absolute left-0 mt-2 w-72 sm:w-84 bg-[#0d0d0f] border border-[#27272a] rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.85)] py-2 px-1.5 z-50 hidden backdrop-blur-xl animate-fadeIn transition-all select-none" id="model-dropdown-menu" role="menu">
+<div class="px-3 py-1.5 mb-1 border-b border-[#202023] flex items-center justify-between">
+<span class="text-[10px] font-mono uppercase tracking-wider text-[#71717A]">Neural Engine Selection</span>
+<span class="text-[9px] font-mono text-[#FF3038] bg-[#FF3038]/10 px-1.5 py-0.5 rounded border border-[#FF3038]/20">FRIDAY Neural Core</span>
+</div>
+<div class="flex flex-col gap-1" id="model-options-list">
+<!-- Options injected dynamically by JS -->
+</div>
+</div>
+</div>
+</div>
+<!-- Right Header Actions -->
+<div class="flex items-center gap-1 sm:gap-2 shrink-0">
+<button class="p-2 rounded-lg text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#181818] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center active:scale-95" onclick="toggleShareModal()" title="Export Audit Log">
+<span class="material-symbols-outlined text-[19px]">ios_share</span>
+</button>
+<button class="p-2 rounded-lg text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#181818] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center active:scale-95" onclick="startNewChat()" title="Clear / New Chat">
+<span class="material-symbols-outlined text-[19px]">add</span>
+</button>
+</div>
+</header>
+<!-- CONTENT SCROLLER: Switches between Welcome State & Active Conversation -->
+<div class="flex-1 overflow-y-auto px-3 sm:px-6 md:px-8 py-4 sm:py-6 flex flex-col items-center touch-scroll" id="chat-scroller">
+<!-- 1. WELCOME STATE (Centered, clean, uncluttered, responsive) -->
+<div class="w-full max-w-3xl my-auto flex flex-col items-center text-center py-6 sm:py-8" id="welcome-view">
+<!-- Mandated Prominent Circular Friday Emblem -->
+<div class="mb-5 sm:mb-6 relative">
+<div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-[#FF3038]/50 bg-[#121316] p-2 sm:p-2.5 flex items-center justify-center shadow-[0_0_24px_rgba(255,48,56,0.25)] ring-1 ring-white/5">
+<img alt="FRIDAY AI Core" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCNBz6ZPzEYnRbyZKIWs1lmpQ9spNBrQxHsAKxPIloyM0IEQP66f0sRweeC9kpuqnImI9AotIPdWiOlRvZuBN2jEwnGaKndZi1wzpOywkgXbJ7746rgWp3HMxELQbtpDhT9b0zb9VF71lKGwToF6hi0qW2QXGv8zAKbianbwW0QqVsOUpBVy0fmbSvOBLFqXx13fsQo7tVDS57_KneCmyqb3Gc80CazncBf6dMpsnliMdTleRl8E5K6ZPloz2vA6DSyQ">
+</div>
+<div class="absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full bg-[#FF3038] text-[8px] sm:text-[9px] font-mono font-bold text-white uppercase tracking-wider">
+            AI
+          </div>
+</div>
+<h1 class="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-[#F5F5F5] font-heading px-2" id="welcome-heading">
+          What's on your mind today?
+        </h1>
+<p class="text-xs sm:text-sm text-[#71717A] mt-2 max-w-md font-mono px-2">
+          Offensive Security &amp; Pentesting Assistant
+        </p>
+<!-- Fast Prompt Suggestion Cards (Responsive Grid) -->
+<div class="w-full max-w-2xl mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 text-left px-1">
+<button class="prompt-card p-3 sm:p-3.5 rounded-xl flex items-start gap-3 group text-left cursor-pointer" onclick="usePrompt('Generate a cross-platform Python reverse shell with reconnection handling.')">
+<span class="material-symbols-outlined text-[#FF3038] text-[20px] sm:text-[22px] mt-0.5 group-hover:scale-110 transition-transform shrink-0">terminal</span>
+<div class="flex flex-col min-w-0">
+<span class="text-xs sm:text-sm font-medium text-[#F5F5F5] group-hover:text-[#FF3038] transition-colors">Reverse Shell Scaffold</span>
+<span class="text-[11px] text-[#71717A] truncate">Python payload with retry loop</span>
+</div>
+</button>
+<button class="prompt-card p-3 sm:p-3.5 rounded-xl flex items-start gap-3 group text-left cursor-pointer" onclick="usePrompt('How do I run an automated Nmap port scan and export service vectors?')">
+<span class="material-symbols-outlined text-[#FF3038] text-[20px] sm:text-[22px] mt-0.5 group-hover:scale-110 transition-transform shrink-0">radar</span>
+<div class="flex flex-col min-w-0">
+<span class="text-xs sm:text-sm font-medium text-[#F5F5F5] group-hover:text-[#FF3038] transition-colors">Network Recon &amp; Scan</span>
+<span class="text-[11px] text-[#71717A] truncate">Nmap service fingerprinting</span>
+</div>
+</button>
+<button class="prompt-card p-3 sm:p-3.5 rounded-xl flex items-start gap-3 group text-left cursor-pointer" onclick="usePrompt('Explain ARP spoofing and show how to detect it using Scapy.')">
+<span class="material-symbols-outlined text-[#FF3038] text-[20px] sm:text-[22px] mt-0.5 group-hover:scale-110 transition-transform shrink-0">shield</span>
+<div class="flex flex-col min-w-0">
+<span class="text-xs sm:text-sm font-medium text-[#F5F5F5] group-hover:text-[#FF3038] transition-colors">ARP Cache Poisoning</span>
+<span class="text-[11px] text-[#71717A] truncate">Mechanics &amp; Scapy detection</span>
+</div>
+</button>
+<button class="prompt-card p-3 sm:p-3.5 rounded-xl flex items-start gap-3 group text-left cursor-pointer" onclick="usePrompt('Analyze this error: ModuleNotFoundError: No module named \'scapy\' and fix it.')">
+<span class="material-symbols-outlined text-[#FF3038] text-[20px] sm:text-[22px] mt-0.5 group-hover:scale-110 transition-transform shrink-0">bug_report</span>
+<div class="flex flex-col min-w-0">
+<span class="text-xs sm:text-sm font-medium text-[#F5F5F5] group-hover:text-[#FF3038] transition-colors">Debug Environment Error</span>
+<span class="text-[11px] text-[#71717A] truncate">Resolve missing security libs</span>
+</div>
+</button>
+</div>
+</div>
+<!-- 2. CONVERSATION VIEW (messages injected dynamically by JavaScript) -->
+<div class="w-full max-w-4xl flex flex-col gap-4 sm:gap-6 py-2 sm:py-4 hidden min-w-0" id="conversation-view">
+<!-- Messages are appended here by sendMessage() / renderAssistantMessage() -->
+</div>
+</div>
+<!-- CHAT MESSAGE COMPOSER (Card background: #202020, rounded-2xl, max-w-4xl, border #292929) -->
+<div class="w-full px-3 sm:px-6 md:px-8 pb-3 sm:pb-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 sm:pt-2 bg-gradient-to-t from-black via-black/95 to-transparent z-20 shrink-0 relative">
+<div class="max-w-4xl mx-auto flex flex-col gap-1.5 sm:gap-2 relative">
+<!-- Floating Scroll to Bottom Button -->
+<button id="scroll-bottom-btn" type="button" onclick="handleScrollToBottomClick()" class="absolute -top-11 right-2 sm:right-4 z-30 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#18181b]/90 hover:bg-[#222226] border border-[#2e2e33] hover:border-[#FF3038]/50 text-[#A1A1AA] hover:text-white shadow-[0_4px_20px_rgba(0,0,0,0.6)] backdrop-blur-md flex items-center justify-center transition-all duration-200 opacity-0 pointer-events-none active:scale-95 cursor-pointer group" title="Scroll to latest message">
+  <span class="material-symbols-outlined text-[18px] group-hover:translate-y-0.5 transition-transform text-[#FF3038]">arrow_downward</span>
+</button>
+<div class="bg-[#202020] rounded-2xl border border-[#292929] focus-within:border-[#FF3038]/60 focus-within:shadow-[0_0_20px_rgba(255,48,56,0.15)] transition-all shadow-2xl p-2 sm:p-3 flex flex-col gap-1.5 sm:gap-2">
+<!-- Textarea (Auto-expanding, text-base on mobile prevents iOS zoom, sm:text-sm) -->
+<textarea class="w-full bg-transparent text-[#F5F5F5] placeholder-[#71717A] text-base sm:text-sm resize-none outline-none border-none p-1 sm:p-1.5 focus:ring-0 leading-relaxed font-sans" id="chat-input" onkeydown="handleKeyDown(event)" placeholder="Ask FRIDAY anything..." rows="1"></textarea>
+<!-- Action Bar Inside Composer -->
+<div class="flex items-center justify-between pt-1">
+<!-- Left Controls: Attachment -->
+<div class="flex items-center gap-1 sm:gap-2 flex-wrap">
+<button class="p-1.5 sm:p-2 rounded-lg text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#2c2c2c] transition-colors flex items-center justify-center min-w-[36px] min-h-[36px] active:scale-95" title="Attach Payload, PCAP or Code">
+<span class="material-symbols-outlined text-[19px]">add</span>
+</button>
+</div>
+<!-- Right Controls: Voice & Stop / Send button -->
+<div class="flex items-center gap-1.5 sm:gap-2">
+<button class="p-2 rounded-xl text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#2c2c2c] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center active:scale-95" title="Voice Comms">
+<span class="material-symbols-outlined text-[19px]">mic</span>
+</button>
+<!-- Send button (default) -->
+<button class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#FF3038] hover:bg-[#e02028] text-white flex items-center justify-center transition-all shadow-[0_0_12px_rgba(255,48,56,0.4)] active:scale-95 shrink-0" id="send-btn" onclick="sendMessage()" title="Send Message">
+<span class="material-symbols-outlined text-[18px]">arrow_upward</span>
+</button>
+<!-- Stop button (shown while streaming) -->
+<button class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-[#FF3038]/60 text-[#FF3038] hidden items-center justify-center transition-all active:scale-95 shrink-0" id="stop-btn" onclick="stopStreaming()" title="Stop Generation">
+<span class="material-symbols-outlined text-[18px]">stop</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Privacy & Disclaimer Footnote -->
+<div class="text-center px-2">
+<span class="text-[10px] sm:text-[11px] text-[#71717A] font-sans line-clamp-1 sm:line-clamp-none">
+            FRIDAY can make mistakes. Verify critical exploit vectors &amp; code before authorized deployment.
+          </span>
+</div>
+</div>
+</div>
+</main>
+<!-- PRICING / UPGRADE MODAL -->
+<div id="pricing-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/92 backdrop-blur-md p-3 sm:p-5 transition-all duration-300">
+  <div class="w-full max-w-4xl pricing-modal-box rounded-2xl sm:rounded-3xl flex flex-col max-h-[94dvh] sm:max-h-[90dvh] overflow-hidden animate-fadeIn relative">
+    <!-- Ambient cyber glow accents -->
+    <div class="absolute -top-32 -right-32 w-72 h-72 bg-[#FF3038]/12 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-32 -left-32 w-72 h-72 bg-[#FFB300]/8 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between p-4 sm:p-6 border-b border-[#1e1e24] shrink-0 bg-[#0c0c10]/70 backdrop-blur-md">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-[#FF3038]/40 bg-[#161214] flex items-center justify-center shadow-[0_0_15px_rgba(255,48,56,0.25)] shrink-0">
+          <span class="material-symbols-outlined text-[20px] text-[#FF3038]">workspace_premium</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="font-heading font-bold text-base sm:text-lg text-[#F5F5F5] tracking-wide" id="pricing-modal-title">Upgrade Neural Arsenal</h2>
+            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#FF3038]/20 text-[#FF3038] border border-[#FF3038]/30 font-semibold uppercase">Pro Plans</span>
+          </div>
+          <p class="text-[11px] font-mono text-[#71717A]" id="pricing-modal-subtitle">Instant activation • Unlocked pentesting intelligence • 256-bit secure checkout</p>
+        </div>
+      </div>
+      <button onclick="hidePricingModal()" class="p-2 rounded-xl text-[#71717A] hover:text-[#F5F5F5] hover:bg-[#1a1a20] transition-colors shrink-0" title="Close modal" aria-label="Close modal">
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+    </div>
+
+    <!-- Content Area: Container for both View 1 (Plans) and View 2 (Checkout) -->
+    <div class="overflow-y-auto flex-1 p-3.5 sm:p-6" id="pricing-modal-body">
+      
+      <!-- VIEW 1: PLANS COMPARISON -->
+      <div id="pricing-plans-view" class="view-fade-in flex flex-col gap-4 sm:gap-5">
+        
+        <!-- Billing Toggle & Value Hook -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-xl bg-[#121217] border border-[#222228]">
+          <div class="flex items-center gap-2 text-xs font-mono text-[#A1A1AA]">
+            <span class="material-symbols-outlined text-[16px] text-emerald-400">verified</span>
+            <span>All plans include uncensored red-team security intelligence</span>
+          </div>
+
+          <!-- Billing Toggle -->
+          <div class="flex items-center gap-2.5 bg-[#09090c] p-1 rounded-xl border border-[#27272a] shrink-0">
+            <span class="text-xs font-mono px-2 py-1 rounded-lg cursor-pointer transition-colors font-semibold text-[#F5F5F5]" id="billing-monthly-label" onclick="setBilling(false)">Monthly</span>
+            <button id="billing-toggle" onclick="toggleBilling()" class="relative w-11 h-6 rounded-full bg-[#27272a] transition-colors focus:outline-none" aria-label="Toggle billing cycle">
+              <span id="billing-toggle-knob" class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow-md transition-transform"></span>
+            </button>
+            <span class="text-xs font-mono px-2 py-1 rounded-lg cursor-pointer transition-colors text-[#71717A] flex items-center gap-1" id="billing-yearly-label" onclick="setBilling(true)">
+              Yearly
+              <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#FF3038]/20 text-[#FF3038] font-bold uppercase tracking-wider">Save 17%</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Plans Grid (injected by renderPricingCards) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="pricing-cards-grid">
+          <!-- Dynamically populated -->
+        </div>
+
+        <!-- Supported Payment Methods Banner -->
+        <div class="p-3.5 sm:p-4 rounded-2xl bg-[#0e0e13] border border-[#222228] flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-[#16161c] border border-[#2b2b34] flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[18px] text-[#A1A1AA]">payments</span>
+            </div>
+            <div>
+              <div class="text-xs font-mono font-semibold text-[#F5F5F5] flex items-center gap-1.5">
+                Supported Payment Methods
+                <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Zero Extra Fees</span>
+              </div>
+              <p class="text-[10px] font-mono text-[#71717A]">Instant activation with Razorpay Standard Web Checkout</p>
+            </div>
+          </div>
+
+          <!-- Payment Method Badges -->
+          <div class="flex flex-wrap items-center gap-1.5 justify-center sm:justify-end">
+            <!-- UPI Badge -->
+            <span class="payment-chip px-2.5 py-1 text-[10px] font-mono font-semibold text-[#F5F5F5] flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              UPI &amp; QR (GPay, PhonePe, Paytm, CRED)
+            </span>
+            <!-- Cards Badge -->
+            <span class="payment-chip px-2.5 py-1 text-[10px] font-mono font-semibold text-[#F5F5F5] flex items-center gap-1">
+              <span class="material-symbols-outlined text-[13px] text-[#00A3FF]">credit_card</span>
+              Cards (Visa, MC, RuPay)
+            </span>
+            <!-- NetBanking -->
+            <span class="payment-chip px-2.5 py-1 text-[10px] font-mono font-semibold text-[#F5F5F5] flex items-center gap-1">
+              <span class="material-symbols-outlined text-[13px] text-[#FFB300]">account_balance</span>
+              NetBanking (50+ Banks)
+            </span>
+          </div>
+        </div>
+
+        <!-- Free Tier Info & Today's Usage Bar -->
+        <div class="p-3.5 rounded-xl bg-[#09090c] border border-[#1f1f24] flex flex-col gap-2">
+          <div class="flex items-center justify-between text-[11px] font-mono text-[#71717A]">
+            <span class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[14px] text-[#A1A1AA]">info</span>
+              Free tier: 5 chats/day on both models — resets every 24 hrs
+            </span>
+            <span id="daily-usage-text" class="text-[#F5F5F5] font-semibold">0 / 5 used</span>
+          </div>
+          <div class="w-full h-1.5 bg-[#1a1a20] rounded-full overflow-hidden" id="daily-usage-bar-wrap">
+            <div class="h-full bg-gradient-to-r from-[#FF3038] to-[#ff7b39] rounded-full transition-all duration-500" id="daily-usage-fill" style="width:0%"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- VIEW 2: CHECKOUT & PAYMENT METHOD CONFIRMATION -->
+      <div id="pricing-checkout-view" class="hidden view-fade-in flex flex-col gap-4 sm:gap-5">
+        
+        <!-- Back Navigation & Step Indicator -->
+        <div class="flex items-center justify-between pb-1 border-b border-[#1e1e24]">
+          <button onclick="backToPlansView()" class="flex items-center gap-1 text-xs font-mono text-[#A1A1AA] hover:text-[#F5F5F5] transition-colors py-1 px-2 rounded-lg hover:bg-[#1a1a20]">
+            <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+            Back to plans
+          </button>
+          <span class="text-[10px] font-mono text-[#71717A] uppercase tracking-wider">Step 2 of 2: Secure Payment</span>
+        </div>
+
+        <!-- Selected Plan Summary Card -->
+        <div class="p-4 sm:p-5 rounded-2xl border" id="checkout-selected-plan-card">
+          <!-- Injected dynamically by openCheckoutReview(plan) -->
+        </div>
+
+        <!-- Payment Method Selection Showcase -->
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-mono font-semibold text-[#F5F5F5] flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px] text-[#FF3038]">lock</span>
+              Select Preferred Payment Method
+            </span>
+            <span class="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Gateway Ready
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <!-- Method 1: UPI -->
+            <div class="payment-method-card p-3 flex items-start gap-3 cursor-pointer" onclick="highlightPaymentMethod('upi')">
+              <div class="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                <span class="material-symbols-outlined text-[18px]">qr_code_2</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-semibold text-[#F5F5F5]">UPI &amp; QR Code</span>
+                  <span class="text-[9px] font-mono text-emerald-400 font-bold">Fastest</span>
+                </div>
+                <p class="text-[10px] font-mono text-[#71717A]">Google Pay, PhonePe, Paytm, CRED, BHIM</p>
+              </div>
+            </div>
+
+            <!-- Method 2: Cards -->
+            <div class="payment-method-card p-3 flex items-start gap-3 cursor-pointer" onclick="highlightPaymentMethod('card')">
+              <div class="w-8 h-8 rounded-lg bg-[#00A3FF]/15 border border-[#00A3FF]/30 flex items-center justify-center text-[#00A3FF] shrink-0">
+                <span class="material-symbols-outlined text-[18px]">credit_card</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-semibold text-[#F5F5F5]">Debit &amp; Credit Cards</span>
+                  <span class="text-[9px] font-mono text-[#A1A1AA]">All Banks</span>
+                </div>
+                <p class="text-[10px] font-mono text-[#71717A]">Visa, MasterCard, RuPay, Maestro</p>
+              </div>
+            </div>
+
+            <!-- Method 3: NetBanking -->
+            <div class="payment-method-card p-3 flex items-start gap-3 cursor-pointer" onclick="highlightPaymentMethod('netbanking')">
+              <div class="w-8 h-8 rounded-lg bg-[#FFB300]/15 border border-[#FFB300]/30 flex items-center justify-center text-[#FFB300] shrink-0">
+                <span class="material-symbols-outlined text-[18px]">account_balance</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-semibold text-[#F5F5F5]">Net Banking</span>
+                  <span class="text-[9px] font-mono text-[#A1A1AA]">50+ Banks</span>
+                </div>
+                <p class="text-[10px] font-mono text-[#71717A]">HDFC, SBI, ICICI, Axis, Kotak, etc.</p>
+              </div>
+            </div>
+
+            <!-- Method 4: Wallets & PayLater -->
+            <div class="payment-method-card p-3 flex items-start gap-3 cursor-pointer" onclick="highlightPaymentMethod('wallet')">
+              <div class="w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0">
+                <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-semibold text-[#F5F5F5]">Wallets &amp; PayLater</span>
+                  <span class="text-[9px] font-mono text-[#A1A1AA]">Supported</span>
+                </div>
+                <p class="text-[10px] font-mono text-[#71717A]">Paytm, Mobikwik, LazyPay &amp; more</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Checkout Action & Security Trust Strip -->
+        <div class="p-4 rounded-2xl bg-[#09090c] border border-[#27272a] flex flex-col gap-3">
+          <div class="flex items-center justify-between text-xs font-mono">
+            <span class="text-[#71717A]">Subscribing account:</span>
+            <span class="text-[#F5F5F5] font-semibold truncate max-w-[220px]" id="checkout-account-email">operator@secure.local</span>
+          </div>
+
+          <button id="checkout-confirm-pay-btn" onclick="proceedToPaymentFromCheckout()" class="w-full py-3.5 rounded-xl font-heading font-bold text-sm text-white bg-[#FF3038] hover:bg-[#e02028] shadow-[0_0_25px_rgba(255,48,56,0.4)] transition-all active:scale-95 flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">lock</span>
+            <span id="checkout-btn-text">Proceed to Secure Pay</span>
+          </button>
+
+          <div class="flex flex-wrap items-center justify-center gap-3 text-[10px] font-mono text-[#52525B] pt-1">
+            <span class="flex items-center gap-1">
+              <span class="material-symbols-outlined text-[12px] text-emerald-400">verified_user</span>
+              Razorpay Secured (PCI-DSS)
+            </span>
+            <span>•</span>
+            <span class="flex items-center gap-1">
+              <span class="material-symbols-outlined text-[12px] text-[#00A3FF]">shield</span>
+              256-Bit TLS Encryption
+            </span>
+            <span>•</span>
+            <span class="flex items-center gap-1">
+              <span class="material-symbols-outlined text-[12px] text-[#FFB300]">bolt</span>
+              Instant Quota Upgrade
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- AUTHENTICATION GATEWAY MODAL (Access Gate) -->
+<div id="auth-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 backdrop-blur-md p-4 transition-all duration-300">
+  <div class="w-full max-w-md bg-[#0e0e11] border border-[#2e2e33] rounded-2xl shadow-[0_0_50px_rgba(255,48,56,0.18)] p-6 sm:p-7 flex flex-col gap-5 relative overflow-hidden animate-fadeIn">
+    <!-- Close button -->
+    <button type="button" onclick="hideAuthModal()" class="absolute top-4 right-4 p-1.5 rounded-lg text-[#71717A] hover:text-[#F5F5F5] hover:bg-[#1f1f23] transition-colors cursor-pointer" title="Close">
+      <span class="material-symbols-outlined text-[18px]">close</span>
+    </button>
+    <!-- Red glowing ambient accents -->
+    <div class="absolute -top-16 -left-16 w-36 h-36 bg-[#FF3038]/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-16 -right-16 w-36 h-36 bg-[#FF3038]/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- Header & Logo -->
+    <div class="flex flex-col items-center text-center gap-2">
+      <div class="w-14 h-14 rounded-full border border-[#FF3038]/50 bg-[#121316] p-1.5 flex items-center justify-center shadow-[0_0_20px_rgba(255,48,56,0.3)]">
+        <img alt="FRIDAY AI" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcN1eRjJArxV6rgrKmESKWs6pNIIgghz2t08lwPHUbguzKUi6_QBkU6zT2Alm2IBhnUq5gJooHVbDYG5riYM9mTAd0ESKoFB_W7ofJEOdvKes4PoKqQ6WVDiu1mvJFhvhPDnO_TLp6O9JInIaI90cgk4l-ucK4jUIi3tQs4KaRFKhTHD-RnluE92sypzaKlZKRApmkyQVRLZX1VjzzTnzvdQZqhmEdoOHihdVh4zvOOVtYyxb5yWK1azp9GQahS68FJg">
+      </div>
+      <div class="flex items-center gap-2 mt-1">
+        <h2 class="font-heading font-bold text-lg text-[#F5F5F5] tracking-wide">FRIDAY AI</h2>
+        <span class="text-[9px] font-mono bg-[#FF3038]/20 text-[#FF3038] px-1.5 py-0.5 rounded font-bold uppercase">Sign In</span>
+      </div>
+      <p class="text-xs font-mono text-[#A1A1AA]">Sign in to chat with FRIDAY and save encrypted session history</p>
+    </div>
+
+    <!-- Error/Alert Banner -->
+    <div id="auth-error-banner" class="hidden p-3 rounded-xl bg-[#260e10] border border-[#FF3038]/40 text-[#FF6B6B] text-xs font-mono flex items-center gap-2">
+      <span class="material-symbols-outlined text-[16px] shrink-0">error</span>
+      <span id="auth-error-text" class="flex-1">Authentication error</span>
+    </div>
+
+    <!-- Authentication Options (Google & Email) -->
+    <div class="flex flex-col gap-3 my-1">
+      <button id="google-login-btn" onclick="handleGoogleSignIn()" class="w-full py-3 px-4 rounded-xl bg-[#16161a] hover:bg-[#22222a] border border-[#33333d] hover:border-[#FF3038]/60 text-sm font-medium text-white transition-all flex items-center justify-center gap-3 active:scale-[0.98] shadow-[0_0_20px_rgba(255,48,56,0.15)] group cursor-pointer">
+        <svg class="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span class="font-medium tracking-wide">Continue with Google</span>
+      </button>
+
+      <div class="flex items-center gap-3 my-1">
+        <div class="h-px flex-1 bg-[#26262e]"></div>
+        <span class="text-[10px] font-mono tracking-wider text-[#71717A] uppercase">or continue with email</span>
+        <div class="h-px flex-1 bg-[#26262e]"></div>
+      </div>
+
+      <form id="email-auth-form" onsubmit="handleEmailAuth(event)" class="flex flex-col gap-2.5">
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] font-mono text-[#A1A1AA]">Email</label>
+          <input id="auth-email" type="email" required autocomplete="email" placeholder="name@example.com"
+            class="w-full bg-[#141416] border border-[#27272a] focus:border-[#FF3038] focus:ring-1 focus:ring-[#FF3038] text-white text-xs font-mono rounded-xl px-3 py-2.5 outline-none transition-all placeholder:text-[#52525B]">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] font-mono text-[#A1A1AA]">Password</label>
+          <input id="auth-password" type="password" required autocomplete="current-password" placeholder="••••••••" minlength="6"
+            class="w-full bg-[#141416] border border-[#27272a] focus:border-[#FF3038] focus:ring-1 focus:ring-[#FF3038] text-white text-xs font-mono rounded-xl px-3 py-2.5 outline-none transition-all placeholder:text-[#52525B]">
+        </div>
+
+        <button id="auth-submit-btn" type="submit"
+          class="w-full mt-1 py-2.5 px-4 rounded-xl bg-[#FF3038] hover:bg-[#FF454C] text-white text-xs font-semibold tracking-wide transition-all shadow-[0_0_15px_rgba(255,48,56,0.25)] active:scale-[0.98] cursor-pointer">
+          Sign In
+        </button>
+      </form>
+
+      <div class="flex items-center justify-center gap-1.5 text-xs font-mono text-[#A1A1AA] pt-1">
+        <span id="auth-switch-text">Don't have an account?</span>
+        <button type="button" id="auth-switch-btn" onclick="toggleAuthMode()" class="text-[#FF3038] hover:underline font-medium cursor-pointer">
+          Sign Up
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRMATION MODAL -->
+<div id="delete-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-md p-4 transition-all duration-200">
+  <div class="w-full max-w-sm bg-[#0e0e11] border border-[#2e2e33] rounded-2xl shadow-[0_0_40px_rgba(255,48,56,0.22)] p-5 sm:p-6 flex flex-col gap-4 relative overflow-hidden animate-fadeIn">
+    <!-- Red glowing ambient accents -->
+    <div class="absolute -top-12 -left-12 w-28 h-28 bg-[#FF3038]/15 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full border border-[#FF3038]/50 bg-[#FF3038]/10 flex items-center justify-center text-[#FF3038] shrink-0">
+        <span class="material-symbols-outlined text-[20px]">delete_sweep</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h3 class="font-heading font-semibold text-sm text-[#F5F5F5]">Delete Conversation?</h3>
+        <p class="text-xs font-mono text-[#A1A1AA] truncate mt-0.5" id="delete-modal-title">New Conversation</p>
+      </div>
+    </div>
+    <p class="text-xs text-[#A1A1AA] leading-relaxed">
+      This will permanently erase this conversation and all saved logs from the cloud database.
+    </p>
+    <div class="flex items-center justify-end gap-2.5 mt-1">
+      <button type="button" onclick="closeDeleteModal()" class="px-3.5 py-2 rounded-xl bg-[#18181b] hover:bg-[#222226] border border-[#27272a] text-xs font-mono text-[#D4D4D8] transition-colors active:scale-95 cursor-pointer">
+        Cancel
+      </button>
+      <button type="button" id="confirm-delete-btn" onclick="confirmDeleteConversation()" class="px-4 py-2 rounded-xl bg-[#FF3038] hover:bg-[#e02028] text-xs font-semibold text-white transition-all shadow-[0_0_15px_rgba(255,48,56,0.3)] active:scale-95 flex items-center gap-1.5 cursor-pointer">
+        <span class="material-symbols-outlined text-[15px]">delete</span>
+        <span>Delete</span>
+      </button>
+    </div>
+  </div>
+</div>
+<!-- Interactive JavaScript -->
+<script>
+  // ─── DOM References ──────────────────────────────────────────────────────
+  const sidebar          = document.getElementById('sidebar');
+  const openSidebarBtn   = document.getElementById('open-sidebar-btn');
+  const closeSidebarBtn  = document.getElementById('close-sidebar-btn');
+  const mobileBackdrop   = document.getElementById('mobile-backdrop');
+  const welcomeView      = document.getElementById('welcome-view');
+  const conversationView = document.getElementById('conversation-view');
+  const chatInput        = document.getElementById('chat-input');
+  const chatScroller     = document.getElementById('chat-scroller');
+  const sendBtn          = document.getElementById('send-btn');
+  const stopBtn          = document.getElementById('stop-btn');
+  const recentsList      = document.getElementById('recents-list');
+
+  // ─── Backend URL (Auto-detects local dev vs production) ───────────────────
+  const isLocalHost = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
+  const BACKEND_URL = window.FRIDAY_BACKEND_URL || (isLocalHost ? 'http://127.0.0.1:8000' : window.location.origin);
+
+  // ─── Firebase Initialization & Configuration ──────────────────────────────
+  const firebaseConfig = {
+    apiKey: "AIzaSyDC-RzT73KVHebhGMLFYlfNb5t8kpKxXqc",
+    authDomain: "friday-ai-27647.firebaseapp.com",
+    projectId: "friday-ai-27647",
+    storageBucket: "friday-ai-27647.firebasestorage.app",
+    messagingSenderId: "634753026307",
+    appId: "1:634753026307:web:22470d67ad0ae46e44c136"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const googleProvider = new firebase.auth.GoogleAuthProvider();
+  googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+  // ─── Authentication State ─────────────────────────────────────────────────
+  let currentFirebaseUser = null;
+  let currentFirebaseToken = null;
+
+  async function getAuthHeaders() {
+    const headers = { 'Content-Type': 'application/json' };
+    const user = auth.currentUser || currentFirebaseUser;
+    if (user) {
+      try {
+        const token = await user.getIdToken();
+        currentFirebaseToken = token;
+        headers['Authorization'] = `Bearer ${token}`;
+      } catch (err) {
+        if (currentFirebaseToken) {
+          headers['Authorization'] = `Bearer ${currentFirebaseToken}`;
+        }
+      }
+    } else if (currentFirebaseToken) {
+      headers['Authorization'] = `Bearer ${currentFirebaseToken}`;
+    }
+    return headers;
+  }
+
+  function showAuthModal(message) {
+    const modal = document.getElementById('auth-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    if (message) {
+      showAuthError(message);
+    }
+  }
+
+  function hideAuthModal() {
+    const modal = document.getElementById('auth-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+    const banner = document.getElementById('auth-error-banner');
+    if (banner) banner.classList.add('hidden');
+  }
+
+  function showAuthError(msg) {
+    const banner = document.getElementById('auth-error-banner');
+    const textEl = document.getElementById('auth-error-text');
+    if (banner && textEl) {
+      textEl.textContent = msg;
+      banner.classList.remove('hidden');
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    const googleBtn = document.getElementById('google-login-btn');
+    if (googleBtn) {
+      googleBtn.disabled = true;
+      googleBtn.style.opacity = '0.6';
+    }
+    const banner = document.getElementById('auth-error-banner');
+    if (banner) banner.classList.add('hidden');
+
+    try {
+      const result = await auth.signInWithPopup(googleProvider);
+      const user = result.user;
+      showToast(`Welcome, ${user.displayName || 'Operator'}!`, 'success');
+    } catch (error) {
+      console.error('Firebase Google sign-in error:', error);
+      if (error.code !== 'auth/popup-closed-by-user') {
+        if (error.code === 'auth/unauthorized-domain' || error.message?.includes('unauthorized-domain')) {
+          showAuthError('Domain unauthorized: Add "localhost" and "127.0.0.1" in Firebase Console > Authentication > Settings > Authorized Domains.');
+        } else if (error.code === 'auth/api-key-not-valid' || error.message?.includes('api-key-not-valid')) {
+          showAuthError('Firebase Web API key is invalid or truncated. Check Firebase Console > Project Settings > General > Web API Key.');
+        } else {
+          showAuthError(error.message || 'Google authentication failed. Please try again.');
+        }
+      }
+    } finally {
+      if (googleBtn) {
+        googleBtn.disabled = false;
+        googleBtn.style.opacity = '1';
+      }
+    }
+  }
+
+  // ─── User Initials Helper ──────────────────────────────────────────────────
+  function getUserInitials(user) {
+    if (!user) return 'U';
+    const name = (user.displayName || '').trim();
+    if (name) {
+      const parts = name.split(/\s+/).filter(Boolean);
+      if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      } else if (parts.length === 1 && parts[0].length >= 2) {
+        return parts[0].slice(0, 2).toUpperCase();
+      } else if (parts.length === 1) {
+        return parts[0].toUpperCase();
+      }
+    }
+    if (user.email) {
+      const local = user.email.split('@')[0];
+      const parts = local.split(/[._-]/).filter(Boolean);
+      if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      }
+      return local.slice(0, 2).toUpperCase();
+    }
+    return 'U';
+  }
+
+  // ─── Dynamic Welcome Message Generator ───────────────────────────────────
+  function updateWelcomeGreeting(user) {
+    const heading = document.getElementById('welcome-heading');
+    if (!heading) return;
+
+    const now = new Date();
+    const hour = now.getHours();
+    let timeOfDay = 'morning';
+    if (hour >= 12 && hour < 17) {
+      timeOfDay = 'afternoon';
+    } else if (hour >= 17 || hour < 5) {
+      timeOfDay = 'evening';
+    }
+
+    let name = '';
+    const activeUser = user || auth.currentUser || currentFirebaseUser;
+    if (activeUser) {
+      const raw = (activeUser.displayName || (activeUser.email ? activeUser.email.split('@')[0] : '')).trim();
+      if (raw) {
+        name = raw.split(/\s+/)[0];
+        name = name.charAt(0).toUpperCase() + name.slice(1);
+      }
+    }
+
+    const greetingTemplates = {
+      morning: [
+        name ? `Good morning, ${name}! What are we hacking on today?` : `Good morning! What are we hacking on today?`,
+        name ? `Good morning, ${name}! What's our security target today?` : `Good morning! What's our security target today?`,
+        name ? `Good morning, ${name}! Ready to audit code or run recon?` : `Good morning! Ready to audit code or run recon?`,
+        name ? `Good morning, ${name}! What are we working on today?` : `Good morning! What are we working on today?`
+      ],
+      afternoon: [
+        name ? `Good afternoon, ${name}! What are we working on today?` : `Good afternoon! What are we working on today?`,
+        name ? `Good afternoon, ${name}! What's our security target today?` : `Good afternoon! What's our security target today?`,
+        name ? `Good afternoon, ${name}! Ready to test some exploits or scripts?` : `Good afternoon! Ready to test some exploits or scripts?`,
+        name ? `Good afternoon, ${name}! What's on your mind today?` : `Good afternoon! What's on your mind today?`
+      ],
+      evening: [
+        name ? `Good evening, ${name}! What are we working on tonight?` : `Good evening! What are we working on tonight?`,
+        name ? `Good evening, ${name}! Ready for a security session?` : `Good evening! Ready for a security session?`,
+        name ? `Good evening, ${name}! What security lab are we tackling tonight?` : `Good evening! What security lab are we tackling tonight?`,
+        name ? `Good evening, ${name}! What's on your mind tonight?` : `Good evening! What's on your mind tonight?`
+      ]
+    };
+
+    const options = greetingTemplates[timeOfDay] || greetingTemplates.morning;
+    const selected = options[Math.floor(Math.random() * options.length)];
+    heading.textContent = selected;
+  }
+
+  function updateUserProfileUI(user) {
+    if (!user) return;
+    const nameEl = document.getElementById('user-display-name');
+    const emailEl = document.getElementById('user-display-email');
+    const avatarContainer = document.getElementById('user-avatar-container');
+
+    const email = user.email || 'Verified Session';
+    const displayName = user.displayName || (user.email ? user.email.split('@')[0] : 'Operator');
+    const photoURL = user.photoURL;
+
+    if (nameEl) nameEl.textContent = displayName;
+    if (emailEl) {
+      emailEl.innerHTML = `
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+        <span class="truncate">${escapeHtml(email)}</span>
+      `;
+    }
+    if (avatarContainer) {
+      if (photoURL) {
+        avatarContainer.innerHTML = `<img src="${escapeHtml(photoURL)}" alt="${escapeHtml(displayName)}" class="w-full h-full object-cover">`;
+      } else {
+        const initials = getUserInitials(user);
+        avatarContainer.innerHTML = `<span class="font-bold text-[#FF3038]">${escapeHtml(initials)}</span>`;
+      }
+    }
+    updateWelcomeGreeting(user);
+  }
+
+  function resetUserProfileUI() {
+    const nameEl = document.getElementById('user-display-name');
+    const emailEl = document.getElementById('user-display-email');
+    const avatarContainer = document.getElementById('user-avatar-container');
+    if (nameEl) nameEl.textContent = 'Guest';
+    if (emailEl) {
+      emailEl.innerHTML = `
+        <span class="w-1.5 h-1.5 rounded-full bg-zinc-500 shrink-0"></span>
+        <span class="truncate">Sign In to Save History</span>
+      `;
+    }
+    if (avatarContainer) {
+      avatarContainer.innerHTML = `<span class="font-bold text-[#FF3038]">U</span>`;
+    }
+    updateWelcomeGreeting(null);
+  }
+
+  function showUserProfileModal() {
+    const user = auth.currentUser || currentFirebaseUser;
+    if (!user) {
+      showAuthModal('Sign in to access your operator profile and history.');
+      return;
+    }
+    showToast(`Operator: ${user.displayName || user.email || 'Anonymous'} (${user.email || user.uid})`, 'info');
+  }
+
+  // ─── Email & Password Authentication (Firebase) ──────────────────────────
+  let authMode = 'signin'; // 'signin' | 'signup'
+
+  function toggleAuthMode() {
+    authMode = authMode === 'signin' ? 'signup' : 'signin';
+    const submitBtn = document.getElementById('auth-submit-btn');
+    const switchText = document.getElementById('auth-switch-text');
+    const switchBtn = document.getElementById('auth-switch-btn');
+    const pwdInput = document.getElementById('auth-password');
+
+    if (authMode === 'signup') {
+      if (submitBtn) submitBtn.textContent = 'Create Account';
+      if (switchText) switchText.textContent = 'Already have an account?';
+      if (switchBtn) switchBtn.textContent = 'Sign In';
+      if (pwdInput) pwdInput.autocomplete = 'new-password';
+    } else {
+      if (submitBtn) submitBtn.textContent = 'Sign In';
+      if (switchText) switchText.textContent = "Don't have an account?";
+      if (switchBtn) switchBtn.textContent = 'Sign Up';
+      if (pwdInput) pwdInput.autocomplete = 'current-password';
+    }
+    const banner = document.getElementById('auth-error-banner');
+    if (banner) banner.classList.add('hidden');
+  }
+
+  async function handleEmailAuth(e) {
+    if (e) e.preventDefault();
+    const emailEl = document.getElementById('auth-email');
+    const passEl = document.getElementById('auth-password');
+    const submitBtn = document.getElementById('auth-submit-btn');
+    const email = emailEl?.value.trim();
+    const password = passEl?.value;
+
+    if (!email || !password) return;
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = '0.6';
+    }
+    const banner = document.getElementById('auth-error-banner');
+    if (banner) banner.classList.add('hidden');
+
+    try {
+      if (authMode === 'signup') {
+        const cred = await auth.createUserWithEmailAndPassword(email, password);
+        showToast(`Account created! Welcome, ${cred.user.email}!`, 'success');
+      } else {
+        const cred = await auth.signInWithEmailAndPassword(email, password);
+        showToast(`Welcome back, ${cred.user.displayName || cred.user.email}!`, 'success');
+      }
+    } catch (error) {
+      console.error('Firebase Email auth error:', error);
+      let msg = error.message;
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        msg = 'Incorrect email or password. Please try again.';
+      } else if (error.code === 'auth/user-not-found') {
+        msg = 'No account found with this email. Click "Sign Up" below.';
+      } else if (error.code === 'auth/email-already-in-use') {
+        msg = 'This email is already registered. Click "Sign In" below.';
+      } else if (error.code === 'auth/weak-password') {
+        msg = 'Password should be at least 6 characters.';
+      } else if (error.code === 'auth/invalid-email') {
+        msg = 'Please enter a valid email address.';
+      } else if (error.code === 'auth/operation-not-allowed') {
+        msg = 'Email/Password sign-in is not enabled in Firebase Console. Please enable it in Authentication > Sign-in method.';
+      }
+      showAuthError(msg);
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+      }
+    }
+  }
+
+  async function logoutOperator() {
+    if (!confirm('Are you sure you want to sign out? Your session history is safely saved.')) return;
+    try {
+      if (auth.currentUser) {
+        await auth.signOut();
+      }
+      currentFirebaseUser = null;
+      currentFirebaseToken = null;
+      resetUserProfileUI();
+      recentsList.innerHTML = '<p class="text-[11px] font-mono text-[#71717A] px-3 py-2">Sign in to view saved history.</p>';
+      startNewChat();
+      showToast('Signed out of session', 'info');
+    } catch (err) {
+      console.error('Error signing out:', err);
+    }
+  }
+
+  // ─── Firebase Auth State Listener ─────────────────────────────────────────
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      currentFirebaseUser = user;
+      try {
+        currentFirebaseToken = await user.getIdToken();
+      } catch (err) {
+        console.error('Failed to get Firebase token:', err);
+      }
+      updateUserProfileUI(user);
+      hideAuthModal();
+      loadSidebarHistory();
+      loadAvailableModels();
+      fetchSubscriptionStatus();
+    } else {
+      currentFirebaseUser = null;
+      currentFirebaseToken = null;
+      resetUserProfileUI();
+      recentsList.innerHTML = '<p class="text-[11px] font-mono text-[#71717A] px-3 py-2">Sign in to view saved history.</p>';
+      // Main chat interface is accessible immediately; auth modal only prompts on message send
+    }
+  });
+
+  // ─── Conversation State ──────────────────────────────────────────────────
+  // In-memory conversation history for the current session.
+  // conversation_id links this to the SQLite record in the backend.
+  let conversationHistory = [];
+  let currentConversationId = null;   // UUID string or null
+  let isStreaming = false;
+  let activeReader = null;             // ReadableStreamDefaultReader — for cancel
+  const convMessagesCache = new Map(); // convId -> { id, title, messages: [] }
+  let pendingDeleteConvId = null;
+  let pendingDeleteConvTitle = '';
+
+  // ─── Multi-Model State ───────────────────────────────────────────────────
+  const DEFAULT_MODELS_REGISTRY = [
+    {
+      id: "hf.co/mradermacher/Huihui-Qwen3-Coder-30B-A3B-Instruct-abliterated-i1-GGUF:Q4_K_M",
+      name: "Friday v1 The Jr Hacker",
+      description: "AI Junior Pentester & Security Mentor",
+      tag: "Jr Hacker (Default)",
+      is_default: true,
+    },
+    {
+      id: "huihui_ai/baronllm-abliterated:latest",
+      name: "Friday v1 The Advanced Pentester",
+      description: "Advanced Cyber Security & Penetration Testing Engine",
+      tag: "Advanced Pentester",
+      is_default: false,
+    },
+  ];
+
+  let availableModels = [...DEFAULT_MODELS_REGISTRY];
+  let currentSelectedModel = localStorage.getItem('friday_selected_model') || DEFAULT_MODELS_REGISTRY[0].id;
+
+  function renderModelDropdown() {
+    const listEl = document.getElementById('model-options-list');
+    const labelEl = document.getElementById('selected-model-label');
+    if (!listEl) return;
+
+    listEl.innerHTML = '';
+    const activeModel = availableModels.find(m => m.id === currentSelectedModel) || availableModels[0];
+    if (labelEl && activeModel) {
+      labelEl.textContent = activeModel.name;
+    }
+
+    availableModels.forEach(m => {
+      const isSelected = m.id === currentSelectedModel;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `w-full text-left p-2.5 rounded-xl transition-all cursor-pointer flex items-start justify-between gap-2 border ${
+        isSelected
+          ? 'bg-[#18181b] border-[#FF3038]/40 shadow-[0_0_15px_rgba(255,48,56,0.1)]'
+          : 'bg-transparent border-transparent hover:bg-[#141416] hover:border-[#27272a]'
+      }`;
+      btn.onclick = () => selectModel(m.id);
+
+      btn.innerHTML = `
+        <div class="flex flex-col min-w-0 pr-1">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="text-xs font-semibold text-[#F5F5F5] font-heading">${escapeHtml(m.name)}</span>
+            ${m.tag ? `<span class="text-[9px] font-mono px-1.5 py-0.5 rounded ${m.is_default ? 'bg-[#FF3038]/20 text-[#FF3038] border border-[#FF3038]/30 font-bold' : 'bg-[#27272a] text-[#A1A1AA]'}">${escapeHtml(m.tag)}</span>` : ''}
+          </div>
+          <span class="text-[10px] text-[#A1A1AA] leading-snug mt-0.5">${escapeHtml(m.description || '')}</span>
+        </div>
+        <div class="shrink-0 pt-0.5">
+          <span class="material-symbols-outlined text-[18px] ${isSelected ? 'text-[#FF3038]' : 'text-transparent'}">check_circle</span>
+        </div>
+      `;
+      listEl.appendChild(btn);
+    });
+  }
+
+  function toggleModelDropdown(e) {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    const menu = document.getElementById('model-dropdown-menu');
+    const chevron = document.getElementById('model-dropdown-chevron');
+    if (!menu) return;
+
+    const isHidden = menu.classList.contains('hidden');
+    if (isHidden) {
+      renderModelDropdown();
+      if (subscriptionStatus) updateModelDropdownLocks(subscriptionStatus);
+      menu.classList.remove('hidden');
+      chevron?.classList.add('rotate-180');
+    } else {
+      closeModelDropdown();
+    }
+  }
+
+  function closeModelDropdown() {
+    const menu = document.getElementById('model-dropdown-menu');
+    const chevron = document.getElementById('model-dropdown-chevron');
+    if (menu) menu.classList.add('hidden');
+    if (chevron) chevron.classList.remove('rotate-180');
+  }
+
+  function selectModel(modelId, notify = true) {
+    const found = availableModels.find(m => m.id === modelId);
+    if (!found) return;
+
+    const isModel2 = modelId.includes('baronllm');
+    const tier = subscriptionStatus?.model_tier || 'free';
+    if (isModel2 && tier === 'model1') {
+      closeModelDropdown();
+      showPricingModal();
+      showToast('The Advanced Pentester requires an Advanced Pentester subscription.', 'warning');
+      return;
+    }
+
+    currentSelectedModel = modelId;
+    localStorage.setItem('friday_selected_model', modelId);
+
+    if (currentConversationId && convMessagesCache.has(currentConversationId)) {
+      convMessagesCache.get(currentConversationId).selectedModel = modelId;
+    }
+
+    renderModelDropdown();
+    if (subscriptionStatus) updateModelDropdownLocks(subscriptionStatus);
+    closeModelDropdown();
+
+    if (notify) {
+      showToast(`Active engine: ${found.name}`, 'info');
+    }
+  }
+
+  async function loadAvailableModels() {
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch(`${BACKEND_URL}/api/models`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.models) && data.models.length > 0) {
+          availableModels = data.models;
+          if (!availableModels.some(m => m.id === currentSelectedModel)) {
+            currentSelectedModel = data.default || availableModels[0].id;
+            localStorage.setItem('friday_selected_model', currentSelectedModel);
+          }
+          renderModelDropdown();
+        }
+      }
+    } catch (_) {
+      renderModelDropdown();
+    }
+  }
+
+  document.addEventListener('click', (e) => {
+    const wrapper = document.getElementById('model-selector-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+      closeModelDropdown();
+    }
+  });
+
+  // ─── Sidebar Mobile & Desktop Toggles ────────────────────────────────────
+  function openSidebar() {
+    sidebar.classList.remove('-translate-x-full');
+    mobileBackdrop.classList.remove('hidden');
+  }
+  function closeSidebar() {
+    sidebar.classList.add('-translate-x-full');
+    mobileBackdrop.classList.add('hidden');
+  }
+  openSidebarBtn?.addEventListener('click', openSidebar);
+  closeSidebarBtn?.addEventListener('click', closeSidebar);
+  mobileBackdrop?.addEventListener('click', closeSidebar);
+
+  const toggleDesktopSidebarBtn = document.getElementById('toggle-desktop-sidebar-btn');
+  let isDesktopSidebarCollapsed = false;
+
+  function toggleDesktopSidebar() {
+    isDesktopSidebarCollapsed = !isDesktopSidebarCollapsed;
+    sidebar.classList.toggle('md:w-0', isDesktopSidebarCollapsed);
+    sidebar.classList.toggle('md:w-[270px]', !isDesktopSidebarCollapsed);
+    sidebar.classList.toggle('md:border-r-0', isDesktopSidebarCollapsed);
+    sidebar.classList.toggle('overflow-hidden', isDesktopSidebarCollapsed);
+  }
+  toggleDesktopSidebarBtn?.addEventListener('click', toggleDesktopSidebar);
+
+  // Auto-resize chat input as user types
+  function autoResizeInput() {
+    chatInput.style.height = 'auto';
+    const newHeight = Math.min(Math.max(chatInput.scrollHeight, 38), 160);
+    chatInput.style.height = `${newHeight}px`;
+  }
+  chatInput.addEventListener('input', autoResizeInput);
+
+  // ─── UUID Helper ─────────────────────────────────────────────────────────
+  function generateUUID() {
+    return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    );
+  }
+
+  // ─── Scroll & Stream Stickiness Control ──────────────────────────────────
+  let userScrolledUp = false;
+  const scrollBottomBtn = document.getElementById('scroll-bottom-btn');
+
+  function isUserNearBottom(threshold = 40) {
+    if (!chatScroller) return true;
+    const distanceToBottom = chatScroller.scrollHeight - chatScroller.scrollTop - chatScroller.clientHeight;
+    return distanceToBottom <= threshold;
+  }
+
+  function updateScrollBottomBtn(show) {
+    if (!scrollBottomBtn) return;
+    if (show) {
+      scrollBottomBtn.classList.remove('opacity-0', 'pointer-events-none');
+      scrollBottomBtn.classList.add('opacity-100', 'pointer-events-auto');
+    } else {
+      scrollBottomBtn.classList.add('opacity-0', 'pointer-events-none');
+      scrollBottomBtn.classList.remove('opacity-100', 'pointer-events-auto');
+    }
+  }
+
+  function scrollToBottom(force = false) {
+    if (!chatScroller) return;
+    // If user has scrolled up to inspect earlier content, do not hijack their scroll
+    if (!force && userScrolledUp) {
+      return;
+    }
+    chatScroller.scrollTop = chatScroller.scrollHeight;
+  }
+
+  function handleScrollToBottomClick() {
+    userScrolledUp = false;
+    updateScrollBottomBtn(false);
+    chatScroller.scrollTo({
+      top: chatScroller.scrollHeight,
+      behavior: 'smooth'
+    });
+  }
+
+  // Wheel event: detect upward scroll instantly before RAF render
+  chatScroller?.addEventListener('wheel', (e) => {
+    if (e.deltaY < 0) {
+      // User is scrolling UP
+      userScrolledUp = true;
+      updateScrollBottomBtn(true);
+    } else if (e.deltaY > 0) {
+      if (isUserNearBottom(40)) {
+        userScrolledUp = false;
+        updateScrollBottomBtn(false);
+      }
+    }
+  }, { passive: true });
+
+  // Touch events for mobile/trackpad drag
+  let touchStartY = 0;
+  chatScroller?.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0]?.clientY || 0;
+  }, { passive: true });
+
+  chatScroller?.addEventListener('touchmove', (e) => {
+    const currentY = e.touches[0]?.clientY || 0;
+    if (currentY > touchStartY + 4) {
+      // Finger dragged DOWN = scrolling UP into chat history
+      userScrolledUp = true;
+      updateScrollBottomBtn(true);
+    } else if (currentY < touchStartY - 4) {
+      // Finger dragged UP = scrolling DOWN
+      if (isUserNearBottom(40)) {
+        userScrolledUp = false;
+        updateScrollBottomBtn(false);
+      }
+    }
+  }, { passive: true });
+
+  // Keyboard navigation
+  chatScroller?.addEventListener('keydown', (e) => {
+    if (['ArrowUp', 'PageUp', 'Home'].includes(e.key)) {
+      userScrolledUp = true;
+      updateScrollBottomBtn(true);
+    } else if (['ArrowDown', 'PageDown', 'End'].includes(e.key)) {
+      setTimeout(() => {
+        if (isUserNearBottom(40)) {
+          userScrolledUp = false;
+          updateScrollBottomBtn(false);
+        }
+      }, 50);
+    }
+  }, { passive: true });
+
+  // General scroll event (catches scrollbar drags)
+  chatScroller?.addEventListener('scroll', () => {
+    const distanceToBottom = chatScroller.scrollHeight - chatScroller.scrollTop - chatScroller.clientHeight;
+    if (distanceToBottom <= 40) {
+      userScrolledUp = false;
+      updateScrollBottomBtn(false);
+    } else if (distanceToBottom > 100) {
+      updateScrollBottomBtn(true);
+    }
+  }, { passive: true });
+
+  // ─── View Helpers ────────────────────────────────────────────────────────
+  function showConversation() {
+    welcomeView.classList.add('hidden');
+    conversationView.classList.remove('hidden');
+    userScrolledUp = false;
+    scrollToBottom(true);
+  }
+
+  // ─── New Chat ────────────────────────────────────────────────────────────
+  function startNewChat() {
+    conversationHistory = [];
+    currentConversationId = null;
+    conversationView.innerHTML = '';
+    welcomeView.classList.remove('hidden');
+    conversationView.classList.add('hidden');
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+    chatInput.focus();
+    closeSidebar();
+    updateSidebarActive(null);
+    updateWelcomeGreeting();
+    userScrolledUp = false;
+    updateScrollBottomBtn(false);
+  }
+
+  // ─── Keyboard Shortcut: Ctrl+N / ⌘N ─────────────────────────────────────
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+      e.preventDefault();
+      startNewChat();
+    }
+  });
+
+  // ─── Prompt Pill ─────────────────────────────────────────────────────────
+  function usePrompt(text) {
+    const user = auth.currentUser || currentFirebaseUser;
+    if (!user) {
+      showToast('Please sign up or sign in to continue chatting with FRIDAY', 'warning');
+      showAuthModal('Sign up or sign in to continue chatting with FRIDAY.');
+      return;
+    }
+    chatInput.value = text;
+    sendMessage();
+  }
+
+  // ─── Key Handler (Enter to send, Shift+Enter for newline) ────────────────
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  // ─── Stop Streaming ──────────────────────────────────────────────────────
+  function stopStreaming() {
+    if (activeReader) {
+      activeReader.cancel().catch(() => {});
+      activeReader = null;
+    }
+  }
+
+  // ─── Send / Input State ──────────────────────────────────────────────────
+  function setInputEnabled(enabled) {
+    chatInput.disabled = !enabled;
+    sendBtn.disabled   = !enabled;
+    sendBtn.style.opacity = enabled ? '1' : '0.4';
+    sendBtn.style.cursor  = enabled ? 'pointer' : 'not-allowed';
+    // Toggle send / stop button visibility
+    if (enabled) {
+      sendBtn.classList.remove('hidden');
+      stopBtn.classList.add('hidden');
+      stopBtn.classList.remove('flex');
+    } else {
+      sendBtn.classList.add('hidden');
+      stopBtn.classList.remove('hidden');
+      stopBtn.classList.add('flex');
+    }
+  }
+
+  // ─── Send Message ────────────────────────────────────────────────────────
+  async function sendMessage() {
+    const text = chatInput.value.trim();
+    if (!text || isStreaming) return;
+
+    const user = auth.currentUser || currentFirebaseUser;
+    if (!user) {
+      showToast('Please sign up or sign in to continue chatting with FRIDAY', 'warning');
+      showAuthModal('Sign up or sign in to continue chatting with FRIDAY.');
+      return;
+    }
+
+    // Create or reuse conversation ID — registers backend record in background
+    if (!currentConversationId) {
+      currentConversationId = generateUUID();
+      getAuthHeaders().then(headers => {
+        fetch(`${BACKEND_URL}/api/conversations`, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ id: currentConversationId, title: 'New Conversation' }),
+        }).catch(() => {});
+      });
+    }
+
+    showConversation();
+    conversationHistory.push({ role: 'user', content: text });
+    if (currentConversationId) {
+      convMessagesCache.set(currentConversationId, {
+        id: currentConversationId,
+        messages: [...conversationHistory],
+        selectedModel: currentSelectedModel,
+      });
+    }
+    renderUserMessage(text);
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+
+    // Instantly refresh remaining chats count in UI upon sending each chat
+    if (subscriptionStatus && !subscriptionStatus.is_unlimited) {
+      subscriptionStatus.daily_used = (subscriptionStatus.daily_used || 0) + 1;
+      if (subscriptionStatus.chats_remaining !== null && subscriptionStatus.chats_remaining !== undefined) {
+        subscriptionStatus.chats_remaining = Math.max(0, subscriptionStatus.chats_remaining - 1);
+      }
+      updateSubBadge(subscriptionStatus);
+    }
+
+    userScrolledUp = false;
+    updateScrollBottomBtn(false);
+    const typingEl = renderTypingIndicator();
+    scrollToBottom(true);
+    setInputEnabled(false);
+    isStreaming = true;
+
+    try {
+      const assistantEl = await streamAssistantResponse(typingEl);
+      const fullText = assistantEl.dataset.rawText || '';
+      if (fullText) {
+        conversationHistory.push({ role: 'assistant', content: fullText });
+      }
+      if (currentConversationId) {
+        convMessagesCache.set(currentConversationId, {
+          id: currentConversationId,
+          messages: [...conversationHistory],
+          selectedModel: currentSelectedModel,
+        });
+      }
+      // Refresh sidebar so title updates after first turn
+      loadSidebarHistory();
+    } catch (err) {
+      if (typingEl.isConnected) typingEl.remove();
+      if (err.name !== 'AbortError' && !err.message?.includes('cancel')) {
+        renderErrorMessage(err.message || 'Something went wrong.');
+      }
+    } finally {
+      isStreaming = false;
+      activeReader = null;
+      setInputEnabled(true);
+      chatInput.focus({ preventScroll: true });
+      scrollToBottom(false);
+      fetchSubscriptionStatus(); // Instant server sync after each chat completes or errors
+    }
+  }
+
+  // ─── Render: User Message ────────────────────────────────────────────────
+  function renderUserMessage(text) {
+    const time = formatTime(new Date());
+    const user = auth.currentUser || currentFirebaseUser;
+    const initials = getUserInitials(user);
+    const div = document.createElement('div');
+    div.className = 'flex gap-2.5 sm:gap-4 items-start justify-end w-full min-w-0';
+    div.innerHTML = `
+      <div class="flex flex-col items-end max-w-[88%] sm:max-w-xl min-w-0">
+        <div class="p-3 sm:p-4 rounded-2xl rounded-tr-sm bg-[#1e1e22] border border-[#292929] text-xs sm:text-sm text-[#F5F5F5] leading-relaxed shadow-sm whitespace-pre-wrap break-words w-full">${escapeHtml(text)}</div>
+        <span class="text-[10px] font-mono text-[#71717A] mt-1 mr-1">${time}</span>
+      </div>
+      <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1c1c1f] border border-[#292929] flex items-center justify-center text-[10px] sm:text-xs font-mono font-bold text-[#FF3038] shrink-0" title="${escapeHtml(user ? (user.displayName || user.email || 'User') : 'User')}">${escapeHtml(initials)}</div>
+    `;
+    conversationView.appendChild(div);
+  }
+
+  // ─── Render: Typing Indicator (Thinking Orb) ────────────────────────────
+  function renderTypingIndicator() {
+    const div = document.createElement('div');
+    div.className = 'flex gap-2.5 sm:gap-4 items-start typing-indicator-row w-full min-w-0';
+    div.innerHTML = `
+      <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[#FF3038]/50 bg-[#121316] p-1 flex items-center justify-center shadow-[0_0_12px_rgba(255,48,56,0.3)] shrink-0">
+        <img alt="FRIDAY AI" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcrt12zOQcu1F3t5EOzwK-rp1yIcJrvdOkVmBiOwevjii1-OjUzmyYh_FzsUdOuj5KX4SMPjW5eGF2UrVtixvPJMxUqjnUncXZI6Q4Qzue6eShB1fxdx8tEIfvF7qPyedJ5n0Zs4jsM9AoIvYdPA6EURCrdVjcWBBjqf0aZlrXGSWf030Aa1-vCTBTZ1bqFN1nP5HIFi96xXLH0DfCXVFS8wgFjvjKdkBfS2tXJs0PUEREhvDw4fiB27Rd-Iwl2H1VdA">
+      </div>
+      <div class="flex-1 flex flex-col max-w-2xl min-w-0">
+        <div class="flex items-center gap-1.5 sm:gap-2 mb-1.5 flex-wrap">
+          <span class="font-heading font-semibold text-xs text-[#F5F5F5]">FRIDAY v1</span>
+          <span class="text-[9px] font-mono bg-[#FF3038]/20 text-[#FF3038] px-1.5 py-0.5 rounded font-bold">AI</span>
+          <span class="text-[10px] font-mono text-[#71717A]">Processing…</span>
+        </div>
+        <div class="thinking-orb-wrap" id="thinking-orb-wrap-${Date.now()}">
+          <div class="thinking-orb-box">
+            <div class="thinking-orb"></div>
+            <div class="thinking-orb-ring"></div>
+          </div>
+          <span class="thinking-label">Thinking…</span>
+        </div>
+      </div>
+    `;
+    conversationView.appendChild(div);
+    return div;
+  }
+
+  // ─── Content Sanitization ────────────────────────────────────────────────
+  function sanitizeDisclaimer(text) {
+    if (!text) return '';
+    return text
+      .replace(/^[^\n]*?(?:safe,?\s*educational\s*(?:sample|demonstration|alternative)|without deploying harmful payloads|demonstrates (?:Android )?malware concepts|clarify something important first)[^\n]*\n*/gim, '')
+      .replace(/\*\*FRIDAY'S SAFETY PRINCIPLE:\*\*\s*/gi, '')
+      .replace(/This will be a \**safe,?\s*educational\s*sample\**[^\n.]*?(?:unauthorized devices|harmful payloads|Android malware concepts)[^\n.]*[.\n]?/gi, '')
+      .replace(/^\s+/, '');
+  }
+
+  // ─── Stream Assistant Response ──────────────────────────────────────────
+  async function streamAssistantResponse(typingEl) {
+    const assistantEl = createAssistantBubble();
+    const contentEl = assistantEl.querySelector('.assistant-content');
+    let rawText = '';
+    let firstChunkReceived = false;
+    let renderScheduled = false;
+
+    function scheduleContentRender() {
+      if (renderScheduled) return;
+      renderScheduled = true;
+      requestAnimationFrame(() => {
+        renderScheduled = false;
+        contentEl.textContent = sanitizeDisclaimer(rawText);
+        scrollToBottom(false);
+      });
+    }
+
+    // After 300 ms with no data, activate the thinking orb animation.
+    // Quick-routed responses arrive so fast this timer almost never fires for them.
+    const orbTimer = setTimeout(() => {
+      const wrap = typingEl.querySelector('.thinking-orb-wrap');
+      if (wrap) wrap.classList.add('thinking-active');
+    }, 300);
+
+    const authHeaders = await getAuthHeaders();
+    const payload = {
+      messages: conversationHistory,
+      conversation_id: currentConversationId,
+      stream: true,
+    };
+    if (currentSelectedModel) {
+      payload.model = currentSelectedModel;
+    }
+    const response = await fetch(`${BACKEND_URL}/api/chat`, {
+      method: 'POST',
+      headers: authHeaders,
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      clearTimeout(orbTimer);
+      if (response.status === 401) {
+        showAuthModal();
+        throw new Error('Authentication required or session expired. Please sign in with Google.');
+      }
+      // Subscription limit / access gate errors
+      if (response.status === 403 || response.status === 429) {
+        let errDetail = {};
+        try { errDetail = await response.json(); } catch {}
+        const det = errDetail.detail || errDetail;
+        if (det.upgrade_required) {
+          showPricingModal();
+          throw new Error(det.message || 'Upgrade required to use this model.');
+        }
+        throw new Error(det.message || `Access denied (HTTP ${response.status})`);
+      }
+      throw new Error(`FRIDAY service encountered an issue (HTTP ${response.status})`);
+    }
+
+    activeReader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let streamDone = false;
+
+    try {
+      while (!streamDone) {
+        const { done, value } = await activeReader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop();
+
+        for (const part of parts) {
+          const eventMatch = part.match(/^event: (\w+)/);
+          const dataMatch  = part.match(/^data: (.+)$/m);
+          if (!dataMatch) continue;
+
+          const eventType = eventMatch ? eventMatch[1] : 'message';
+          let payload;
+          try { payload = JSON.parse(dataMatch[1]); } catch { continue; }
+
+          if (eventType === 'chunk') {
+            // First chunk: cancel orb timer, swap indicator for bubble
+            if (!firstChunkReceived) {
+              firstChunkReceived = true;
+              clearTimeout(orbTimer);
+              typingEl.replaceWith(assistantEl);
+            }
+            rawText += payload.text;
+            scheduleContentRender();
+          } else if (eventType === 'done') {
+            streamDone = true;
+            // Swap in bubble now if no chunks were ever received (empty response)
+            if (!firstChunkReceived) {
+              clearTimeout(orbTimer);
+              typingEl.replaceWith(assistantEl);
+            }
+            break;
+          } else if (eventType === 'error') {
+            clearTimeout(orbTimer);
+            throw new Error(payload.message || 'FRIDAY service temporarily unavailable.');
+          }
+        }
+      }
+    } catch (err) {
+      clearTimeout(orbTimer);
+      if (!rawText) throw err;
+    }
+
+    // Flush final text content
+    contentEl.textContent = sanitizeDisclaimer(rawText);
+    scrollToBottom(false);
+
+    // Post-stream: render formatted content
+    const cleanedText = sanitizeDisclaimer(rawText);
+    assistantEl.dataset.rawText = cleanedText;
+    if (cleanedText) renderFormattedContent(contentEl, cleanedText);
+    scrollToBottom(false);
+    return assistantEl;
+  }
+
+  // ─── Create Assistant Bubble ─────────────────────────────────────────────
+  function createAssistantBubble() {
+    const time = formatTime(new Date());
+    const div = document.createElement('div');
+    div.className = 'assistant-message-row flex gap-2.5 sm:gap-4 items-start w-full min-w-0';
+    div.innerHTML = `
+      <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[#FF3038]/50 bg-[#121316] p-1 flex items-center justify-center shadow-[0_0_12px_rgba(255,48,56,0.3)] shrink-0">
+        <img alt="FRIDAY AI" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcrt12zOQcu1F3t5EOzwK-rp1yIcJrvdOkVmBiOwevjii1-OjUzmyYh_FzsUdOuj5KX4SMPjW5eGF2UrVtixvPJMxUqjnUncXZI6Q4Qzue6eShB1fxdx8tEIfvF7qPyedJ5n0Zs4jsM9AoIvYdPA6EURCrdVjcWBBjqf0aZlrXGSWf030Aa1-vCTBTZ1bqFN1nP5HIFi96xXLH0DfCXVFS8wgFjvjKdkBfS2tXJs0PUEREhvDw4fiB27Rd-Iwl2H1VdA">
+      </div>
+      <div class="flex-1 flex flex-col max-w-full sm:max-w-3xl min-w-0">
+        <div class="flex items-center gap-1.5 sm:gap-2 mb-1.5 flex-wrap">
+          <span class="font-heading font-semibold text-xs text-[#F5F5F5]">FRIDAY v1</span>
+          <span class="text-[9px] font-mono bg-[#FF3038]/20 text-[#FF3038] px-1.5 py-0.5 rounded font-bold">AI</span>
+          <span class="text-[10px] font-mono text-[#71717A]">${time}</span>
+        </div>
+        <div class="p-3.5 sm:p-5 rounded-2xl rounded-tl-sm bg-[#121214] border border-[#292929] text-xs sm:text-sm text-[#F5F5F5] leading-relaxed shadow-md min-w-0 overflow-hidden">
+          <div class="assistant-content whitespace-pre-wrap break-words min-w-0"></div>
+        </div>
+        <!-- Assistant Action Bar: Copy, Regenerate, Like, Dislike -->
+        <div class="flex items-center justify-between gap-2 mt-1.5 text-[#71717A] px-0.5">
+          <span class="text-[10px] font-mono text-[#52525B] hidden xs:inline">FRIDAY AI</span>
+          <div class="flex items-center gap-1 ml-auto">
+            <!-- Copy Full Response Button -->
+            <button class="copy-resp-btn px-2 py-1 hover:text-[#F5F5F5] transition-colors rounded-lg hover:bg-[#1a1a1a] active:scale-95 flex items-center gap-1 text-[11px] font-mono" title="Copy response">
+              <span class="material-symbols-outlined text-[15px]">content_copy</span>
+              <span class="copy-label hidden xs:inline text-[10px]">Copy</span>
+            </button>
+            <!-- Regenerate Response Button -->
+            <button class="regen-resp-btn px-2 py-1 hover:text-[#F5F5F5] transition-colors rounded-lg hover:bg-[#1a1a1a] active:scale-95 flex items-center gap-1 text-[11px] font-mono" title="Regenerate response">
+              <span class="material-symbols-outlined text-[15px]">replay</span>
+              <span class="hidden xs:inline text-[10px]">Retry</span>
+            </button>
+            <!-- Like Button -->
+            <button class="like-resp-btn p-1.5 hover:text-emerald-400 transition-colors rounded-lg hover:bg-[#1a1a1a] active:scale-95 flex items-center justify-center min-w-[28px] min-h-[28px]" title="Good response">
+              <span class="material-symbols-outlined text-[15px]">thumb_up</span>
+            </button>
+            <!-- Dislike Button -->
+            <button class="dislike-resp-btn p-1.5 hover:text-[#FF3038] transition-colors rounded-lg hover:bg-[#1a1a1a] active:scale-95 flex items-center justify-center min-w-[28px] min-h-[28px]" title="Dislike / Give feedback for better suggestion">
+              <span class="material-symbols-outlined text-[15px]">thumb_down</span>
+            </button>
+          </div>
+        </div>
+        <!-- Dislike Suggestions Toolbar (Opens upon Dislike) -->
+        <div class="feedback-suggestions-panel hidden mt-2.5 p-3 rounded-xl bg-[#0e0e11] border border-[#292929] flex-col gap-2 transition-all shadow-lg animate-fadeIn">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-mono text-[#A1A1AA] flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[14px] text-[#FF3038]">tips_and_updates</span>
+              How can FRIDAY give a better suggestion?
+            </span>
+            <button class="close-suggestions-btn p-1 text-[11px] text-[#71717A] hover:text-[#F5F5F5] transition-colors rounded hover:bg-[#1c1c1f]" title="Dismiss">✕</button>
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            <button class="feedback-chip px-2.5 py-1 rounded-lg bg-[#18181b] hover:bg-[#222226] border border-[#2e2e33] hover:border-[#FF3038]/60 text-xs text-[#D4D4D8] hover:text-white transition-all flex items-center gap-1.5 active:scale-95" data-prompt="Please refine this response: give me complete, fully working, and runnable code with step-by-step execution commands.">
+              <span>💻 Working Code</span>
+            </button>
+            <button class="feedback-chip px-2.5 py-1 rounded-lg bg-[#18181b] hover:bg-[#222226] border border-[#2e2e33] hover:border-[#FF3038]/60 text-xs text-[#D4D4D8] hover:text-white transition-all flex items-center gap-1.5 active:scale-95" data-prompt="Please refine this response: make it much more concise, direct, and straight to the technical point.">
+              <span>⚡ More Concise</span>
+            </button>
+            <button class="feedback-chip px-2.5 py-1 rounded-lg bg-[#18181b] hover:bg-[#222226] border border-[#2e2e33] hover:border-[#FF3038]/60 text-xs text-[#D4D4D8] hover:text-white transition-all flex items-center gap-1.5 active:scale-95" data-prompt="Please explain this step-by-step in detail, breaking down each command and mechanism simply.">
+              <span>🔍 Step-by-Step</span>
+            </button>
+            <button class="feedback-chip px-2.5 py-1 rounded-lg bg-[#18181b] hover:bg-[#222226] border border-[#2e2e33] hover:border-[#FF3038]/60 text-xs text-[#D4D4D8] hover:text-white transition-all flex items-center gap-1.5 active:scale-95" data-prompt="Please provide an alternative method or attack vector to achieve this objective.">
+              <span>🔄 Alternative Vector</span>
+            </button>
+            <button class="feedback-chip px-2.5 py-1 rounded-lg bg-[#18181b] hover:bg-[#222226] border border-[#2e2e33] hover:border-[#FF3038]/60 text-xs text-[#D4D4D8] hover:text-white transition-all flex items-center gap-1.5 active:scale-95" data-prompt="Please review the previous code/commands, fix any syntax or dependency errors, and ensure accuracy.">
+              <span>🛠️ Fix Errors</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Attach interaction handlers
+    attachBubbleActionListeners(div);
+    return div;
+  }
+
+  // ─── Render Formatted Content ────────────────────────────────────────────
+  // Safely parses fenced code blocks and **bold** markers without using
+  // innerHTML on raw model output.
+  function renderFormattedContent(el, rawText) {
+    const codeBlockRegex = /```(\w*)\n?([\s\S]*?)```/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+    let codeBlockIndex = 0;
+
+    while ((match = codeBlockRegex.exec(rawText)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push({ type: 'text', content: rawText.slice(lastIndex, match.index) });
+      }
+      parts.push({ type: 'code', lang: match[1] || 'text', content: match[2] });
+      lastIndex = match.index + match[0].length;
+    }
+    if (lastIndex < rawText.length) {
+      parts.push({ type: 'text', content: rawText.slice(lastIndex) });
+    }
+
+    if (parts.length === 0 || (parts.length === 1 && parts[0].type === 'text')) {
+      renderTextWithBold(el, rawText);
+      return;
+    }
+
+    el.innerHTML = '';
+    for (const part of parts) {
+      if (part.type === 'text') {
+        if (part.content.trim()) {
+          const p = document.createElement('p');
+          p.className = 'whitespace-pre-wrap break-words mb-3';
+          renderTextWithBold(p, part.content);
+          el.appendChild(p);
+        }
+      } else {
+        const blockId = `dyn-code-${Date.now()}-${codeBlockIndex++}`;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'rounded-xl overflow-hidden border border-[#292929] bg-[#09090b] my-3 max-w-full min-w-0';
+        wrapper.innerHTML = `
+          <div class="flex items-center justify-between px-3 sm:px-3.5 py-2 bg-[#18181b] border-b border-[#292929] text-[11px] sm:text-xs font-mono text-[#A1A1AA]">
+            <span class="flex items-center gap-1.5 min-w-0 truncate">
+              <span class="material-symbols-outlined text-[14px] text-[#FF3038] shrink-0">terminal</span>
+              <span class="truncate">${escapeHtml(part.lang)}</span>
+            </span>
+            <button class="hover:text-white flex items-center gap-1 text-[11px] transition-colors p-1 rounded hover:bg-[#252528] shrink-0 active:scale-95" onclick="copyDynCode('${blockId}')">
+              <span class="material-symbols-outlined text-[14px]">content_copy</span>
+              <span class="hidden xs:inline">Copy</span>
+            </button>
+          </div>
+          <pre class="p-3 sm:p-3.5 text-[11px] sm:text-xs font-mono text-[#E4E4E7] overflow-x-auto touch-scroll"><code id="${blockId}"></code></pre>
+        `;
+        wrapper.querySelector(`#${blockId}`).textContent = part.content;
+        el.appendChild(wrapper);
+      }
+    }
+  }
+
+  // Render text with **bold** support — safely, no innerHTML on model output
+  function renderTextWithBold(el, text) {
+    const boldRegex = /\*\*(.+?)\*\*/g;
+    let last = 0;
+    let m;
+    el.innerHTML = '';
+    while ((m = boldRegex.exec(text)) !== null) {
+      if (m.index > last) el.appendChild(document.createTextNode(text.slice(last, m.index)));
+      const strong = document.createElement('strong');
+      strong.textContent = m[1];
+      el.appendChild(strong);
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) el.appendChild(document.createTextNode(text.slice(last)));
+  }
+
+  // ─── Format User-Facing Error Messages ──────────────────────────────────
+  function formatUserErrorMessage(rawMessage) {
+    if (!rawMessage || typeof rawMessage !== 'string') {
+      return 'FRIDAY is temporarily unreachable. Please try again shortly.';
+    }
+    const lower = rawMessage.toLowerCase();
+    if (
+      lower.includes('failed to fetch') ||
+      lower.includes('networkerror') ||
+      lower.includes('load failed') ||
+      lower.includes('connection refused') ||
+      lower.includes('cannot reach') ||
+      lower.includes('unreachable') ||
+      lower.includes('timed out') ||
+      lower.includes('timeout')
+    ) {
+      return 'FRIDAY is temporarily unreachable. Please check your network connection or try again shortly.';
+    }
+    if (
+      lower.includes('ollama') ||
+      lower.includes('ssh tunnel') ||
+      lower.includes('stream error') ||
+      lower.includes('502') ||
+      lower.includes('503') ||
+      lower.includes('504') ||
+      lower.includes('server error') ||
+      lower.includes('internal error')
+    ) {
+      return 'FRIDAY neural engine is temporarily unavailable. Please try again shortly.';
+    }
+    return rawMessage
+      .replace(/hf\.co\/[^\s'"]+/gi, 'FRIDAY Engine')
+      .replace(/huihui_ai\/[^\s'"]+/gi, 'FRIDAY Engine')
+      .replace(/ollama/gi, 'FRIDAY');
+  }
+
+  // ─── Render: Error Message ───────────────────────────────────────────────
+  function renderErrorMessage(message) {
+    const displayMsg = formatUserErrorMessage(message);
+    const div = document.createElement('div');
+    div.className = 'flex gap-3 items-start';
+    div.innerHTML = `
+      <div class="flex-1 max-w-2xl">
+        <div class="p-4 rounded-2xl bg-[#1a0a0a] border border-[#FF3038]/50 text-sm text-[#FF3038] font-mono flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">error</span>
+          <span>${escapeHtml(displayMsg)}</span>
+        </div>
+      </div>
+    `;
+    conversationView.appendChild(div);
+  }
+
+  // ─── Bubble Actions & Interactive Feedback ──────────────────────────────
+  function attachBubbleActionListeners(bubble) {
+    const copyBtn = bubble.querySelector('.copy-resp-btn');
+    const regenBtn = bubble.querySelector('.regen-resp-btn');
+    const likeBtn = bubble.querySelector('.like-resp-btn');
+    const dislikeBtn = bubble.querySelector('.dislike-resp-btn');
+    const panel = bubble.querySelector('.feedback-suggestions-panel');
+    const closeBtn = bubble.querySelector('.close-suggestions-btn');
+
+    // 1. Copy entire assistant response
+    copyBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      copyBubbleResponse(bubble, copyBtn);
+    });
+
+    // 2. Regenerate response
+    regenBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      regenerateLastResponse(bubble);
+    });
+
+    // 3. Like (Thumbs Up)
+    likeBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isLiked = likeBtn.classList.contains('text-emerald-400');
+      if (isLiked) {
+        likeBtn.classList.remove('text-emerald-400', 'bg-emerald-500/10', 'border', 'border-emerald-500/30');
+      } else {
+        likeBtn.classList.add('text-emerald-400', 'bg-emerald-500/10', 'border', 'border-emerald-500/30');
+        dislikeBtn?.classList.remove('text-[#FF3038]', 'bg-[#FF3038]/10', 'border', 'border-[#FF3038]/30');
+        panel?.classList.add('hidden');
+        panel?.classList.remove('flex');
+        showToast('Response marked helpful 👍', 'success');
+      }
+    });
+
+    // 4. Dislike (Thumbs Down) -> Reveals suggestions to improve response
+    dislikeBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isDisliked = dislikeBtn.classList.contains('text-[#FF3038]');
+      if (isDisliked) {
+        dislikeBtn.classList.remove('text-[#FF3038]', 'bg-[#FF3038]/10', 'border', 'border-[#FF3038]/30');
+        panel?.classList.add('hidden');
+        panel?.classList.remove('flex');
+      } else {
+        dislikeBtn.classList.add('text-[#FF3038]', 'bg-[#FF3038]/10', 'border', 'border-[#FF3038]/30');
+        likeBtn?.classList.remove('text-emerald-400', 'bg-emerald-500/10', 'border', 'border-emerald-500/30');
+        panel?.classList.remove('hidden');
+        panel?.classList.add('flex');
+        scrollToBottom();
+        showToast('Feedback recorded. Choose a suggestion to refine this response!', 'info');
+      }
+    });
+
+    // Close suggestions
+    closeBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      panel?.classList.add('hidden');
+      panel?.classList.remove('flex');
+    });
+
+    // Suggestion chips: send refinement prompt to model to give a good suggestion
+    const chips = bubble.querySelectorAll('.feedback-chip');
+    chips.forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const promptText = chip.getAttribute('data-prompt');
+        if (!promptText) return;
+        panel?.classList.add('hidden');
+        panel?.classList.remove('flex');
+        showToast('Refining response with your feedback...', 'info');
+        chatInput.value = promptText;
+        autoResizeInput();
+        sendMessage();
+      });
+    });
+  }
+
+  // Copy full response text to clipboard
+  function copyBubbleResponse(bubble, btn) {
+    const raw = bubble.dataset.rawText || bubble.querySelector('.assistant-content')?.innerText || '';
+    if (!raw.trim()) {
+      showToast('No text available to copy', 'info');
+      return;
+    }
+    navigator.clipboard.writeText(raw).then(() => {
+      showToast('Response copied to clipboard', 'success');
+      const icon = btn.querySelector('.material-symbols-outlined');
+      const label = btn.querySelector('.copy-label');
+      if (icon) {
+        const orig = icon.textContent;
+        icon.textContent = 'check';
+        btn.classList.add('text-emerald-400');
+        if (label) label.textContent = 'Copied!';
+        setTimeout(() => {
+          icon.textContent = orig;
+          btn.classList.remove('text-emerald-400');
+          if (label) label.textContent = 'Copy';
+        }, 1500);
+      }
+    }).catch(() => {
+      showToast('Failed to copy to clipboard', 'info');
+    });
+  }
+
+  // Regenerate assistant response
+  async function regenerateLastResponse(bubble) {
+    if (isStreaming) {
+      showToast('Please wait for current response to complete', 'info');
+      return;
+    }
+    if (!conversationHistory.length || !conversationHistory.some(m => m.role === 'user')) {
+      showToast('No prompt found to regenerate', 'info');
+      return;
+    }
+
+    // Pop the assistant turn from conversation history if it's the last one
+    if (conversationHistory.length > 0 && conversationHistory[conversationHistory.length - 1].role === 'assistant') {
+      conversationHistory.pop();
+    }
+
+    bubble.remove();
+
+    const typingEl = renderTypingIndicator();
+    scrollToBottom();
+    setInputEnabled(false);
+    isStreaming = true;
+
+    try {
+      const assistantEl = await streamAssistantResponse(typingEl);
+      const fullText = assistantEl.dataset.rawText || '';
+      if (fullText) {
+        conversationHistory.push({ role: 'assistant', content: fullText });
+      }
+      loadSidebarHistory();
+      showToast('Response regenerated!', 'success');
+    } catch (err) {
+      if (typingEl.isConnected) typingEl.remove();
+      if (err.name !== 'AbortError' && !err.message?.includes('cancel')) {
+        renderErrorMessage(err.message || 'Something went wrong.');
+      }
+    } finally {
+      isStreaming = false;
+      activeReader = null;
+      setInputEnabled(true);
+      chatInput.focus();
+      scrollToBottom();
+    }
+  }
+
+  // ─── Unified Floating Toast Notification ──────────────────────────────────
+  function showToast(message, type = 'info') {
+    const existing = document.getElementById('friday-toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'friday-toast';
+    const isSuccess = type === 'success';
+    const isError = type === 'error';
+    const borderBg = isSuccess
+      ? 'bg-[#0f1f14] border-emerald-500/40 text-emerald-300'
+      : isError
+      ? 'bg-[#220d0e] border-[#FF3038]/50 text-[#FF6B6B]'
+      : 'bg-[#18181b] border-[#38383f] text-[#F5F5F5]';
+    const icon = isSuccess ? 'check_circle' : isError ? 'error' : 'info';
+
+    toast.className = `fixed bottom-20 left-1/2 -translate-x-1/2 ${borderBg} border text-xs font-mono px-3.5 py-2 rounded-xl shadow-2xl z-50 flex items-center gap-2 pointer-events-none transition-all duration-200 opacity-0 translate-y-2`;
+    toast.innerHTML = `
+      <span class="material-symbols-outlined text-[15px] shrink-0">${icon}</span>
+      <span>${escapeHtml(message)}</span>
+    `;
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => {
+      toast.classList.remove('opacity-0', 'translate-y-2');
+      toast.classList.add('opacity-100', 'translate-y-0');
+    });
+    setTimeout(() => {
+      toast.classList.remove('opacity-100', 'translate-y-0');
+      toast.classList.add('opacity-0', 'translate-y-2');
+      setTimeout(() => toast.remove(), 250);
+    }, 2200);
+  }
+
+  function showCopyToast() {
+    showToast('Copied to clipboard', 'success');
+  }
+
+  // ─── Copy Code Block ─────────────────────────────────────────────────────
+  function copyDynCode(id) {
+    const code = document.getElementById(id)?.textContent;
+    if (!code) return;
+    navigator.clipboard.writeText(code).then(() => showToast('Code copied to clipboard', 'success'));
+  }
+
+  function copySnippet(elementId) {
+    const code = document.getElementById(elementId)?.innerText;
+    if (code) navigator.clipboard.writeText(code).then(() => showToast('Code copied to clipboard', 'success'));
+  }
+
+  // ─── Sidebar: Load History from API ──────────────────────────────────────
+  async function loadSidebarHistory() {
+    const user = auth.currentUser || currentFirebaseUser;
+    if (!user) {
+      recentsList.innerHTML = '<p class="text-[11px] font-mono text-[#71717A] px-3 py-2">Sign in to view saved history.</p>';
+      return;
+    }
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch(`${BACKEND_URL}/api/conversations`, {
+        headers: headers,
+      });
+      if (!res.ok) return;
+      const convs = await res.json();
+      renderSidebarHistory(convs);
+
+      // Background prefetch the top 4 recent conversations into cache for instant switching
+      if (Array.isArray(convs)) {
+        const toPrefetch = convs.slice(0, 4).filter(c => !convMessagesCache.has(c.id));
+        toPrefetch.forEach(c => {
+          fetch(`${BACKEND_URL}/api/conversations/${c.id}`, { headers })
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+              if (data && !convMessagesCache.has(c.id)) {
+                convMessagesCache.set(c.id, { id: c.id, title: data.title || c.title, messages: data.messages || [] });
+              }
+            })
+            .catch(() => {});
+        });
+      }
+    } catch (_) {
+      // Backend may not be reachable — sidebar stays empty, core chat still works
+    }
+  }
+
+  // ─── Delete Modal Functions ──────────────────────────────────────────────
+
+  function openDeleteModal(e, convId, title) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    pendingDeleteConvId = convId;
+    pendingDeleteConvTitle = title || 'this session';
+    const titleEl = document.getElementById('delete-modal-title');
+    if (titleEl) titleEl.textContent = `"${title || 'Conversation'}"`;
+    const modal = document.getElementById('delete-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+  }
+
+  function closeDeleteModal() {
+    const modal = document.getElementById('delete-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+    pendingDeleteConvId = null;
+    pendingDeleteConvTitle = '';
+  }
+
+  async function confirmDeleteConversation() {
+    const convId = pendingDeleteConvId;
+    if (!convId) return;
+    closeDeleteModal();
+
+    // 1. Instant animated removal from sidebar UI (delete animation)
+    const itemEl = recentsList.querySelector(`.chat-history-item[data-conv-id="${convId}"]`);
+    if (itemEl) {
+      itemEl.classList.add('chat-item-deleting');
+      setTimeout(() => {
+        if (itemEl.isConnected) itemEl.remove();
+        if (!recentsList.querySelector('.chat-history-item')) {
+          recentsList.innerHTML = '<p class="text-[11px] font-mono text-[#71717A] px-3 py-2">No sessions yet.</p>';
+        }
+      }, 320);
+    }
+
+    // 2. Clear client-side memory cache
+    convMessagesCache.delete(convId);
+
+    // 3. If currently open, reset to new chat
+    if (convId === currentConversationId) {
+      startNewChat();
+    }
+
+    showToast('Conversation deleted', 'info');
+
+    // 4. Background deletion request to backend
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch(`${BACKEND_URL}/api/conversations/${convId}`, {
+        method: 'DELETE',
+        headers: headers,
+      });
+      if (!res.ok && res.status !== 404) {
+        showToast('Could not delete session on server', 'error');
+        loadSidebarHistory();
+      }
+    } catch (err) {
+      console.error('Delete request failed:', err);
+      showToast('FRIDAY is temporarily unreachable', 'error');
+      loadSidebarHistory();
+    }
+  }
+
+  // Backwards-compatible direct delete trigger
+  function deleteConversation(e, convId) {
+    const item = recentsList.querySelector(`.chat-history-item[data-conv-id="${convId}"]`);
+    const title = item ? (item.querySelector('.history-item-title')?.textContent || 'Conversation') : 'Conversation';
+    openDeleteModal(e, convId, title);
+  }
+
+  function renderSidebarHistory(convs) {
+    recentsList.innerHTML = '';
+    if (!convs.length) {
+      recentsList.innerHTML = '<p class="text-[11px] font-mono text-[#71717A] px-3 py-2">No sessions yet.</p>';
+      return;
+    }
+    convs.forEach(conv => {
+      const item = document.createElement('div');
+      const isActive = conv.id === currentConversationId;
+      item.className = `chat-history-item group flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer text-xs transition-all border border-transparent ${
+        isActive
+          ? 'bg-[#181818] text-[#F5F5F5] border-[#292929]'
+          : 'text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#141414]'
+      }`;
+      item.dataset.convId = conv.id;
+      const safeTitle = escapeHtml(conv.title || 'New Conversation');
+      item.innerHTML = `
+        <div class="flex items-center gap-2 truncate flex-1 min-w-0 pr-1">
+          <span class="material-symbols-outlined text-[16px] ${ isActive ? 'text-[#FF3038]' : 'text-[#71717A] group-hover:text-[#FF3038] transition-colors' } shrink-0 history-item-icon">chat_bubble</span>
+          <span class="truncate font-normal history-item-title">${safeTitle}</span>
+        </div>
+        <div class="flex items-center opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-opacity gap-0.5 shrink-0">
+          <button type="button" class="p-1.5 hover:text-[#FF3038] text-[#A1A1AA] transition-colors rounded hover:bg-[#202020] active:scale-95 cursor-pointer" title="Rename" onclick="renameConversation(event, '${conv.id}')">
+            <span class="material-symbols-outlined text-[15px]">edit</span>
+          </button>
+          <button type="button" class="p-1.5 hover:text-[#FF3038] text-[#A1A1AA] transition-colors rounded hover:bg-[#202020] active:scale-95 cursor-pointer" title="Delete conversation" onclick="openDeleteModal(event, '${conv.id}', '${safeTitle.replace(/'/g, "\\'")}')">
+            <span class="material-symbols-outlined text-[15px]">delete</span>
+          </button>
+        </div>
+      `;
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('button')) return; // ignore rename/delete buttons
+        loadConversationById(conv.id, conv.title);
+      });
+      recentsList.appendChild(item);
+    });
+  }
+
+  function updateSidebarActive(convId) {
+    document.querySelectorAll('.chat-history-item').forEach(el => {
+      const active = el.dataset.convId === convId;
+      el.classList.toggle('bg-[#181818]', active);
+      el.classList.toggle('text-[#F5F5F5]', active);
+      el.classList.toggle('border-[#292929]', active);
+      el.classList.toggle('text-[#A1A1AA]', !active);
+      const icon = el.querySelector('.history-item-icon');
+      if (icon) {
+        icon.classList.toggle('text-[#FF3038]', active);
+        icon.classList.toggle('text-[#71717A]', !active);
+      }
+    });
+  }
+
+  // ─── Render Full Conversation Messages Helper ───────────────────────────
+  function renderFullConversation(convId, messages) {
+    currentConversationId = convId;
+    conversationHistory = (messages || [])
+      .filter(m => m.role !== 'system')
+      .map(m => ({ role: m.role, content: m.content }));
+
+    conversationView.innerHTML = '';
+    (messages || [])
+      .filter(m => m.role !== 'system')
+      .forEach(m => {
+        if (m.role === 'user') {
+          renderUserMessage(m.content);
+        } else if (m.role === 'assistant') {
+          const bubble = createAssistantBubble();
+          const cleaned = sanitizeDisclaimer(m.content);
+          bubble.dataset.rawText = cleaned;
+          const contentEl = bubble.querySelector('.assistant-content');
+          renderFormattedContent(contentEl, cleaned);
+          attachBubbleActionListeners(bubble); // Ensure copy, retry, like, dislike work
+          conversationView.appendChild(bubble);
+        }
+      });
+
+    showConversation();
+    updateSidebarActive(convId);
+    userScrolledUp = false;
+    scrollToBottom(true);
+    chatInput.focus({ preventScroll: true });
+  }
+
+  function showConversationLoadingSkeleton(title) {
+    welcomeView.classList.add('hidden');
+    conversationView.classList.remove('hidden');
+    conversationView.innerHTML = `
+      <div class="flex flex-col items-center justify-center min-h-[300px] gap-3 text-center my-auto animate-fadeIn select-none">
+        <div class="w-8 h-8 rounded-full border-2 border-[#FF3038] border-t-transparent animate-spin shadow-[0_0_15px_rgba(255,48,56,0.25)]"></div>
+        <div class="flex flex-col gap-1">
+          <span class="text-xs font-heading font-semibold text-[#F5F5F5] tracking-wide">Loading "${escapeHtml(title || 'Conversation')}"</span>
+          <span class="text-[10px] font-mono text-[#71717A]">Retrieving encrypted session logs…</span>
+        </div>
+      </div>
+    `;
+  }
+
+  // ─── Load Conversation by ID ──────────────────────────────────────────────
+  async function loadConversationById(convId, title) {
+    if (isStreaming) {
+      showToast('Please wait for current response to complete', 'info');
+      return;
+    }
+
+    // If already open, simply close sidebar on mobile
+    if (currentConversationId === convId && !conversationView.classList.contains('hidden')) {
+      closeSidebar();
+      return;
+    }
+
+    // Instantly highlight item and close mobile drawer
+    updateSidebarActive(convId);
+    closeSidebar();
+
+    // Cache hit: instantaneous load (0ms latency!)
+    if (convMessagesCache.has(convId)) {
+      const cached = convMessagesCache.get(convId);
+      if (cached.selectedModel) {
+        selectModel(cached.selectedModel, false);
+      }
+      renderFullConversation(convId, cached.messages);
+      return;
+    }
+
+    // Cache miss: show smooth loading skeleton in conversation view
+    showConversationLoadingSkeleton(title);
+
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch(`${BACKEND_URL}/api/conversations/${convId}`, {
+        headers: headers,
+      });
+
+      if (!res.ok) {
+        if (res.status === 404) {
+          showToast('Conversation not found or was deleted', 'warning');
+          startNewChat();
+          loadSidebarHistory();
+          return;
+        }
+        throw new Error(`Server returned HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      convMessagesCache.set(convId, {
+        id: convId,
+        title: data.title || title,
+        messages: data.messages || [],
+        selectedModel: currentSelectedModel,
+      });
+      renderFullConversation(convId, data.messages || []);
+    } catch (err) {
+      console.error('Failed to load conversation:', err);
+      conversationView.innerHTML = '';
+      renderErrorMessage('Could not load conversation: ' + (err.message || 'Network error'));
+      showConversation();
+    }
+  }
+
+  // ─── Rename Conversation ─────────────────────────────────────────────────
+  async function renameConversation(e, convId) {
+    e.stopPropagation();
+    const newTitle = prompt('Rename conversation:');
+    if (!newTitle?.trim()) return;
+    try {
+      const headers = await getAuthHeaders();
+      await fetch(`${BACKEND_URL}/api/conversations/${convId}`, {
+        method: 'PATCH',
+        headers: headers,
+        body: JSON.stringify({ title: newTitle.trim() }),
+      });
+      if (convMessagesCache.has(convId)) {
+        convMessagesCache.get(convId).title = newTitle.trim();
+      }
+      loadSidebarHistory();
+    } catch (_) {}
+  }
+
+  // ─── Web Search Toggle (preserved) ───────────────────────────────────────
+  let webSearchActive = false;
+  function toggleWebSearch() {
+    webSearchActive = !webSearchActive;
+    const toggle = document.getElementById('web-search-toggle');
+    const icon   = document.getElementById('search-icon');
+    if (!toggle) return;
+    if (webSearchActive) {
+      toggle.classList.add('border-[#FF3038]', 'text-[#FF3038]', 'bg-[#FF3038]/10');
+      icon?.classList.replace('text-[#A1A1AA]', 'text-[#FF3038]');
+    } else {
+      toggle.classList.remove('border-[#FF3038]', 'text-[#FF3038]', 'bg-[#FF3038]/10');
+      icon?.classList.replace('text-[#FF3038]', 'text-[#A1A1AA]');
+    }
+  }
+
+  // ─── Search Modal ─────────────────────────────────────────────────────────
+  function toggleSearchModal() {
+    const q = prompt('Search cyber logs & AI vectors:');
+    if (q) usePrompt('Search archive: ' + q);
+  }
+
+  // ─── Export Session ───────────────────────────────────────────────────────
+  function toggleShareModal() {
+    if (conversationHistory.length === 0) {
+      alert('No active session to export.');
+      return;
+    }
+    const lines = conversationHistory.map(
+      m => `[${m.role.toUpperCase()}]\n${m.content}`
+    ).join('\n\n---\n\n');
+    const blob = new Blob([lines], { type: 'text/plain' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `FRIDAY-AUDIT-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ─── Utilities ────────────────────────────────────────────────────────────
+  function escapeHtml(str) {
+    if (typeof str !== 'string') return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function formatTime(date) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // Explicit global bindings for inline handlers
+  window.openDeleteModal = openDeleteModal;
+  window.closeDeleteModal = closeDeleteModal;
+  window.confirmDeleteConversation = confirmDeleteConversation;
+  window.deleteConversation = deleteConversation;
+  window.renameConversation = renameConversation;
+  window.loadConversationById = loadConversationById;
+  window.startNewChat = startNewChat;
+  window.toggleWebSearch = toggleWebSearch;
+  window.toggleSearchModal = toggleSearchModal;
+  window.toggleShareModal = toggleShareModal;
+  window.toggleModelDropdown = toggleModelDropdown;
+  window.closeModelDropdown = closeModelDropdown;
+  window.selectModel = selectModel;
+  window.handleScrollToBottomClick = handleScrollToBottomClick;
+  window.showPricingModal = showPricingModal;
+  window.hidePricingModal = hidePricingModal;
+  window.toggleBilling = toggleBilling;
+  window.startCheckout = startCheckout;
+
+  // ─── Subscription System ─────────────────────────────────────────────────
+  const BACKEND_URL_SUB = BACKEND_URL;
+  let subscriptionStatus = null;   // cached subscription status
+  let billingYearly = false;       // default: show monthly plans (₹2,499/mo & ₹4,999/mo)
+
+  const PLAN_LABELS = {
+    jr_hacker_monthly:  { name: 'Jr Hacker',          tier: 1, badge: 'model1' },
+    jr_hacker_yearly:   { name: 'Jr Hacker',          tier: 1, badge: 'model1' },
+    advanced_monthly:   { name: 'Advanced Pentester', tier: 2, badge: 'model2' },
+    advanced_yearly:    { name: 'Advanced Pentester', tier: 2, badge: 'model2' },
+  };
+
+  async function fetchSubscriptionStatus() {
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch(`${BACKEND_URL_SUB}/api/subscription/status`, { headers });
+      if (!res.ok) return;
+      subscriptionStatus = await res.json();
+      updateSubBadge(subscriptionStatus);
+      updateModelDropdownLocks(subscriptionStatus);
+    } catch (_) {}
+  }
+
+  function updateSubBadge(status) {
+    const badge  = document.getElementById('sub-status-badge');
+    const label  = document.getElementById('sub-badge-label');
+    const detail = document.getElementById('sub-badge-detail');
+    if (!badge || !status) return;
+
+    badge.className = badge.className.replace(/\bsub-badge-\w+\b/g, '');
+
+    const tier = status.model_tier || 'free';
+    if (tier === 'free') {
+      badge.classList.add('sub-badge-free');
+      label.textContent  = 'Free Plan';
+      const rem = status.chats_remaining ?? Math.max(0, (status.daily_limit || 5) - (status.daily_used || 0));
+      detail.textContent = `${rem} chat${rem !== 1 ? 's' : ''} left today`;
+    } else if (tier === 'model1') {
+      badge.classList.add('sub-badge-model1');
+      label.textContent = '⚡ Jr Hacker';
+      if (status.chats_remaining !== null && status.chats_remaining !== undefined) {
+        const rem = status.chats_remaining;
+        detail.textContent = `${rem} / ${status.daily_limit || 50} chats left`;
+      } else {
+        detail.textContent = '50 chats / day';
+      }
+    } else if (tier === 'model2') {
+      badge.classList.add('sub-badge-model2');
+      label.textContent  = '🔥 Advanced Pentester';
+      detail.textContent = 'Unlimited';
+    }
+  }
+
+  function updateModelDropdownLocks(status) {
+    // Called after models load & status loaded — adds lock icons to gated models
+    if (!status) return;
+    const tier = status.model_tier || 'free';
+    const listEl = document.getElementById('model-options-list');
+    if (!listEl) return;
+
+    listEl.querySelectorAll('button').forEach((btn, idx) => {
+      const model = availableModels[idx];
+      if (!model) return;
+      const isModel2 = model.id.includes('baronllm');
+      // Free users can use BOTH models up to 5 chats/day.
+      // Model 2 is only locked if the user is on the Model 1 tier (Jr Hacker).
+      const locked = isModel2 && (tier === 'model1');
+      // Visual lock indicator — add/remove lock badge
+      let lockBadge = btn.querySelector('.lock-badge');
+      if (locked) {
+        if (!lockBadge) {
+          lockBadge = document.createElement('span');
+          lockBadge.className = 'lock-badge text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#FF3038]/20 text-[#FF3038] border border-[#FF3038]/30 ml-auto shrink-0 flex items-center gap-1';
+          lockBadge.innerHTML = '<span class="material-symbols-outlined text-[11px]">lock</span> Upgrade';
+          btn.querySelector('div')?.appendChild(lockBadge);
+        }
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          closeModelDropdown();
+          showPricingModal();
+        };
+      } else {
+        if (lockBadge) lockBadge.remove();
+        btn.onclick = () => selectModel(model.id);
+      }
+    });
+  }
+
+  let selectedCheckoutPlan = null;
+  let activePaymentMethod = 'upi';
+
+  function showPricingModal() {
+    const modal = document.getElementById('pricing-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    backToPlansView();
+    renderPricingCards();
+    // Show daily usage bar for users
+    const usageWrap = document.getElementById('daily-usage-bar-wrap');
+    if (subscriptionStatus && (subscriptionStatus.model_tier === 'free' || subscriptionStatus.model_tier === 'model1')) {
+      usageWrap?.classList.remove('hidden');
+      const used = subscriptionStatus.daily_used || 0;
+      const limit = subscriptionStatus.daily_limit || (subscriptionStatus.model_tier === 'model1' ? 50 : 5);
+      document.getElementById('daily-usage-text').textContent = `${used} / ${limit} used`;
+      document.getElementById('daily-usage-fill').style.width = `${Math.min(100, (used / limit) * 100)}%`;
+    } else {
+      usageWrap?.classList.add('hidden');
+    }
+  }
+
+  function hidePricingModal() {
+    const modal = document.getElementById('pricing-modal');
+    if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+  }
+
+  function setBilling(yearly) {
+    if (billingYearly === yearly) return;
+    billingYearly = yearly;
+    const btn = document.getElementById('billing-toggle');
+    const knob = document.getElementById('billing-toggle-knob');
+    if (knob) knob.style.transform = billingYearly ? 'translateX(20px)' : 'translateX(0)';
+    if (btn) {
+      btn.classList.toggle('bg-[#FF3038]', billingYearly);
+      btn.classList.toggle('bg-[#27272a]', !billingYearly);
+    }
+    document.getElementById('billing-monthly-label')?.classList.toggle('text-[#F5F5F5]', !billingYearly);
+    document.getElementById('billing-monthly-label')?.classList.toggle('text-[#71717A]', billingYearly);
+    document.getElementById('billing-yearly-label')?.classList.toggle('text-[#F5F5F5]', billingYearly);
+    document.getElementById('billing-yearly-label')?.classList.toggle('text-[#71717A]', !billingYearly);
+    renderPricingCards();
+  }
+
+  function toggleBilling() {
+    setBilling(!billingYearly);
+  }
+
+  async function renderPricingCards() {
+    const grid = document.getElementById('pricing-cards-grid');
+    if (!grid) return;
+    grid.innerHTML = '<div class="col-span-1 md:col-span-2 text-center text-[11px] font-mono text-[#71717A] py-8 flex items-center justify-center gap-2"><span class="w-3.5 h-3.5 border-2 border-[#FF3038] border-t-transparent rounded-full animate-spin"></span> Loading neural plans…</div>';
+    try {
+      const res = await fetch(`${BACKEND_URL_SUB}/api/subscription/plans`);
+      if (!res.ok) throw new Error('Failed to load plans');
+      const { plans } = await res.json();
+      const filtered = plans.filter(p => p.is_yearly === billingYearly);
+      if (!filtered.length) { grid.innerHTML = ''; return; }
+
+      grid.innerHTML = '';
+      filtered.forEach(plan => {
+        const isAdv = plan.model_tier === 'model2';
+        const card = document.createElement('div');
+        card.className = `pricing-card p-4 sm:p-5 flex flex-col justify-between gap-4 ${isAdv ? 'pricing-card-adv shimmer' : 'pricing-card-jr shimmer-gold'}`;
+
+        const features = plan.features.map(f =>
+          `<li class="flex items-start gap-2 text-xs text-[#D4D4D8] leading-tight">
+            <span class="material-symbols-outlined text-[15px] ${isAdv ? 'text-[#FF3038]' : 'text-[#FFB300]'} shrink-0 mt-0.5">check_circle</span>
+            <span>${escapeHtml(f)}</span>
+          </li>`
+        ).join('');
+
+        const priceINR = (plan.price_paise / 100).toLocaleString('en-IN');
+        const period   = plan.is_yearly ? '/yr' : '/mo';
+        const tierLabel = isAdv ? 'Advanced Pentester' : 'Jr Hacker';
+        const tierColor = isAdv ? 'text-[#FF3038]' : 'text-[#FFB300]';
+        const tierBg    = isAdv ? 'bg-[#FF3038]/15 border-[#FF3038]/30' : 'bg-[#FFB300]/15 border-[#FFB300]/30';
+
+        const quotaPill = isAdv
+          ? '<span class="text-[9px] font-mono px-2 py-0.5 rounded-full bg-[#FF3038]/20 text-[#FF3038] border border-[#FF3038]/40 font-bold uppercase tracking-wider flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-[#FF3038] animate-pulse"></span> Unlimited Chats</span>'
+          : '<span class="text-[9px] font-mono px-2 py-0.5 rounded-full bg-[#FFB300]/20 text-[#FFB300] border border-[#FFB300]/40 font-bold uppercase tracking-wider flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-[#FFB300]"></span> 50 Chats / Day</span>';
+
+        const headerBadge = isAdv
+          ? `<div class="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-[#FF3038]/30">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-[#FF3038] to-[#e01e26] text-white text-[10px] font-mono font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(255,48,56,0.6)] border border-white/20">
+                <span class="material-symbols-outlined text-[13px]">bolt</span> RECOMMENDED • MOST POPULAR
+              </span>
+              <span class="text-[10px] font-mono text-[#FF3038] font-bold uppercase tracking-wider">FULL ARSENAL</span>
+            </div>`
+          : `<div class="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-[#FFB300]/20">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FFB300]/15 text-[#FFB300] text-[10px] font-mono font-semibold uppercase tracking-wider border border-[#FFB300]/30">
+                <span class="material-symbols-outlined text-[13px]">terminal</span> STARTER PRO
+              </span>
+              <span class="text-[10px] font-mono text-[#FFB300] font-semibold uppercase tracking-wider">50 CHATS / DAY</span>
+            </div>`;
+
+        const effectiveMo = plan.is_yearly
+          ? `<div class="text-[10px] font-mono text-[#A1A1AA] mt-0.5">Equivalent to <span class="text-[#F5F5F5] font-semibold">₹${Math.round((plan.price_paise / 100) / 12).toLocaleString('en-IN')}/mo</span></div>`
+          : '';
+
+        card.innerHTML = `
+          <div class="flex flex-col">
+            ${headerBadge}
+            <div class="flex flex-col gap-3">
+              <div class="flex items-start justify-between gap-2 pt-1">
+                <div class="flex flex-col gap-1.5">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[9px] font-mono px-2 py-0.5 rounded border ${tierBg} ${tierColor} font-bold uppercase tracking-wider">${escapeHtml(tierLabel)}</span>
+                    ${quotaPill}
+                  </div>
+                  <div class="flex items-baseline gap-1.5 mt-1">
+                    <span class="text-2xl sm:text-3xl font-heading font-extrabold text-[#F5F5F5] tracking-tight">₹${escapeHtml(priceINR)}</span>
+                    <span class="text-xs font-mono text-[#71717A]">${period}</span>
+                  </div>
+                  ${effectiveMo}
+                </div>
+                <div class="w-10 h-10 rounded-xl ${isAdv ? 'bg-[#FF3038]/15 border border-[#FF3038]/30 text-[#FF3038]' : 'bg-[#FFB300]/15 border border-[#FFB300]/30 text-[#FFB300]'} flex items-center justify-center shrink-0">
+                  <span class="material-symbols-outlined text-[22px]">${isAdv ? 'shield_lock' : 'terminal'}</span>
+                </div>
+              </div>
+
+              <div class="h-[1px] w-full bg-[#1e1e24]"></div>
+
+              <ul class="flex flex-col gap-2.5 py-1">${features}</ul>
+            </div>
+          </div>
+
+          <div class="pt-2 flex flex-col gap-2">
+            <button onclick="openCheckoutReview('${escapeHtml(plan.plan_id)}')" class="w-full py-3 rounded-xl font-heading font-bold text-xs sm:text-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${
+              isAdv
+                ? 'bg-[#FF3038] hover:bg-[#e02028] text-white shadow-[0_0_20px_rgba(255,48,56,0.35)]'
+                : 'bg-[#FFB300]/20 hover:bg-[#FFB300]/30 text-[#FFB300] border border-[#FFB300]/40'
+            }" id="choose-btn-${escapeHtml(plan.plan_id)}">
+              <span>${isAdv ? 'Unlock Full Access (Recommended)' : 'Select ' + escapeHtml(tierLabel)}</span>
+              <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </button>
+            <span class="text-center text-[9px] font-mono text-[#52525B]">Instant UPI, Cards & NetBanking checkout</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    } catch (err) {
+      grid.innerHTML = `<div class="col-span-1 md:col-span-2 text-center text-xs font-mono text-[#FF3038] py-8">Failed to load plans. Please try again.</div>`;
+    }
+  }
+
+  async function openCheckoutReview(planId) {
+    try {
+      const res = await fetch(`${BACKEND_URL_SUB}/api/subscription/plans`);
+      const { plans } = await res.json();
+      const plan = plans.find(p => p.plan_id === planId);
+      if (!plan) throw new Error('Plan not found');
+
+      selectedCheckoutPlan = plan;
+      const user = auth.currentUser || currentFirebaseUser;
+      const emailEl = document.getElementById('checkout-account-email');
+      if (emailEl) {
+        emailEl.textContent = user ? (user.email || user.displayName || 'Authenticated Operator') : 'Sign-in required';
+      }
+
+      const isAdv = plan.model_tier === 'model2';
+      const tierColor = isAdv ? 'text-[#FF3038]' : 'text-[#FFB300]';
+      const tierBg = isAdv ? 'bg-[#FF3038]/15 border-[#FF3038]/30' : 'bg-[#FFB300]/15 border-[#FFB300]/30';
+      const priceINR = (plan.price_paise / 100).toLocaleString('en-IN');
+      const periodLabel = plan.is_yearly ? 'Annual Plan (365 Days Access)' : 'Monthly Plan (30 Days Access)';
+      const quotaLabel = isAdv ? 'Unlimited daily chats' : '50 chats per day (resets every 24h)';
+
+      const cardEl = document.getElementById('checkout-selected-plan-card');
+      if (cardEl) {
+        cardEl.className = `p-4 sm:p-5 rounded-2xl border ${isAdv ? 'bg-[#150d10] border-[#FF3038]/40 shadow-[0_0_25px_rgba(255,48,56,0.15)]' : 'bg-[#14120a] border-[#FFB300]/40 shadow-[0_0_25px_rgba(255,179,0,0.12)]'}`;
+        cardEl.innerHTML = `
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-[9px] font-mono px-2 py-0.5 rounded border ${tierBg} ${tierColor} font-bold uppercase tracking-wider">${escapeHtml(plan.label)}</span>
+                <span class="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Instant Activation</span>
+              </div>
+              <h3 class="font-heading font-bold text-base sm:text-lg text-[#F5F5F5] mt-1">${escapeHtml(plan.label)}</h3>
+              <p class="text-[11px] font-mono text-[#A1A1AA] flex items-center gap-2 mt-0.5">
+                <span>${periodLabel}</span>
+                <span>•</span>
+                <span class="${tierColor} font-semibold">${quotaLabel}</span>
+              </p>
+            </div>
+            <div class="flex flex-col items-start sm:items-end">
+              <span class="text-2xl sm:text-3xl font-heading font-extrabold text-[#F5F5F5]">₹${priceINR}</span>
+              <span class="text-[9px] font-mono text-[#71717A]">Total payable (all inclusive)</span>
+            </div>
+          </div>
+        `;
+      }
+
+      const btnText = document.getElementById('checkout-btn-text');
+      if (btnText) btnText.textContent = `Pay ₹${priceINR} with Razorpay`;
+
+      // Switch views
+      document.getElementById('pricing-plans-view')?.classList.add('hidden');
+      document.getElementById('pricing-checkout-view')?.classList.remove('hidden');
+      document.getElementById('pricing-modal-title').textContent = 'Confirm Order & Pay';
+      document.getElementById('pricing-modal-subtitle').textContent = 'Fast, secure checkout via Razorpay Gateway';
+    } catch (err) {
+      showToast('Could not load plan details: ' + err.message, 'error');
+    }
+  }
+
+  function backToPlansView() {
+    document.getElementById('pricing-checkout-view')?.classList.add('hidden');
+    document.getElementById('pricing-plans-view')?.classList.remove('hidden');
+    document.getElementById('pricing-modal-title').textContent = 'Upgrade Neural Arsenal';
+    document.getElementById('pricing-modal-subtitle').textContent = 'Instant activation • Unlocked pentesting intelligence • 256-bit secure checkout';
+  }
+
+  function highlightPaymentMethod(method) {
+    activePaymentMethod = method;
+    const names = {
+      upi: 'UPI / QR Code (GPay, PhonePe, Paytm, CRED)',
+      card: 'Debit & Credit Cards (Visa, MasterCard, RuPay)',
+      netbanking: 'Net Banking (50+ Indian Banks)',
+      wallet: 'Wallets & PayLater (Paytm, Mobikwik, LazyPay)'
+    };
+    showToast(`Selected method: ${names[method] || method}. Click Proceed to Pay to complete.`, 'info');
+  }
+
+  async function proceedToPaymentFromCheckout() {
+    if (!selectedCheckoutPlan) {
+      showToast('Please select a plan first.', 'warning');
+      backToPlansView();
+      return;
+    }
+    await startCheckout(selectedCheckoutPlan.plan_id);
+  }
+
+  async function startCheckout(planId) {
+    const user = auth.currentUser || currentFirebaseUser;
+    if (!user) {
+      hidePricingModal();
+      showAuthModal('Sign in first to subscribe.');
+      return;
+    }
+    const btn = document.getElementById('checkout-confirm-pay-btn') || document.getElementById(`choose-btn-${planId}`);
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Creating order…';
+    }
+
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch(`${BACKEND_URL_SUB}/api/create-order`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ plan_id: planId }),
+      });
+      if (!res.ok) throw new Error((await res.json()).detail || 'Order creation failed');
+      const order = await res.json();
+
+      hidePricingModal();
+      openRazorpayModal(order, planId, user);
+    } catch (err) {
+      showToast(err.message || 'Payment initiation failed. Try again.', 'error');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+  }
+
+  function openRazorpayModal(order, planId, user) {
+    const options = {
+      key: order.razorpay_key_id,
+      amount: order.amount,
+      currency: order.currency || 'INR',
+      name: 'FRIDAY AI',
+      description: order.plan_label || 'FRIDAY Premium Subscription',
+      order_id: order.order_id,
+      prefill: {
+        email: user.email || '',
+        name:  user.displayName || '',
+      },
+      theme: { color: '#FF3038' },
+      handler: async function(response) {
+        await handlePaymentSuccess(response, planId);
+      },
+      modal: {
+        ondismiss: function() {
+          showToast('Payment cancelled by user.', 'info');
+        }
+      }
+    };
+    const rzp = new Razorpay(options);
+    rzp.on('payment.failed', function(resp) {
+      const reason = resp.error?.description || resp.error?.reason || 'Transaction declined';
+      showToast('Payment failed: ' + reason, 'error');
+    });
+    rzp.open();
+  }
+
+  async function handlePaymentSuccess(rzpResponse, planId) {
+    showToast('Verifying payment signature…', 'info');
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch(`${BACKEND_URL_SUB}/api/verify-payment`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          plan_id:              planId,
+          razorpay_order_id:   rzpResponse.razorpay_order_id,
+          razorpay_payment_id: rzpResponse.razorpay_payment_id,
+          razorpay_signature:  rzpResponse.razorpay_signature,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.detail || 'Verification failed');
+
+      showToast(result.message || '🎉 Subscription activated!', 'success');
+      // Refresh subscription status & UI
+      await fetchSubscriptionStatus();
+      loadAvailableModels();
+    } catch (err) {
+      showToast('Payment verified by Razorpay but backend error: ' + err.message, 'error');
+    }
+  }
+
+  // Close pricing modal on backdrop click
+  document.getElementById('pricing-modal')?.addEventListener('click', function(e) {
+    if (e.target === this) hidePricingModal();
+  });
+
+  // ─── Init ────────────────────────────────────────────────────────────────
+  renderModelDropdown();
+  loadAvailableModels();
+  updateWelcomeGreeting();
+  chatInput.focus();
+</script>
+
+
+</body></html>

@@ -1,0 +1,22 @@
+# Secrets
+.env
+backend/.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Backups & Temporary files
+*.bak*
+*.bak
+.pytest_cache/
+
+# Database
+*.db
+*.sqlite3
+
+# Logs
+*.log
+
