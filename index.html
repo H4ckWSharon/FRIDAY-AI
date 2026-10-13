@@ -1,6 +1,6 @@
 <!DOCTYPE html><html class="dark" lang="en"><head>
 <meta charset="utf-8">
-<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" name="viewport">
 <title>FRIDAY AI — Offensive Security Assistant</title>
 <meta name="description" content="FRIDAY AI — Black Hat Offensive Security & Penetration Testing Neural Assistant with uncensored red-team intelligence.">
 <meta name="theme-color" content="#000000">
@@ -39,14 +39,27 @@
     };
   </script>
 <style>
-    html, body {
+    :root {
+      --app-height: 100dvh;
+    }
+    html {
       height: 100%;
-      height: 100dvh;
-      min-height: 100dvh;
+      height: -webkit-fill-available;
+      overflow: hidden;
+      background-color: #000000;
+    }
+    body {
+      height: 100%;
+      height: var(--app-height, 100dvh);
+      max-height: var(--app-height, 100dvh);
+      min-height: -webkit-fill-available;
       background-color: #000000;
       color: #F5F5F5;
       font-family: 'Inter', sans-serif;
       overscroll-behavior: none;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
     }
     .touch-scroll {
       -webkit-overflow-scrolling: touch;
@@ -308,7 +321,7 @@
     }
   </style>
 </head>
-<body class="bg-black text-[#F5F5F5] antialiased flex h-screen h-[100dvh] min-h-[100dvh] w-screen overflow-hidden selection:bg-[#FF3038]/30 selection:text-white">
+<body class="bg-black text-[#F5F5F5] antialiased flex w-full overflow-hidden selection:bg-[#FF3038]/30 selection:text-white" style="height: var(--app-height, 100dvh); max-height: var(--app-height, 100dvh);">
 <!-- Mobile Overlay Backdrop -->
 <div class="fixed inset-0 bg-black/75 backdrop-blur-sm z-40 hidden md:hidden transition-opacity duration-200" id="mobile-backdrop"></div>
 <!-- STREAMLINED LEFT SIDEBAR (Collapsible on Desktop, Drawer on Mobile) -->
@@ -387,7 +400,7 @@
 </div>
 </aside>
 <!-- MAIN CHAT INTERFACE & WORKSPACE -->
-<main class="flex-1 flex flex-col h-full h-[100dvh] bg-[#000000] relative overflow-hidden min-w-0">
+<main class="flex-1 flex flex-col h-full min-h-0 bg-[#000000] relative overflow-hidden min-w-0">
 <!-- Top Minimalist Bar -->
 <header class="h-14 sm:h-16 border-b border-[#202024] px-2.5 sm:px-4 md:px-6 flex items-center justify-between bg-black/95 backdrop-blur-md z-30 shrink-0">
 <div class="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
@@ -435,22 +448,22 @@
 </div>
 </header>
 <!-- CONTENT SCROLLER: Switches between Welcome State & Active Conversation -->
-<div class="flex-1 overflow-y-auto px-2.5 sm:px-6 md:px-8 py-3 sm:py-6 flex flex-col items-center touch-scroll" id="chat-scroller">
+<div class="flex-1 min-h-0 overflow-y-auto px-2.5 sm:px-6 md:px-8 py-2 sm:py-6 flex flex-col items-center touch-scroll" id="chat-scroller">
 <!-- 1. WELCOME STATE (Centered, clean, uncluttered, responsive) -->
-<div class="w-full max-w-3xl my-auto flex flex-col items-center text-center py-4 sm:py-8" id="welcome-view">
+<div class="w-full max-w-3xl my-auto flex flex-col items-center text-center py-2 sm:py-8" id="welcome-view">
 <!-- Mandated Prominent Circular Friday Emblem -->
-<div class="mb-3.5 sm:mb-6 relative">
-<div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-[#FF3038]/50 bg-[#121316] p-2 sm:p-2.5 flex items-center justify-center shadow-[0_0_24px_rgba(255,48,56,0.25)] ring-1 ring-white/5">
+<div class="mb-2 sm:mb-6 relative">
+<div class="w-14 h-14 sm:w-20 sm:h-20 rounded-full border border-[#FF3038]/50 bg-[#121316] p-1.5 sm:p-2.5 flex items-center justify-center shadow-[0_0_24px_rgba(255,48,56,0.25)] ring-1 ring-white/5">
 <img alt="FRIDAY AI Core" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCNBz6ZPzEYnRbyZKIWs1lmpQ9spNBrQxHsAKxPIloyM0IEQP66f0sRweeC9kpuqnImI9AotIPdWiOlRvZuBN2jEwnGaKndZi1wzpOywkgXbJ7746rgWp3HMxELQbtpDhT9b0zb9VF71lKGwToF6hi0qW2QXGv8zAKbianbwW0QqVsOUpBVy0fmbSvOBLFqXx13fsQo7tVDS57_KneCmyqb3Gc80CazncBf6dMpsnliMdTleRl8E5K6ZPloz2vA6DSyQ">
 </div>
 <div class="absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full bg-[#FF3038] text-[8px] sm:text-[9px] font-mono font-bold text-white uppercase tracking-wider">
             AI
           </div>
 </div>
-<h1 class="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-[#F5F5F5] font-heading px-2 leading-tight" id="welcome-heading">
+<h1 class="text-xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-[#F5F5F5] font-heading px-2 leading-tight" id="welcome-heading">
           What's on your mind today?
         </h1>
-<p class="text-xs sm:text-sm text-[#71717A] mt-1.5 sm:mt-2 max-w-md font-mono px-2">
+<p class="text-[11px] sm:text-sm text-[#71717A] mt-1 sm:mt-2 max-w-md font-mono px-2">
           Offensive Security &amp; Pentesting Assistant
         </p>
 
@@ -492,41 +505,41 @@
 </div>
 </div>
 <!-- CHAT MESSAGE COMPOSER -->
-<div class="w-full px-2.5 sm:px-4 md:px-8 pb-3 sm:pb-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 bg-gradient-to-t from-black via-black/95 to-transparent z-20 shrink-0 relative">
-<div class="max-w-3xl sm:max-w-4xl mx-auto flex flex-col gap-1.5 relative">
+<div class="w-full px-2 sm:px-4 md:px-8 pb-2 sm:pb-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 bg-gradient-to-t from-black via-black/95 to-transparent z-20 shrink-0 relative">
+<div class="max-w-3xl sm:max-w-4xl mx-auto flex flex-col gap-1 sm:gap-1.5 relative">
 <!-- Floating Scroll to Bottom Button -->
-<button id="scroll-bottom-btn" type="button" onclick="handleScrollToBottomClick()" class="absolute -top-12 right-2 sm:right-4 z-30 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#16161b] hover:bg-[#202028] border border-[#2e2e38] text-[#A1A1AA] hover:text-white shadow-[0_4px_20px_rgba(0,0,0,0.7)] backdrop-blur-md flex items-center justify-center transition-all duration-200 opacity-0 pointer-events-none active:scale-95 cursor-pointer group" title="Scroll to latest message">
-  <span class="material-symbols-outlined text-[18px] group-hover:translate-y-0.5 transition-transform text-[#FF3038]">arrow_downward</span>
+<button id="scroll-bottom-btn" type="button" onclick="handleScrollToBottomClick()" class="absolute -top-11 right-2 sm:right-4 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#16161b] hover:bg-[#202028] border border-[#2e2e38] text-[#A1A1AA] hover:text-white shadow-[0_4px_20px_rgba(0,0,0,0.7)] backdrop-blur-md flex items-center justify-center transition-all duration-200 opacity-0 pointer-events-none active:scale-95 cursor-pointer group" title="Scroll to latest message">
+  <span class="material-symbols-outlined text-[17px] sm:text-[18px] group-hover:translate-y-0.5 transition-transform text-[#FF3038]">arrow_downward</span>
 </button>
-<div class="bg-[#141417] rounded-2xl border border-[#27272a] focus-within:border-[#FF3038]/60 focus-within:shadow-[0_0_20px_rgba(255,48,56,0.18)] transition-all shadow-xl p-2.5 sm:p-3 flex flex-col gap-2">
+<div class="bg-[#141417] rounded-2xl border border-[#27272a] focus-within:border-[#FF3038]/60 focus-within:shadow-[0_0_20px_rgba(255,48,56,0.18)] transition-all shadow-xl p-2 sm:p-3 flex flex-col gap-1.5 sm:gap-2">
 <!-- Textarea (Auto-expanding, text-[16px] on mobile prevents iOS zoom, sm:text-sm) -->
-<textarea class="w-full bg-transparent text-[#F5F5F5] placeholder-[#71717A] text-[16px] sm:text-sm resize-none outline-none border-none p-1 sm:p-1.5 focus:ring-0 leading-relaxed font-sans min-h-[40px] max-h-[140px] sm:max-h-[160px]" id="chat-input" onkeydown="handleKeyDown(event)" placeholder="Ask FRIDAY anything..." rows="1"></textarea>
+<textarea class="w-full bg-transparent text-[#F5F5F5] placeholder-[#71717A] text-[15px] sm:text-sm resize-none outline-none border-none p-1 sm:p-1.5 focus:ring-0 leading-relaxed font-sans min-h-[36px] sm:min-h-[40px] max-h-[120px] sm:max-h-[160px]" id="chat-input" onkeydown="handleKeyDown(event)" placeholder="Ask FRIDAY anything..." rows="1"></textarea>
 <!-- Action Bar Inside Composer -->
 <div class="flex items-center justify-between pt-0.5">
 <!-- Left Controls: Attachment -->
 <div class="flex items-center gap-1.5">
-<button type="button" class="w-9 h-9 rounded-xl bg-[#1b1b22] hover:bg-[#252530] border border-[#2a2a34] text-[#A1A1AA] hover:text-[#F5F5F5] transition-all flex items-center justify-center active:scale-95 cursor-pointer shadow-sm" title="Attach Payload, PCAP or Code">
-<span class="material-symbols-outlined text-[18px]">add</span>
+<button type="button" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#1b1b22] hover:bg-[#252530] border border-[#2a2a34] text-[#A1A1AA] hover:text-[#F5F5F5] transition-all flex items-center justify-center active:scale-95 cursor-pointer shadow-sm" title="Attach Payload, PCAP or Code">
+<span class="material-symbols-outlined text-[17px] sm:text-[18px]">add</span>
 </button>
 </div>
 <!-- Right Controls: Voice & Stop / Send button -->
-<div class="flex items-center gap-2">
-<button type="button" class="w-9 h-9 rounded-xl bg-[#1b1b22] hover:bg-[#252530] border border-[#2a2a34] text-[#A1A1AA] hover:text-[#F5F5F5] transition-all flex items-center justify-center active:scale-95 cursor-pointer shadow-sm" title="Voice Comms">
-<span class="material-symbols-outlined text-[18px]">mic</span>
+<div class="flex items-center gap-1.5 sm:gap-2">
+<button type="button" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#1b1b22] hover:bg-[#252530] border border-[#2a2a34] text-[#A1A1AA] hover:text-[#F5F5F5] transition-all flex items-center justify-center active:scale-95 cursor-pointer shadow-sm" title="Voice Comms">
+<span class="material-symbols-outlined text-[17px] sm:text-[18px]">mic</span>
 </button>
 <!-- Send button (default) -->
-<button class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#FF3038] hover:bg-[#e02028] text-white flex items-center justify-center transition-all shadow-[0_0_14px_rgba(255,48,56,0.45)] active:scale-95 shrink-0 cursor-pointer" id="send-btn" onclick="sendMessage()" title="Send Message">
-<span class="material-symbols-outlined text-[18px]">arrow_upward</span>
+<button class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#FF3038] hover:bg-[#e02028] text-white flex items-center justify-center transition-all shadow-[0_0_14px_rgba(255,48,56,0.45)] active:scale-95 shrink-0 cursor-pointer" id="send-btn" onclick="sendMessage()" title="Send Message">
+<span class="material-symbols-outlined text-[17px] sm:text-[18px]">arrow_upward</span>
 </button>
 <!-- Stop button (shown while streaming) -->
-<button class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-[#FF3038] bg-[#FF3038]/15 text-[#FF3038] hidden items-center justify-center transition-all active:scale-95 shrink-0 cursor-pointer shadow-[0_0_14px_rgba(255,48,56,0.3)]" id="stop-btn" onclick="stopStreaming()" title="Stop Generation">
-<span class="material-symbols-outlined text-[18px]">stop</span>
+<button class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl border border-[#FF3038] bg-[#FF3038]/15 text-[#FF3038] hidden items-center justify-center transition-all active:scale-95 shrink-0 cursor-pointer shadow-[0_0_14px_rgba(255,48,56,0.3)]" id="stop-btn" onclick="stopStreaming()" title="Stop Generation">
+<span class="material-symbols-outlined text-[17px] sm:text-[18px]">stop</span>
 </button>
 </div>
 </div>
 </div>
 <!-- Privacy & Disclaimer Footnote -->
-<div class="text-center px-2">
+<div class="text-center px-2 pt-0.5 pb-0.5">
 <span class="text-[9px] sm:text-[10px] text-[#52525B] font-mono truncate block">
   FRIDAY can make mistakes. Verify critical exploit vectors &amp; code before deployment.
 </span>
@@ -902,6 +915,19 @@
 </div>
 <!-- Interactive JavaScript -->
 <script>
+  // ─── Dynamic Visual Viewport Height Manager (Fixes Mobile Address Bar & Virtual Keyboard) ─
+  function updateAppHeight() {
+    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', `${vh}px`);
+  }
+  updateAppHeight();
+  window.addEventListener('resize', updateAppHeight);
+  window.addEventListener('orientationchange', updateAppHeight);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateAppHeight);
+    window.visualViewport.addEventListener('scroll', updateAppHeight);
+  }
+
   // ─── DOM References ──────────────────────────────────────────────────────
   const sidebar          = document.getElementById('sidebar');
   const openSidebarBtn   = document.getElementById('open-sidebar-btn');
