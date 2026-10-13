@@ -256,6 +256,35 @@ async def test_create_order_rejects_sub_100_paise(temp_db):
 
 
 @pytest.mark.asyncio
+async def test_create_order_invalid_auth_returns_401(temp_db):
+    """POST /api/create-order returns HTTP 401 if provided Bearer token is invalid/expired."""
+    headers = {"Authorization": "Bearer invalid_expired_token"}
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        res = await ac.post(
+            "/api/create-order",
+            headers=headers,
+            json={"amount": 5000, "currency": "INR"},
+        )
+    assert res.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_create_order_razorpay_api_error_returns_500(temp_db):
+    """POST /api/create-order returns HTTP 500 if Razorpay client raises an unexpected error."""
+    mock_client = MagicMock()
+    mock_client.order.create.side_effect = Exception("Razorpay connection timeout")
+
+    with patch("services.subscription._get_razorpay_client", return_value=mock_client):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            res = await ac.post(
+                "/api/create-order",
+                json={"amount": 5000, "currency": "INR"},
+            )
+        assert res.status_code == 500
+        assert "failed to create razorpay order" in res.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
 async def test_verify_payment_signature_mismatch_returns_400(temp_db):
     """POST /api/verify-payment returns HTTP 400 if HMAC signature does not match."""
     headers = {"Authorization": "Bearer token-free-user"}

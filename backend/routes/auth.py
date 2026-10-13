@@ -48,18 +48,34 @@ def get_current_user_optional(authorization: Optional[str] = Header(None)) -> Op
     """
     Extract authenticated operator from Authorization: Bearer <Firebase ID Token>.
     Returns user dict with 'id' equal to Firebase UID, or None if unauthenticated.
+    Raises HTTP 401 if an invalid or expired token is provided.
     Uses in-memory cache to eliminate cloud DB queries on repeat requests.
     """
-    if not isinstance(authorization, str) or not authorization.startswith("Bearer "):
+    if authorization is None:
         return None
+
+    if not isinstance(authorization, str) or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authorization scheme. Bearer token required.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     token = authorization[7:].strip()
     if not token:
-        return None
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Empty authorization token provided.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     verified = verify_firebase_token(token)
     if not verified or not verified.get("uid"):
-        return None
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired authentication token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     uid = verified["uid"]
     now_ts = time.time()
