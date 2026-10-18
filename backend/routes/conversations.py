@@ -21,6 +21,7 @@ from services.db import (
     update_conversation_title,
     delete_conversation,
     get_messages,
+    replace_conversation_messages,
 )
 
 logger = logging.getLogger(__name__)
@@ -36,6 +37,15 @@ class ConversationCreate(BaseModel):
 
 class ConversationRename(BaseModel):
     title: str = Field(..., min_length=1, max_length=120)
+
+
+class MessageItem(BaseModel):
+    role: str = Field(..., pattern="^(user|assistant|system)$")
+    content: str
+
+
+class MessagesReplaceRequest(BaseModel):
+    messages: list[MessageItem]
 
 
 def _get_conversation_with_messages_sync(conv_id: str, user_id: str | None) -> dict | None:
@@ -91,4 +101,30 @@ async def delete_conv(conv_id: str, user: dict = Depends(get_current_user)):
     deleted = await asyncio.to_thread(delete_conversation, conv_id, user_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Conversation not found.")
+
+
+@router.put("/{conv_id}/messages")
+async def replace_messages(
+    conv_id: str,
+    body: MessagesReplaceRequest,
+    user: dict = Depends(get_current_user),
+):
+    """
+    Replace all messages in a conversation (used when editing a user message and re-branching).
+    Scoped to the authenticated operator.
+    """
+    user_id = user["id"] if isinstance(user, dict) else None
+    message_dicts = [
+        m.model_dump() if hasattr(m, "model_dump") else m.dict()
+        for m in body.messages
+    ]
+    success = await asyncio.to_thread(
+        replace_conversation_messages,
+        conv_id,
+        message_dicts,
+        user_id,
+    )
+    if not success:
+        raise HTTPException(status_code=404, detail="Conversation not found.")
+    return {"status": "ok", "count": len(message_dicts)}
 

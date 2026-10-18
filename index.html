@@ -1810,15 +1810,261 @@
     const user = auth.currentUser || currentFirebaseUser;
     const initials = getUserInitials(user);
     const div = document.createElement('div');
-    div.className = 'flex gap-2.5 sm:gap-4 items-start justify-end w-full min-w-0';
+    div.className = 'chat-message-row user-message-row group flex gap-2.5 sm:gap-4 items-start justify-end w-full min-w-0';
+    div.dataset.role = 'user';
+    div.dataset.rawText = text;
     div.innerHTML = `
-      <div class="flex flex-col items-end max-w-[88%] sm:max-w-xl min-w-0">
-        <div class="p-3 sm:p-4 rounded-2xl rounded-tr-sm bg-[#1e1e22] border border-[#292929] text-xs sm:text-sm text-[#F5F5F5] leading-relaxed shadow-sm whitespace-pre-wrap break-words w-full">${escapeHtml(text)}</div>
-        <span class="text-[10px] font-mono text-[#71717A] mt-1 mr-1">${time}</span>
+      <div class="user-msg-col flex flex-col items-end w-full max-w-[88%] sm:max-w-xl min-w-0">
+        <div class="user-msg-content-container p-3 sm:p-4 rounded-2xl rounded-tr-sm bg-[#1e1e22] border border-[#292929] text-xs sm:text-sm text-[#F5F5F5] leading-relaxed shadow-sm whitespace-pre-wrap break-words w-full">
+          <div class="user-msg-text">${escapeHtml(text)}</div>
+        </div>
+        <div class="user-msg-actions flex items-center gap-1 mt-1 mr-1 text-[#71717A]">
+          <button class="user-copy-btn px-1.5 py-0.5 hover:text-[#F5F5F5] transition-colors rounded hover:bg-[#1a1a1a] active:scale-95 flex items-center gap-1 text-[10px] font-mono opacity-80 sm:opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity" title="Copy message">
+            <span class="material-symbols-outlined text-[13px]">content_copy</span>
+            <span class="hidden xs:inline">Copy</span>
+          </button>
+          <button class="user-edit-btn px-1.5 py-0.5 hover:text-[#FF3038] transition-colors rounded hover:bg-[#1a1a1a] active:scale-95 flex items-center gap-1 text-[10px] font-mono opacity-80 sm:opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity" title="Edit message">
+            <span class="material-symbols-outlined text-[13px]">edit</span>
+            <span class="hidden xs:inline">Edit</span>
+          </button>
+          <span class="text-[10px] font-mono text-[#71717A] ml-1">${time}</span>
+        </div>
       </div>
       <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1c1c1f] border border-[#292929] flex items-center justify-center text-[10px] sm:text-xs font-mono font-bold text-[#FF3038] shrink-0" title="${escapeHtml(user ? (user.displayName || user.email || 'User') : 'User')}">${escapeHtml(initials)}</div>
     `;
+    attachUserMessageListeners(div);
     conversationView.appendChild(div);
+    return div;
+  }
+
+  // ─── User Message Event Handlers (Copy, Edit) ───────────────────────────
+  function attachUserMessageListeners(userRow) {
+    const copyBtn = userRow.querySelector('.user-copy-btn');
+    copyBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const raw = userRow.dataset.rawText || userRow.querySelector('.user-msg-text')?.innerText || '';
+      if (!raw.trim()) return;
+      navigator.clipboard.writeText(raw).then(() => {
+        showToast('Message copied to clipboard', 'success');
+        const icon = copyBtn.querySelector('.material-symbols-outlined');
+        if (icon) {
+          const orig = icon.textContent;
+          icon.textContent = 'check';
+          copyBtn.classList.add('text-emerald-400');
+          setTimeout(() => {
+            icon.textContent = orig;
+            copyBtn.classList.remove('text-emerald-400');
+          }, 1500);
+        }
+      }).catch(() => {
+        showToast('Failed to copy message', 'info');
+      });
+    });
+
+    const editBtn = userRow.querySelector('.user-edit-btn');
+    editBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      startUserMessageEdit(userRow);
+    });
+  }
+
+  function startUserMessageEdit(userRow) {
+    if (isStreaming) {
+      showToast('Please wait for current response to complete before editing', 'info');
+      return;
+    }
+    // Cancel any other currently open inline edits
+    const activeEdit = conversationView.querySelector('.user-edit-container');
+    if (activeEdit) {
+      const activeRow = activeEdit.closest('.user-message-row');
+      if (activeRow) cancelUserMessageEdit(activeRow);
+    }
+
+    const contentContainer = userRow.querySelector('.user-msg-content-container');
+    const actionsBar = userRow.querySelector('.user-msg-actions');
+    const col = userRow.querySelector('.user-msg-col');
+    if (!contentContainer || !actionsBar || !col) return;
+
+    const currentText = userRow.dataset.rawText || userRow.querySelector('.user-msg-text')?.innerText || '';
+
+    contentContainer.classList.add('hidden');
+    actionsBar.classList.add('hidden');
+
+    const editContainer = document.createElement('div');
+    editContainer.className = 'user-edit-container flex flex-col gap-2 w-full animate-fadeIn';
+    editContainer.innerHTML = `
+      <textarea class="user-edit-textarea w-full p-3 sm:p-3.5 rounded-xl bg-[#121214] border border-[#FF3038]/60 focus:border-[#FF3038] focus:ring-1 focus:ring-[#FF3038] text-xs sm:text-sm text-[#F5F5F5] leading-relaxed resize-y outline-none font-sans" rows="3"></textarea>
+      <div class="flex items-center justify-between gap-2 w-full flex-wrap">
+        <span class="text-[10px] text-[#71717A] font-mono hidden xs:inline">Enter to save • Esc to cancel • Shift+Enter for newline</span>
+        <div class="flex items-center gap-2 ml-auto">
+          <button class="user-edit-cancel-btn px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-[#18181b] hover:bg-[#222226] border border-[#2e2e33] text-[11px] sm:text-xs text-[#D4D4D8] hover:text-white transition-all active:scale-95 font-mono">
+            Cancel
+          </button>
+          <button class="user-edit-save-btn px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-lg bg-[#FF3038] hover:bg-[#ff474e] text-white text-[11px] sm:text-xs font-semibold shadow-[0_0_12px_rgba(255,48,56,0.35)] transition-all active:scale-95 flex items-center gap-1 font-mono">
+            <span class="material-symbols-outlined text-[14px]">send</span>
+            <span>Save & Submit</span>
+          </button>
+        </div>
+      </div>
+    `;
+    col.appendChild(editContainer);
+
+    const textarea = editContainer.querySelector('.user-edit-textarea');
+    textarea.value = currentText;
+
+    const autoResizeEdit = () => {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.max(72, textarea.scrollHeight) + 'px';
+    };
+    textarea.addEventListener('input', autoResizeEdit);
+    setTimeout(autoResizeEdit, 0);
+
+    textarea.focus();
+    textarea.setSelectionRange(currentText.length, currentText.length);
+
+    const cancelBtn = editContainer.querySelector('.user-edit-cancel-btn');
+    cancelBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      cancelUserMessageEdit(userRow);
+    });
+
+    const saveBtn = editContainer.querySelector('.user-edit-save-btn');
+    saveBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      executeUserMessageEdit(userRow, textarea.value.trim());
+    });
+
+    textarea.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        cancelUserMessageEdit(userRow);
+      } else if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        executeUserMessageEdit(userRow, textarea.value.trim());
+      }
+    });
+  }
+
+  function cancelUserMessageEdit(userRow) {
+    const editContainer = userRow.querySelector('.user-edit-container');
+    if (editContainer) editContainer.remove();
+    const contentContainer = userRow.querySelector('.user-msg-content-container');
+    const actionsBar = userRow.querySelector('.user-msg-actions');
+    if (contentContainer) contentContainer.classList.remove('hidden');
+    if (actionsBar) actionsBar.classList.remove('hidden');
+  }
+
+  async function executeUserMessageEdit(userRow, newText) {
+    if (!newText) {
+      showToast('Message cannot be empty', 'info');
+      return;
+    }
+    if (isStreaming) {
+      showToast('Please wait for current response to complete', 'info');
+      return;
+    }
+
+    const oldText = userRow.dataset.rawText || userRow.querySelector('.user-msg-text')?.innerText || '';
+    if (newText === oldText) {
+      cancelUserMessageEdit(userRow);
+      return;
+    }
+
+    const allRows = Array.from(conversationView.querySelectorAll('.chat-message-row'));
+    const rowIndex = allRows.indexOf(userRow);
+    if (rowIndex === -1) {
+      cancelUserMessageEdit(userRow);
+      return;
+    }
+
+    cancelUserMessageEdit(userRow);
+
+    // Update current user message DOM text and rawText attribute
+    userRow.dataset.rawText = newText;
+    const textDiv = userRow.querySelector('.user-msg-text');
+    if (textDiv) textDiv.textContent = newText;
+
+    // Remove all downstream DOM nodes after this user message row
+    let nextSibling = userRow.nextElementSibling;
+    while (nextSibling) {
+      const toRemove = nextSibling;
+      nextSibling = nextSibling.nextElementSibling;
+      toRemove.remove();
+    }
+
+    // Truncate conversationHistory and replace the target user prompt
+    conversationHistory = conversationHistory.slice(0, rowIndex);
+    conversationHistory.push({ role: 'user', content: newText });
+
+    // Sync memory cache
+    if (currentConversationId) {
+      convMessagesCache.set(currentConversationId, {
+        id: currentConversationId,
+        messages: [...conversationHistory],
+        selectedModel: currentSelectedModel,
+      });
+    }
+
+    // Persist replacement to backend DB for authenticated user
+    const user = auth.currentUser || currentFirebaseUser;
+    if (user && currentConversationId) {
+      getAuthHeaders().then(headers => {
+        fetch(`${BACKEND_URL}/api/conversations/${encodeURIComponent(currentConversationId)}/messages`, {
+          method: 'PUT',
+          headers: headers,
+          body: JSON.stringify({
+            messages: conversationHistory.map(m => ({ role: m.role, content: m.content }))
+          }),
+        }).catch(err => {
+          console.warn('Failed to sync edited messages to backend:', err);
+        });
+      });
+    }
+
+    // Count towards quota if on free tier
+    if (subscriptionStatus && !subscriptionStatus.is_unlimited) {
+      subscriptionStatus.daily_used = (subscriptionStatus.daily_used || 0) + 1;
+      if (subscriptionStatus.chats_remaining !== null && subscriptionStatus.chats_remaining !== undefined) {
+        subscriptionStatus.chats_remaining = Math.max(0, subscriptionStatus.chats_remaining - 1);
+      }
+      updateSubBadge(subscriptionStatus);
+    }
+
+    // Stream fresh assistant response for the updated prompt
+    userScrolledUp = false;
+    updateScrollBottomBtn(false);
+    const typingEl = renderTypingIndicator();
+    scrollToBottom(true);
+    setInputEnabled(false);
+    isStreaming = true;
+
+    try {
+      const assistantEl = await streamAssistantResponse(typingEl);
+      const fullText = assistantEl.dataset.rawText || '';
+      if (fullText) {
+        conversationHistory.push({ role: 'assistant', content: fullText });
+      }
+      if (currentConversationId) {
+        convMessagesCache.set(currentConversationId, {
+          id: currentConversationId,
+          messages: [...conversationHistory],
+          selectedModel: currentSelectedModel,
+        });
+      }
+      loadSidebarHistory();
+    } catch (err) {
+      if (typingEl.isConnected) typingEl.remove();
+      if (err.name !== 'AbortError' && !err.message?.includes('cancel')) {
+        renderErrorMessage(err.message || 'Something went wrong.');
+      }
+    } finally {
+      isStreaming = false;
+      activeReader = null;
+      setInputEnabled(true);
+      chatInput.focus({ preventScroll: true });
+      scrollToBottom(false);
+      fetchSubscriptionStatus();
+    }
   }
 
   // ─── Render: Typing Indicator (Thinking Orb) ────────────────────────────
@@ -1997,7 +2243,8 @@
   function createAssistantBubble() {
     const time = formatTime(new Date());
     const div = document.createElement('div');
-    div.className = 'assistant-message-row flex gap-2.5 sm:gap-4 items-start w-full min-w-0';
+    div.className = 'chat-message-row assistant-message-row flex gap-2.5 sm:gap-4 items-start w-full min-w-0';
+    div.dataset.role = 'assistant';
     div.innerHTML = `
       <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[#FF3038]/50 bg-[#121316] p-1 flex items-center justify-center shadow-[0_0_12px_rgba(255,48,56,0.3)] shrink-0">
         <img alt="FRIDAY AI" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcrt12zOQcu1F3t5EOzwK-rp1yIcJrvdOkVmBiOwevjii1-OjUzmyYh_FzsUdOuj5KX4SMPjW5eGF2UrVtixvPJMxUqjnUncXZI6Q4Qzue6eShB1fxdx8tEIfvF7qPyedJ5n0Zs4jsM9AoIvYdPA6EURCrdVjcWBBjqf0aZlrXGSWf030Aa1-vCTBTZ1bqFN1nP5HIFi96xXLH0DfCXVFS8wgFjvjKdkBfS2tXJs0PUEREhvDw4fiB27Rd-Iwl2H1VdA">

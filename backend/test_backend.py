@@ -279,6 +279,29 @@ class TestDatabase:
         assert len(msgs_c1) == 1
         assert len(msgs_c2) == 0
 
+    def test_replace_conversation_messages(self, temp_db):
+        conv = temp_db.create_conversation()
+        temp_db.append_message(conv["id"], "user", "original msg 1")
+        temp_db.append_message(conv["id"], "assistant", "original reply 1")
+        temp_db.append_message(conv["id"], "user", "original msg 2")
+        temp_db.append_message(conv["id"], "assistant", "original reply 2")
+
+        new_messages = [
+            {"role": "user", "content": "edited msg 1"},
+            {"role": "assistant", "content": "new reply 1"},
+        ]
+        ok = temp_db.replace_conversation_messages(conv["id"], new_messages)
+        assert ok is True
+
+        msgs = temp_db.get_messages(conv["id"])
+        assert len(msgs) == 2
+        assert msgs[0]["content"] == "edited msg 1"
+        assert msgs[1]["content"] == "new reply 1"
+
+    def test_replace_conversation_messages_nonexistent(self, temp_db):
+        ok = temp_db.replace_conversation_messages("nonexistent-conv-id", [{"role": "user", "content": "test"}])
+        assert ok is False
+
 
 # ─── B. Integration Tests (require running backend) ───────────────────────────
 

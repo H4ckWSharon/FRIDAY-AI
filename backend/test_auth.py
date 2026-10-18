@@ -259,3 +259,70 @@ async def test_dev_token_rejected_in_production(monkeypatch):
             headers={"Authorization": "Bearer dev-token:bad-uid:bad@mail.com:Bad User"},
         )
         assert res.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_replace_conversation_messages_endpoint(temp_db):
+    """Verify PUT /api/conversations/{conv_id}/messages security & replacement."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        # 1. Unauthenticated request -> 401
+        res = await ac.put(
+            "/api/conversations/test-conv/messages",
+            json={"messages": [{"role": "user", "content": "hello"}]},
+        )
+        assert res.status_code == 401
+
+        # 2. Operator Alpha creates a session
+        create_res = await ac.post(
+            "/api/conversations",
+            json={"id": "conv-alpha-edit", "title": "Alpha Session"},
+            headers={"Authorization": "Bearer valid-token-alpha"},
+        )
+        assert create_res.status_code == 201
+
+        # Append messages to Alpha's session
+        temp_db.append_message("conv-alpha-edit", "user", "original prompt 1")
+        temp_db.append_message("conv-alpha-edit", "assistant", "original reply 1")
+        temp_db.append_message("conv-alpha-edit", "user", "original prompt 2")
+
+        # 3. Operator Beta attempts to edit Alpha's session -> 404
+        beta_edit = await ac.put(
+            "/api/conversations/conv-alpha-edit/messages",
+            json={"messages": [{"role": "user", "content": "hijacked prompt"}]},
+            headers={"Authorization": "Bearer valid-token-beta"},
+        )
+        assert beta_edit.status_code == 404
+
+        # 4. Operator Alpha submits invalid role -> 422
+        invalid_role = await ac.put(
+            "/api/conversations/conv-alpha-edit/messages",
+            json={"messages": [{"role": "invalid_role", "content": "bad"}]},
+            headers={"Authorization": "Bearer valid-token-alpha"},
+        )
+        assert invalid_role.status_code == 422
+
+        # 5. Operator Alpha replaces messages -> 200 and messages updated
+        alpha_edit = await ac.put(
+            "/api/conversations/conv-alpha-edit/messages",
+            json={
+                "messages": [
+                    {"role": "user", "content": "edited prompt 1"},
+                    {"role": "assistant", "content": "new reply 1"},
+                ]
+            },
+            headers={"Authorization": "Bearer valid-token-alpha"},
+        )
+        assert alpha_edit.status_code == 200
+        assert alpha_edit.json()["count"] == 2
+
+        # 6. Verify via GET that session messages reflect replacement
+        get_res = await ac.get(
+            "/api/conversations/conv-alpha-edit",
+            headers={"Authorization": "Bearer valid-token-alpha"},
+        )
+        assert get_res.status_code == 200
+        data = get_res.json()
+        assert len(data["messages"]) == 2
+        assert data["messages"][0]["content"] == "edited prompt 1"
+        assert data["messages"][1]["content"] == "new reply 1"

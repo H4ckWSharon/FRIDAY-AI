@@ -658,6 +658,46 @@ def set_conversation_title_from_first_message(conv_id: str, first_content: str) 
         )
 
 
+def replace_conversation_messages(
+    conv_id: str,
+    messages: list[dict],
+    user_id: str | None = None,
+) -> bool:
+    """
+    Replace all messages of a conversation with a new list of messages.
+    Used when editing a message and re-branching.
+    Verifies ownership if user_id is provided.
+    """
+    now = _now()
+    with get_db() as conn:
+        if user_id:
+            row = conn.execute(
+                "SELECT id FROM conversations WHERE id = ? AND user_id = ?",
+                (conv_id, user_id),
+            ).fetchone()
+            if not row:
+                return False
+        else:
+            row = conn.execute(
+                "SELECT id FROM conversations WHERE id = ?",
+                (conv_id,),
+            ).fetchone()
+            if not row:
+                return False
+
+        conn.execute("DELETE FROM messages WHERE conv_id = ?", (conv_id,))
+        for msg in messages:
+            conn.execute(
+                "INSERT INTO messages (conv_id, role, content, created_at) VALUES (?, ?, ?, ?)",
+                (conv_id, msg["role"], msg["content"], now),
+            )
+        conn.execute(
+            "UPDATE conversations SET updated_at = ? WHERE id = ?",
+            (now, conv_id),
+        )
+    return True
+
+
 # ─── Subscription CRUD ────────────────────────────────────────────────────────
 
 def get_active_subscription(user_id: str) -> Optional[dict]:
