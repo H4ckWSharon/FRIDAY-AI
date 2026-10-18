@@ -69,8 +69,9 @@
       overflow-anchor: none;
     }
     #chat-input {
-      min-height: 38px;
+      min-height: 26px;
       max-height: 160px;
+      line-height: 1.5;
     }
     .prompt-card {
       background: #121214;
@@ -511,28 +512,28 @@
 <button id="scroll-bottom-btn" type="button" onclick="handleScrollToBottomClick()" class="absolute -top-11 right-2 sm:right-4 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#16161b] hover:bg-[#202028] border border-[#2e2e38] text-[#A1A1AA] hover:text-white shadow-[0_4px_20px_rgba(0,0,0,0.7)] backdrop-blur-md flex items-center justify-center transition-all duration-200 opacity-0 pointer-events-none active:scale-95 cursor-pointer group" title="Scroll to latest message">
   <span class="material-symbols-outlined text-[17px] sm:text-[18px] group-hover:translate-y-0.5 transition-transform text-[#FF3038]">arrow_downward</span>
 </button>
-<div class="bg-[#141417] rounded-2xl border border-[#27272a] focus-within:border-[#FF3038]/60 focus-within:shadow-[0_0_20px_rgba(255,48,56,0.18)] transition-all shadow-xl p-2 sm:p-3 flex flex-col gap-1.5 sm:gap-2">
-<!-- Textarea (Auto-expanding, text-[16px] on mobile prevents iOS zoom, sm:text-sm) -->
-<textarea class="w-full bg-transparent text-[#F5F5F5] placeholder-[#71717A] text-[15px] sm:text-sm resize-none outline-none border-none p-1 sm:p-1.5 focus:ring-0 leading-relaxed font-sans min-h-[36px] sm:min-h-[40px] max-h-[120px] sm:max-h-[160px]" id="chat-input" onkeydown="handleKeyDown(event)" placeholder="Ask FRIDAY anything..." rows="1"></textarea>
+<div class="bg-[#121215]/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-[#25252c] focus-within:border-[#FF3038]/60 focus-within:shadow-[0_0_24px_rgba(255,48,56,0.18)] transition-all duration-200 shadow-[0_6px_28px_rgba(0,0,0,0.55)] p-2 sm:p-2.5 px-3 sm:px-4 flex flex-col gap-1 sm:gap-1.5">
+<!-- Textarea (Auto-expanding, text-[15px] on mobile prevents iOS zoom, sm:text-sm) -->
+<textarea class="w-full bg-transparent text-[#F5F5F5] placeholder-[#71717A] text-[15px] sm:text-sm resize-none outline-none border-none p-1 sm:p-1.5 focus:ring-0 leading-relaxed font-sans min-h-[26px] max-h-[160px]" id="chat-input" onkeydown="handleKeyDown(event)" placeholder="Ask FRIDAY anything..." rows="1"></textarea>
 <!-- Action Bar Inside Composer -->
-<div class="flex items-center justify-between pt-0.5">
+<div class="flex items-center justify-between pt-0.5 sm:pt-1">
 <!-- Left Controls: Attachment -->
 <div class="flex items-center gap-1.5">
-<button type="button" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#1b1b22] hover:bg-[#252530] border border-[#2a2a34] text-[#A1A1AA] hover:text-[#F5F5F5] transition-all flex items-center justify-center active:scale-95 cursor-pointer shadow-sm" title="Attach Payload, PCAP or Code">
+<button type="button" class="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-xl bg-[#18181e] hover:bg-[#22222a] border border-[#272730] text-[#9E9EA8] hover:text-[#F5F5F5] transition-all flex items-center justify-center active:scale-95 cursor-pointer shadow-sm" title="Attach Payload, PCAP or Code">
 <span class="material-symbols-outlined text-[17px] sm:text-[18px]">add</span>
 </button>
 </div>
 <!-- Right Controls: Voice & Stop / Send button -->
 <div class="flex items-center gap-1.5 sm:gap-2">
-<button type="button" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#1b1b22] hover:bg-[#252530] border border-[#2a2a34] text-[#A1A1AA] hover:text-[#F5F5F5] transition-all flex items-center justify-center active:scale-95 cursor-pointer shadow-sm" title="Voice Comms">
+<button type="button" class="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-xl bg-[#18181e] hover:bg-[#22222a] border border-[#272730] text-[#9E9EA8] hover:text-[#F5F5F5] transition-all flex items-center justify-center active:scale-95 cursor-pointer shadow-sm" title="Voice Comms">
 <span class="material-symbols-outlined text-[17px] sm:text-[18px]">mic</span>
 </button>
 <!-- Send button (default) -->
-<button class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#FF3038] hover:bg-[#e02028] text-white flex items-center justify-center transition-all shadow-[0_0_14px_rgba(255,48,56,0.45)] active:scale-95 shrink-0 cursor-pointer" id="send-btn" onclick="sendMessage()" title="Send Message">
+<button class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#222228] text-[#71717A] opacity-40 cursor-not-allowed flex items-center justify-center transition-all duration-200 active:scale-95 shrink-0" id="send-btn" onclick="sendMessage()" title="Send Message" disabled>
 <span class="material-symbols-outlined text-[17px] sm:text-[18px]">arrow_upward</span>
 </button>
 <!-- Stop button (shown while streaming) -->
-<button class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl border border-[#FF3038] bg-[#FF3038]/15 text-[#FF3038] hidden items-center justify-center transition-all active:scale-95 shrink-0 cursor-pointer shadow-[0_0_14px_rgba(255,48,56,0.3)]" id="stop-btn" onclick="stopStreaming()" title="Stop Generation">
+<button class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-[#FF3038] bg-[#FF3038]/15 text-[#FF3038] hidden items-center justify-center transition-all active:scale-95 shrink-0 cursor-pointer shadow-[0_0_14px_rgba(255,48,56,0.3)]" id="stop-btn" onclick="stopStreaming()" title="Stop Generation">
 <span class="material-symbols-outlined text-[17px] sm:text-[18px]">stop</span>
 </button>
 </div>
@@ -1535,11 +1536,28 @@
   }
   toggleDesktopSidebarBtn?.addEventListener('click', toggleDesktopSidebar);
 
+  // Dynamic Send Button States based on input presence
+  function updateSendButtonState() {
+    const sendButton = document.getElementById('send-btn');
+    if (!sendButton) return;
+    const hasText = !!chatInput.value.trim();
+    if (hasText && !isStreaming) {
+      sendButton.disabled = false;
+      sendButton.classList.remove('opacity-40', 'cursor-not-allowed', 'bg-[#222228]', 'text-[#71717A]');
+      sendButton.classList.add('opacity-100', 'cursor-pointer', 'bg-[#FF3038]', 'hover:bg-[#e02028]', 'text-white', 'shadow-[0_0_14px_rgba(255,48,56,0.45)]');
+    } else {
+      sendButton.disabled = true;
+      sendButton.classList.remove('opacity-100', 'cursor-pointer', 'bg-[#FF3038]', 'hover:bg-[#e02028]', 'text-white', 'shadow-[0_0_14px_rgba(255,48,56,0.45)]');
+      sendButton.classList.add('opacity-40', 'cursor-not-allowed', 'bg-[#222228]', 'text-[#71717A]');
+    }
+  }
+
   // Auto-resize chat input as user types
   function autoResizeInput() {
     chatInput.style.height = 'auto';
-    const newHeight = Math.min(Math.max(chatInput.scrollHeight, 38), 160);
+    const newHeight = Math.min(Math.max(chatInput.scrollHeight, 26), 160);
     chatInput.style.height = `${newHeight}px`;
+    updateSendButtonState();
   }
   chatInput.addEventListener('input', autoResizeInput);
 
@@ -1709,14 +1727,12 @@
   // ─── Send / Input State ──────────────────────────────────────────────────
   function setInputEnabled(enabled) {
     chatInput.disabled = !enabled;
-    sendBtn.disabled   = !enabled;
-    sendBtn.style.opacity = enabled ? '1' : '0.4';
-    sendBtn.style.cursor  = enabled ? 'pointer' : 'not-allowed';
     // Toggle send / stop button visibility
     if (enabled) {
       sendBtn.classList.remove('hidden');
       stopBtn.classList.add('hidden');
       stopBtn.classList.remove('flex');
+      updateSendButtonState();
     } else {
       sendBtn.classList.add('hidden');
       stopBtn.classList.remove('hidden');
@@ -1762,6 +1778,7 @@
     renderUserMessage(text);
     chatInput.value = '';
     chatInput.style.height = 'auto';
+    updateSendButtonState();
 
     // Instantly refresh remaining chats count in UI upon sending each chat
     if (subscriptionStatus && !subscriptionStatus.is_unlimited) {
@@ -1819,8 +1836,8 @@
     div.dataset.role = 'user';
     div.dataset.rawText = text;
     div.innerHTML = `
-      <div class="user-msg-col flex flex-col items-end w-full max-w-[88%] sm:max-w-xl min-w-0">
-        <div class="user-msg-content-container p-3 sm:p-4 rounded-2xl rounded-tr-sm bg-[#1e1e22] border border-[#292929] text-xs sm:text-sm text-[#F5F5F5] leading-relaxed shadow-sm whitespace-pre-wrap break-words w-full">
+      <div class="user-msg-col flex flex-col items-end max-w-[88%] sm:max-w-xl min-w-0">
+        <div class="user-msg-content-container w-fit max-w-full text-left inline-block p-3 sm:p-3.5 rounded-2xl rounded-tr-sm bg-[#1b1b20] border border-[#2c2c34] text-xs sm:text-sm text-[#F5F5F5] leading-relaxed shadow-sm whitespace-pre-wrap break-words">
           <div class="user-msg-text">${escapeHtml(text)}</div>
         </div>
         <div class="user-msg-actions flex items-center gap-1 mt-1 mr-1 text-[#71717A]">
@@ -1890,6 +1907,7 @@
     const col = userRow.querySelector('.user-msg-col');
     if (!contentContainer || !actionsBar || !col) return;
 
+    col.classList.add('w-full');
     const currentText = userRow.dataset.rawText || userRow.querySelector('.user-msg-text')?.innerText || '';
 
     contentContainer.classList.add('hidden');
@@ -1955,6 +1973,8 @@
   function cancelUserMessageEdit(userRow) {
     const editContainer = userRow.querySelector('.user-edit-container');
     if (editContainer) editContainer.remove();
+    const col = userRow.querySelector('.user-msg-col');
+    if (col) col.classList.remove('w-full');
     const contentContainer = userRow.querySelector('.user-msg-content-container');
     const actionsBar = userRow.querySelector('.user-msg-actions');
     if (contentContainer) contentContainer.classList.remove('hidden');
@@ -3549,6 +3569,7 @@
   renderModelDropdown();
   loadAvailableModels();
   updateWelcomeGreeting();
+  updateSendButtonState();
   chatInput.focus();
 </script>
 
