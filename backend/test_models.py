@@ -75,10 +75,10 @@ async def test_get_models_authenticated_returns_allowlist(temp_db):
     assert "default" in data
     model_ids = [m["id"] for m in data["models"]]
     assert "huihui_ai/baronllm-abliterated:latest" in model_ids
-    assert "hf.co/mradermacher/Huihui-Qwen3-Coder-30B-A3B-Instruct-abliterated-i1-GGUF:Q4_K_M" in model_ids
+    assert "hf.co/RavichandranJ/Dolphin3-Cyber-8B-GGUF:Q8_0" in model_ids
 
     # Check friendly branding
-    model_1 = next(m for m in data["models"] if m["id"] == "hf.co/mradermacher/Huihui-Qwen3-Coder-30B-A3B-Instruct-abliterated-i1-GGUF:Q4_K_M")
+    model_1 = next(m for m in data["models"] if m["id"] == "hf.co/RavichandranJ/Dolphin3-Cyber-8B-GGUF:Q8_0")
     assert model_1["name"] == "Friday v1 The Jr Hacker"
 
     model_2 = next(m for m in data["models"] if m["id"] == "huihui_ai/baronllm-abliterated:latest")
@@ -120,7 +120,7 @@ async def test_chat_with_default_model_attaches_system_prompt(temp_db):
 async def test_chat_model_1_jr_hacker_attaches_system_prompt(temp_db):
     """Model 1 (The Jr Hacker) connects with the chat.py BLACK_HAT_SYSTEM_PROMPT."""
     headers = {"Authorization": "Bearer valid-operator-token"}
-    target_model = "hf.co/mradermacher/Huihui-Qwen3-Coder-30B-A3B-Instruct-abliterated-i1-GGUF:Q4_K_M"
+    target_model = "hf.co/RavichandranJ/Dolphin3-Cyber-8B-GGUF:Q8_0"
     called_model = None
     called_messages = None
 
@@ -234,7 +234,7 @@ async def test_quick_route_unaffected_by_model(temp_db):
             headers=headers,
             json={
                 "messages": [{"role": "user", "content": "hi"}],
-                "model": "hf.co/mradermacher/Huihui-Qwen3-Coder-30B-A3B-Instruct-abliterated-i1-GGUF:Q4_K_M",
+                "model": "hf.co/RavichandranJ/Dolphin3-Cyber-8B-GGUF:Q8_0",
                 "stream": True,
             },
         )

@@ -44,7 +44,7 @@ FREE_DAILY_LIMIT = 5        # messages per day for free (both models)
 MODEL1_DAILY_LIMIT = 50    # messages per day for Jr Hacker subscribers
 
 # Model IDs from config (must match AVAILABLE_MODELS in config.py)
-MODEL_1_ID = "hf.co/mradermacher/Huihui-Qwen3-Coder-30B-A3B-Instruct-abliterated-i1-GGUF:Q4_K_M"
+MODEL_1_ID = "hf.co/RavichandranJ/Dolphin3-Cyber-8B-GGUF:Q8_0"
 MODEL_2_ID = "huihui_ai/baronllm-abliterated:latest"
 
 # ─── Plan Configuration ───────────────────────────────────────────────────────

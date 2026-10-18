@@ -437,7 +437,7 @@ def _prepare_messages(request: ChatRequest) -> tuple[list[dict], str]:
 
     # Only Model 1 (Friday v1 The Jr Hacker) connects with the chat.py prompt.
     # Model 2 (Friday v1 The Advanced Pentester / BaronLLM) runs raw without chat.py prompt.
-    is_model_1 = (model == settings.ollama_model or "Huihui-Qwen3-Coder" in model or "baronllm" not in model.lower())
+    is_model_1 = (model == settings.ollama_model or "Dolphin3-Cyber" in model or "Huihui-Qwen3-Coder" in model or "baronllm" not in model.lower())
 
     if is_model_1:
         messages = [{"role": "system", "content": BLACK_HAT_SYSTEM_PROMPT}]

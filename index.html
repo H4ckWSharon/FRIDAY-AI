@@ -1366,7 +1366,7 @@
   // ─── Multi-Model State ───────────────────────────────────────────────────
   const DEFAULT_MODELS_REGISTRY = [
     {
-      id: "hf.co/mradermacher/Huihui-Qwen3-Coder-30B-A3B-Instruct-abliterated-i1-GGUF:Q4_K_M",
+      id: "hf.co/RavichandranJ/Dolphin3-Cyber-8B-GGUF:Q8_0",
       name: "Friday v1 The Jr Hacker",
       description: "AI Junior Pentester & Security Mentor",
       tag: "Jr Hacker (Default)",
@@ -1382,7 +1382,12 @@
   ];
 
   let availableModels = [...DEFAULT_MODELS_REGISTRY];
-  let currentSelectedModel = localStorage.getItem('friday_selected_model') || DEFAULT_MODELS_REGISTRY[0].id;
+  let savedSelectedModel = localStorage.getItem('friday_selected_model');
+  if (savedSelectedModel && (savedSelectedModel.includes('Huihui-Qwen3-Coder') || savedSelectedModel.includes('mradermacher'))) {
+    savedSelectedModel = DEFAULT_MODELS_REGISTRY[0].id;
+    localStorage.setItem('friday_selected_model', savedSelectedModel);
+  }
+  let currentSelectedModel = savedSelectedModel || DEFAULT_MODELS_REGISTRY[0].id;
 
   function renderModelDropdown() {
     const listEl = document.getElementById('model-options-list');
@@ -1924,12 +1929,14 @@
 
     const cancelBtn = editContainer.querySelector('.user-edit-cancel-btn');
     cancelBtn.addEventListener('click', (e) => {
+      e.preventDefault();
       e.stopPropagation();
       cancelUserMessageEdit(userRow);
     });
 
     const saveBtn = editContainer.querySelector('.user-edit-save-btn');
     saveBtn.addEventListener('click', (e) => {
+      e.preventDefault();
       e.stopPropagation();
       executeUserMessageEdit(userRow, textarea.value.trim());
     });
@@ -1960,31 +1967,45 @@
       return;
     }
     if (isStreaming) {
-      showToast('Please wait for current response to complete', 'info');
+      showToast('Please wait for current response to complete before submitting', 'info');
       return;
     }
 
-    const oldText = userRow.dataset.rawText || userRow.querySelector('.user-msg-text')?.innerText || '';
-    if (newText === oldText) {
+    // 1. Determine which user turn this is by counting .user-message-row in DOM
+    const allUserRows = Array.from(conversationView.querySelectorAll('.user-message-row'));
+    const userMsgIndex = allUserRows.indexOf(userRow);
+    if (userMsgIndex === -1) {
       cancelUserMessageEdit(userRow);
       return;
     }
 
-    const allRows = Array.from(conversationView.querySelectorAll('.chat-message-row'));
-    const rowIndex = allRows.indexOf(userRow);
-    if (rowIndex === -1) {
-      cancelUserMessageEdit(userRow);
-      return;
+    // 2. Find matching turn in conversationHistory
+    let targetHistoryIndex = -1;
+    let userTurnCount = 0;
+    for (let i = 0; i < conversationHistory.length; i++) {
+      if (conversationHistory[i].role === 'user') {
+        if (userTurnCount === userMsgIndex) {
+          targetHistoryIndex = i;
+          break;
+        }
+        userTurnCount++;
+      }
     }
 
+    // Fallback: if not found by index, slice by userMsgIndex * 2 or reset
+    if (targetHistoryIndex === -1) {
+      targetHistoryIndex = Math.min(conversationHistory.length, userMsgIndex * 2);
+    }
+
+    // 3. Close the inline edit interface
     cancelUserMessageEdit(userRow);
 
-    // Update current user message DOM text and rawText attribute
+    // 4. Update the user message row DOM and data attribute
     userRow.dataset.rawText = newText;
     const textDiv = userRow.querySelector('.user-msg-text');
     if (textDiv) textDiv.textContent = newText;
 
-    // Remove all downstream DOM nodes after this user message row
+    // 5. Remove all subsequent DOM elements after this user message row
     let nextSibling = userRow.nextElementSibling;
     while (nextSibling) {
       const toRemove = nextSibling;
@@ -1992,11 +2013,11 @@
       toRemove.remove();
     }
 
-    // Truncate conversationHistory and replace the target user prompt
-    conversationHistory = conversationHistory.slice(0, rowIndex);
+    // 6. Truncate conversationHistory and set the new prompt
+    conversationHistory = conversationHistory.slice(0, targetHistoryIndex);
     conversationHistory.push({ role: 'user', content: newText });
 
-    // Sync memory cache
+    // 7. Sync memory cache
     if (currentConversationId) {
       convMessagesCache.set(currentConversationId, {
         id: currentConversationId,
@@ -2005,7 +2026,7 @@
       });
     }
 
-    // Persist replacement to backend DB for authenticated user
+    // 8. Persist replacement to backend DB for authenticated user
     const user = auth.currentUser || currentFirebaseUser;
     if (user && currentConversationId) {
       getAuthHeaders().then(headers => {
@@ -2015,13 +2036,30 @@
           body: JSON.stringify({
             messages: conversationHistory.map(m => ({ role: m.role, content: m.content }))
           }),
+        }).then(res => {
+          if (res.status === 404) {
+            // Conversation not created on backend yet, create it
+            return fetch(`${BACKEND_URL}/api/conversations`, {
+              method: 'POST',
+              headers: headers,
+              body: JSON.stringify({ id: currentConversationId, title: 'New Conversation' }),
+            }).then(() => {
+              return fetch(`${BACKEND_URL}/api/conversations/${encodeURIComponent(currentConversationId)}/messages`, {
+                method: 'PUT',
+                headers: headers,
+                body: JSON.stringify({
+                  messages: conversationHistory.map(m => ({ role: m.role, content: m.content }))
+                }),
+              });
+            });
+          }
         }).catch(err => {
-          console.warn('Failed to sync edited messages to backend:', err);
+          console.warn('Backend message sync error (non-fatal):', err);
         });
       });
     }
 
-    // Count towards quota if on free tier
+    // 9. Count towards quota if on free tier
     if (subscriptionStatus && !subscriptionStatus.is_unlimited) {
       subscriptionStatus.daily_used = (subscriptionStatus.daily_used || 0) + 1;
       if (subscriptionStatus.chats_remaining !== null && subscriptionStatus.chats_remaining !== undefined) {
@@ -2030,7 +2068,7 @@
       updateSubBadge(subscriptionStatus);
     }
 
-    // Stream fresh assistant response for the updated prompt
+    // 10. Stream fresh assistant response
     userScrolledUp = false;
     updateScrollBottomBtn(false);
     const typingEl = renderTypingIndicator();

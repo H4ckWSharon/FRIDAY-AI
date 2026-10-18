@@ -14,7 +14,7 @@ import os
 # Arbitrary client-provided model IDs are rejected at the API boundary.
 AVAILABLE_MODELS: list[dict[str, Any]] = [
     {
-        "id": "hf.co/mradermacher/Huihui-Qwen3-Coder-30B-A3B-Instruct-abliterated-i1-GGUF:Q4_K_M",
+        "id": "hf.co/RavichandranJ/Dolphin3-Cyber-8B-GGUF:Q8_0",
         "name": "Friday v1 The Jr Hacker",
         "description": "AI Junior Pentester & Security Mentor",
         "tag": "Jr Hacker (Default)",
@@ -37,7 +37,7 @@ class Settings(BaseSettings):
 
     # Ollama connection
     ollama_base_url: str = "http://localhost:11434"
-    ollama_model: str = "qwen3:latest"
+    ollama_model: str = "hf.co/RavichandranJ/Dolphin3-Cyber-8B-GGUF:Q8_0"
     ollama_timeout: float = 120.0
 
     # Server
