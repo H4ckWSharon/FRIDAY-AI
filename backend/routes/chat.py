@@ -29,6 +29,11 @@ router = APIRouter()
 # Keep strong references to background persistence tasks to avoid GC in Python 3.11+
 _background_tasks: set[asyncio.Task] = set()
 
+# ─── Temporary Toggle: Testing New Model Without Prompt ───────────────────────
+# Set to True to disable BLACK_HAT_SYSTEM_PROMPT, lifecycle directives, and quick router,
+# allowing direct, unaugmented raw interaction with the newly installed model.
+DISABLE_PROMPT_FOR_TESTING: bool = True
+
 
 # ─── The "Uncensored" Black Hat System Prompt ─────────────────────────────────
 # This prompt is engineered to strip away "helpful assistant" fluff and force
@@ -285,6 +290,8 @@ def _quick_route(text: str, model: str | None = None) -> str | None:
     Selects model-appropriate persona responses (Jr Hacker vs Advanced Pentester).
     Returns the pre-written response string, or None to fall through to Ollama.
     """
+    if DISABLE_PROMPT_FOR_TESTING:
+        return None
     routes = _QUICK_ROUTES_MODEL_2 if _is_advanced_pentester_model(model) else _QUICK_ROUTES_MODEL_1
     stripped = text.strip()
     for pattern, response in routes:
@@ -434,6 +441,10 @@ def _prepare_messages(request: ChatRequest) -> tuple[list[dict], str]:
     )
 
     prepared_history = [{"role": m["role"], "content": m["content"]} for m in trimmed]
+
+    if DISABLE_PROMPT_FOR_TESTING:
+        # Prompt and directives disabled: send pure raw conversation turns to Ollama
+        return prepared_history, model
 
     # Only Model 1 (Friday v1 The Jr Hacker) connects with the chat.py prompt.
     # Model 2 (Friday v1 The Advanced Pentester / BaronLLM) runs raw without chat.py prompt.
