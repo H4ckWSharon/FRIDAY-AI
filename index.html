@@ -3111,6 +3111,10 @@
       } else {
         detail.textContent = '50 chats / day';
       }
+    } else if (status.plan_id === 'founder_unlimited') {
+      badge.classList.add('sub-badge-model2');
+      label.textContent  = '👑 Founder / Admin';
+      detail.textContent = 'Lifetime VIP • Unlimited';
     } else if (tier === 'model2') {
       badge.classList.add('sub-badge-model2');
       label.textContent  = '🔥 Advanced Pentester';

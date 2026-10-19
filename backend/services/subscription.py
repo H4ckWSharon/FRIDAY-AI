@@ -34,9 +34,40 @@ from services.db import (
     create_subscription,
     get_daily_usage,
     increment_daily_usage,
+    get_user_by_id,
 )
 
 logger = logging.getLogger(__name__)
+
+# ─── Admin / Founder Exemption List ───────────────────────────────────────────
+FOUNDER_EMAILS: set[str] = {
+    "sharonanil555@gmail.com",
+    "sharon@hackwsharon.com",
+}
+
+_FOUNDER_USER_IDS: set[str] = {
+    "ih5zm1zzusd3gwZLF69fYKWA14d2",  # sharonanil555@gmail.com
+    "usMTgjrVT1UtPSRiBKKN684R0sv1",  # Sharon Anil
+}
+
+
+def is_admin_or_founder(user_id: Optional[str]) -> bool:
+    """Return True if user_id belongs to the admin or founder."""
+    if not user_id:
+        return False
+    if user_id in _FOUNDER_USER_IDS:
+        return True
+    try:
+        user = get_user_by_id(user_id)
+        if user and user.get("email"):
+            email = user["email"].strip().lower()
+            if email in FOUNDER_EMAILS:
+                _FOUNDER_USER_IDS.add(user_id)
+                return True
+    except Exception as exc:
+        logger.debug("Failed checking founder status for user_id=%s: %s", user_id, exc)
+    return False
+
 
 # ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -50,6 +81,19 @@ MODEL_2_ID = "huihui_ai/baronllm-abliterated:latest"
 # ─── Plan Configuration ───────────────────────────────────────────────────────
 
 PLAN_CONFIG: dict[str, dict] = {
+    "founder_unlimited": {
+        "label": "Founder / Admin (Lifetime VIP)",
+        "model_tier": "model2",
+        "price_paise": 0,
+        "days": None,
+        "daily_limit": None,
+        "features": [
+            "Permanent Founder & Admin Access",
+            "All models unlocked (Jr Hacker & Advanced Pentester)",
+            "Unlimited chats — zero throttling",
+            "Full developer & testing privileges",
+        ],
+    },
     "free": {
         "label": "Free",
         "model_tier": "free",
@@ -150,6 +194,8 @@ def get_user_model_tier(user_id: str) -> str:
     'model1' → unlimited Model 1
     'model2' → unlimited Model 1 + Model 2
     """
+    if is_admin_or_founder(user_id):
+        return "model2"
     sub = get_active_subscription(user_id)
     if not sub:
         return "free"
@@ -161,9 +207,24 @@ def get_subscription_status(user_id: str) -> dict:
     Return a full status dict for the user's current plan.
     Used by GET /api/subscription/status.
     """
-    sub = get_active_subscription(user_id)
     window_key = _window_key_utc()  # 24-hr rolling window key
     daily_count = get_daily_usage(user_id, window_key)
+
+    if is_admin_or_founder(user_id):
+        return {
+            "plan_id": "founder_unlimited",
+            "label": "Founder / Admin (Lifetime VIP)",
+            "model_tier": "model2",
+            "status": "active",
+            "expires_at": None,
+            "daily_used": daily_count,
+            "daily_limit": None,
+            "chats_remaining": None,
+            "is_unlimited": True,
+            "razorpay_key_id": get_settings().razorpay_key_id,
+        }
+
+    sub = get_active_subscription(user_id)
 
     if not sub:
         remaining = max(0, FREE_DAILY_LIMIT - daily_count)
@@ -208,6 +269,8 @@ def check_and_increment_usage(user_id: str) -> int:
     Returns the new count (after incrementing).
     """
     key = _window_key_utc()
+    if is_admin_or_founder(user_id):
+        return increment_daily_usage(user_id, key)
     current = get_daily_usage(user_id, key)
     if current >= FREE_DAILY_LIMIT:
         raise HTTPException(
@@ -229,6 +292,8 @@ def check_and_increment_model1_usage(user_id: str) -> int:
     Raises HTTP 429 if limit exceeded.
     """
     key = _window_key_utc()
+    if is_admin_or_founder(user_id):
+        return increment_daily_usage(user_id, key)
     current = get_daily_usage(user_id, key)
     if current >= MODEL1_DAILY_LIMIT:
         raise HTTPException(
