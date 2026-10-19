@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRIDAY AI // Telemetry & User Subscription Console</title>
+  <meta name="description" content="FRIDAY AI Administrator & Founder Telemetry Console — Monitor users, subscriptions, model tiers, and expirations in real time.">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Firebase Web SDK (v10.13.0 compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --bg-card: rgba(13, 17, 26, 0.75);
+      --bg-card-hover: rgba(19, 26, 38, 0.85);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(0, 240, 255, 0.25);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --cyan-neon: #00f0ff;
+      --cyan-glow: rgba(0, 240, 255, 0.15);
+      --green-neon: #00f59b;
+      --green-glow: rgba(0, 245, 155, 0.15);
+      --purple-neon: #9d4edd;
+      --purple-glow: rgba(157, 78, 221, 0.18);
+      --gold-neon: #ffd166;
+      --gold-glow: rgba(255, 209, 102, 0.18);
+      --crimson-neon: #ff0055;
+      --crimson-glow: rgba(255, 0, 85, 0.18);
+      --blue-accent: #3b82f6;
+
+      --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 240, 255, 0.07), transparent 70%),
+        radial-gradient(ellipse 60% 40% at 90% 80%, rgba(157, 78, 221, 0.06), transparent 60%),
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+      color: var(--text-main);
+      font-family: var(--font-ui);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─── Scrollbar ────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #07090e; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+    /* ─── Header & Nav ─────────────────────────────────────── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(7, 9, 14, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 14px 28px;
+    }
+
+    .nav-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(157, 78, 221, 0.3));
+      border: 1px solid var(--cyan-neon);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      color: var(--cyan-neon);
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.25);
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(0, 240, 255, 0.1);
+      color: var(--cyan-neon);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .live-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--green-neon);
+      background: rgba(0, 245, 155, 0.08);
+      border: 1px solid rgba(0, 245, 155, 0.2);
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green-neon);
+      box-shadow: 0 0 8px var(--green-neon);
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      border: 1px solid transparent;
+      outline: none;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+      border-color: var(--border-subtle);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.18);
+      color: #fff;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00f0ff, #0099ff);
+      color: #07090e;
+      font-weight: 600;
+      box-shadow: 0 0 14px rgba(0, 240, 255, 0.25);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .btn-founder {
+      background: linear-gradient(135deg, rgba(255, 209, 102, 0.15), rgba(157, 78, 221, 0.2));
+      color: var(--gold-neon);
+      border-color: rgba(255, 209, 102, 0.35);
+    }
+    .btn-founder:hover {
+      background: linear-gradient(135deg, rgba(255, 209, 102, 0.25), rgba(157, 78, 221, 0.3));
+      box-shadow: 0 0 16px var(--gold-glow);
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px 4px 6px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-subtle);
+      border-radius: 30px;
+    }
+
+    .user-avatar-sm {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #1e293b;
+      object-fit: cover;
+    }
+
+    .user-email-text {
+      font-size: 12px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ─── Main Content Container ───────────────────────────── */
+    main {
+      flex: 1;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 28px 28px 60px;
+    }
+
+    /* ─── Page Title Banner ────────────────────────────────── */
+    .title-banner {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 24px;
+    }
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .main-heading {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sub-heading {
+      font-size: 14px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ─── KPI Metrics Grid ─────────────────────────────────── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.25s ease;
+    }
+
+    .metric-card:hover {
+      border-color: rgba(255, 255, 255, 0.16);
+      transform: translateY(-2px);
+    }
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: transparent;
+      transition: background 0.25s ease;
+    }
+
+    .card-total::before { background: linear-gradient(90deg, #3b82f6, #00f0ff); }
+    .card-paid::before { background: linear-gradient(90deg, #00f59b, #00f0ff); }
+    .card-free::before { background: linear-gradient(90deg, #64748b, #94a3b8); }
+    .card-founders::before { background: linear-gradient(90deg, #ffd166, #9d4edd); }
+    .card-expiring::before { background: linear-gradient(90deg, #ff0055, #f59e0b); }
+
+    .metric-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    .metric-icon {
+      font-size: 18px;
+      opacity: 0.85;
+    }
+
+    .metric-value {
+      font-family: var(--font-mono);
+      font-size: 32px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .metric-sub {
+      font-size: 12px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ─── Filter & Search Bar ──────────────────────────────── */
+    .controls-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 9px 14px 9px 36px;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      color: #fff;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--cyan-neon);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .filter-tabs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .filter-chip {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .filter-chip:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .filter-chip.active {
+      background: rgba(0, 240, 255, 0.12);
+      border-color: var(--cyan-neon);
+      color: var(--cyan-neon);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
+    }
+
+    /* ─── Table Container ──────────────────────────────────── */
+    .table-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .data-table th {
+      background: rgba(0, 0, 0, 0.45);
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      white-space: nowrap;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.8px;
+    }
+
+    .data-table td {
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+      vertical-align: middle;
+    }
+
+    .data-table tbody tr {
+      transition: background 0.15s ease;
+    }
+
+    .data-table tbody tr:hover {
+      background: var(--bg-card-hover);
+    }
+
+    /* ─── User Profile Column ──────────────────────────────── */
+    .user-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #1e293b;
+      object-fit: cover;
+      border: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .user-info-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .user-name-title {
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .user-email-sub {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .uid-badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+    .uid-badge:hover { color: var(--cyan-neon); }
+
+    /* ─── Plan & Tier Badges ────────────────────────────────── */
+    .plan-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .plan-founder {
+      background: rgba(255, 209, 102, 0.12);
+      color: var(--gold-neon);
+      border: 1px solid rgba(255, 209, 102, 0.3);
+      box-shadow: 0 0 10px rgba(255, 209, 102, 0.1);
+    }
+
+    .plan-adv {
+      background: rgba(255, 0, 85, 0.12);
+      color: #ff3366;
+      border: 1px solid rgba(255, 0, 85, 0.3);
+      box-shadow: 0 0 10px rgba(255, 0, 85, 0.1);
+    }
+
+    .plan-jr {
+      background: rgba(0, 240, 255, 0.1);
+      color: var(--cyan-neon);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+    }
+
+    .plan-free {
+      background: rgba(148, 163, 184, 0.08);
+      color: #94a3b8;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .tier-indicator {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      margin-top: 4px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ─── Status Pills ─────────────────────────────────────── */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-active {
+      background: rgba(0, 245, 155, 0.12);
+      color: var(--green-neon);
+      border: 1px solid rgba(0, 245, 155, 0.3);
+    }
+
+    .status-expired {
+      background: rgba(255, 0, 85, 0.12);
+      color: var(--crimson-neon);
+      border: 1px solid rgba(255, 0, 85, 0.3);
+    }
+
+    .status-free-tier {
+      background: rgba(59, 130, 246, 0.12);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.25);
+    }
+
+    /* ─── Expiry & Countdown ───────────────────────────────── */
+    .expiry-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .expiry-date {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #fff;
+    }
+
+    .expiry-countdown {
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .exp-safe { color: var(--green-neon); }
+    .exp-soon { color: var(--gold-neon); font-weight: 600; }
+    .exp-past { color: var(--crimson-neon); font-weight: 600; }
+    .exp-never { color: var(--gold-neon); font-family: var(--font-mono); }
+
+    /* ─── Usage Progress Bar ───────────────────────────────── */
+    .usage-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 110px;
+    }
+
+    .usage-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-muted);
+    }
+
+    .progress-bar-bg {
+      height: 5px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--cyan-neon);
+      transition: width 0.3s ease;
+    }
+    .fill-green { background: var(--green-neon); }
+    .fill-amber { background: var(--gold-neon); }
+    .fill-red { background: var(--crimson-neon); }
+    .fill-purple { background: var(--purple-neon); }
+
+    /* ─── Action Buttons in Row ────────────────────────────── */
+    .table-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-action-sm {
+      padding: 5px 9px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      border: 1px solid var(--border-subtle);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-action-sm:hover {
+      background: rgba(0, 240, 255, 0.1);
+      border-color: var(--cyan-neon);
+      color: var(--cyan-neon);
+    }
+
+    /* ─── Empty & Loading States ───────────────────────────── */
+    .state-panel {
+      padding: 60px 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(0, 240, 255, 0.15);
+      border-top-color: var(--cyan-neon);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ─── Modal Overlay ────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #0d121c;
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      box-shadow: 0 0 35px rgba(0, 240, 255, 0.18);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 520px;
+      padding: 24px;
+      position: relative;
+      animation: modalIn 0.2s ease-out;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .modal-close:hover { color: #fff; }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #fff;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: var(--cyan-neon);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+    }
+
+    .form-select option {
+      background: #0d121c;
+      color: #fff;
+    }
+
+    .modal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    /* ─── Auth Gate Card ───────────────────────────────────── */
+    .gate-container {
+      max-width: 460px;
+      margin: 80px auto;
+      text-align: center;
+      background: var(--bg-card);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      box-shadow: 0 0 40px rgba(0, 240, 255, 0.12);
+      border-radius: 20px;
+      padding: 40px 32px;
+      backdrop-filter: blur(16px);
+    }
+
+    .gate-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      display: inline-block;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    /* ─── Toast Notifications ──────────────────────────────── */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      background: #0d1424;
+      border: 1px solid var(--cyan-neon);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-size: 13px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn 0.2s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(50px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @media (max-width: 900px) {
+      .data-table th:nth-child(5),
+      .data-table td:nth-child(5),
+      .data-table th:nth-child(6),
+      .data-table td:nth-child(6) {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Top Header Navigation ────────────────────────────── -->
+  <header>
+    <div class="nav-container">
+      <div class="brand-section">
+        <div class="brand-logo">FR</div>
+        <div>
+          <div class="brand-title">
+            FRIDAY AI
+            <span class="brand-tag">ADMIN HUD</span>
+          </div>
+        </div>
+        <div class="live-indicator">
+          <span class="pulse-dot"></span>
+          SUPABASE TELEMETRY
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="btn-refresh" class="btn btn-secondary" onclick="fetchTelemetry(true)" title="Reload live data">
+          <span id="refresh-icon">🔄</span> Refresh
+        </button>
+        <button id="btn-export" class="btn btn-secondary" onclick="exportCSV()" title="Export CSV summary">
+          📥 Export CSV
+        </button>
+        <button class="btn btn-primary" onclick="openGrantModal()" title="Grant or modify user plan">
+          ➕ Grant Plan
+        </button>
+        <a href="/" class="btn btn-secondary" title="Return to Friday AI Terminal">
+          ⚡ Terminal
+        </a>
+
+        <!-- Current Operator Profile -->
+        <div id="operator-pill" class="user-pill" style="display: none;">
+          <img id="operator-avatar" class="user-avatar-sm" src="favicon.ico" alt="Founder">
+          <span id="operator-email" class="user-email-text">sharonanil555@gmail.com</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── Main Content / Gate ──────────────────────────────── -->
+  <main>
+    <!-- Gate for Unauthenticated / Non-Admin Users -->
+    <div id="auth-gate" class="gate-container" style="display: none;">
+      <div class="gate-icon">🛡️</div>
+      <h2 style="font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 8px;">Restricted Founder Console</h2>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5;">
+        This page monitors active users, subscriptions, model tiers, and payment records. Founder or administrator authentication is required to proceed.
+      </p>
+      <div id="gate-action-area">
+        <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px;" onclick="signInWithGoogle()">
+          Sign in with Founder Google Account
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Admin Dashboard View -->
+    <div id="dashboard-view" style="display: none;">
+      <!-- Title & Live Time Banner -->
+      <div class="title-banner">
+        <div class="title-row">
+          <div>
+            <h1 class="main-heading">User & Subscription Telemetry</h1>
+            <div class="sub-heading">
+              <span>Real-time operator access records across PostgreSQL & Ollama inference nodes</span>
+            </div>
+          </div>
+          <div style="font-family: var(--font-mono); font-size: 12px; color: var(--text-dim);" id="server-time-display">
+            Synced: --:--:-- UTC
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Metrics Cards (Top Row) -->
+      <div class="metrics-grid">
+        <div class="metric-card card-total">
+          <div class="metric-header">
+            <span>TOTAL OPERATORS</span>
+            <span class="metric-icon">👥</span>
+          </div>
+          <div class="metric-value" id="kpi-total-users">0</div>
+          <div class="metric-sub">Registered platform users</div>
+        </div>
+
+        <div class="metric-card card-paid">
+          <div class="metric-header">
+            <span>ACTIVE PAID PLANS</span>
+            <span class="metric-icon">⚡</span>
+          </div>
+          <div class="metric-value" id="kpi-paid-users" style="color: var(--green-neon);">0</div>
+          <div class="metric-sub" id="kpi-paid-sub">Model 1 & Model 2 paid</div>
+        </div>
+
+        <div class="metric-card card-free">
+          <div class="metric-header">
+            <span>FREE TIER OPERATORS</span>
+            <span class="metric-icon">🛡️</span>
+          </div>
+          <div class="metric-value" id="kpi-free-users">0</div>
+          <div class="metric-sub">5 chats/day cap</div>
+        </div>
+
+        <div class="metric-card card-founders">
+          <div class="metric-header">
+            <span>FOUNDERS / VIPS</span>
+            <span class="metric-icon">👑</span>
+          </div>
+          <div class="metric-value" id="kpi-founder-users" style="color: var(--gold-neon);">0</div>
+          <div class="metric-sub">Permanent unlimited VIP</div>
+        </div>
+
+        <div class="metric-card card-expiring">
+          <div class="metric-header">
+            <span>EXPIRING SOON</span>
+            <span class="metric-icon">⏳</span>
+          </div>
+          <div class="metric-value" id="kpi-expiring-users" style="color: #f59e0b;">0</div>
+          <div class="metric-sub">Expiring within 7 days</div>
+        </div>
+      </div>
+
+      <!-- Search & Filters Panel -->
+      <div class="controls-panel">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" class="search-input" placeholder="Search by email, name, UID, plan, or model..." oninput="handleSearch()">
+        </div>
+
+        <div class="filter-tabs">
+          <button class="filter-chip active" data-filter="all" onclick="setFilter('all')">All Users (<span id="count-all">0</span>)</button>
+          <button class="filter-chip" data-filter="paid" onclick="setFilter('paid')">Paid Subscriptions (<span id="count-paid">0</span>)</button>
+          <button class="filter-chip" data-filter="free" onclick="setFilter('free')">Free Tier (<span id="count-free">0</span>)</button>
+          <button class="filter-chip" data-filter="founder" onclick="setFilter('founder')">Founders 👑 (<span id="count-founder">0</span>)</button>
+          <button class="filter-chip" data-filter="expiring" onclick="setFilter('expiring')">Expiring Soon ⏳ (<span id="count-expiring">0</span>)</button>
+        </div>
+      </div>
+
+      <!-- Users Table -->
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Operator</th>
+              <th>Current Plan</th>
+              <th>Model Tier</th>
+              <th>Status</th>
+              <th>Subscription Expiry</th>
+              <th>Today's Usage</th>
+              <th>Conversations</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <!-- Populated dynamically via JS -->
+          </tbody>
+        </table>
+
+        <!-- Loading State Indicator -->
+        <div id="table-loading" class="state-panel">
+          <div class="spinner"></div>
+          <span style="color: var(--text-muted); font-size: 13px;">Streaming telemetry from PostgreSQL...</span>
+        </div>
+
+        <!-- Empty Results -->
+        <div id="table-empty" class="state-panel" style="display: none;">
+          <span style="font-size: 24px;">🔍</span>
+          <span style="color: var(--text-muted); font-size: 14px;">No matching operators found for current search.</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ─── Grant / Modify Plan Modal ──────────────────────────── -->
+  <div id="grant-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <span>👑</span> Grant / Modify User Plan
+        </h3>
+        <button class="modal-close" onclick="closeGrantModal()">&times;</button>
+      </div>
+
+      <form id="grant-form" onsubmit="handleGrantSubmit(event)">
+        <div class="form-group">
+          <label class="form-label" for="grant-email">User Email or Firebase UID</label>
+          <input type="text" id="grant-email" class="form-input" placeholder="e.g. user@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="grant-plan">Select Plan Tier</label>
+          <select id="grant-plan" class="form-select" onchange="handlePlanSelectChange()">
+            <option value="advanced_monthly">🔥 The Advanced Pentester — Monthly (Model 2 Unlimited)</option>
+            <option value="advanced_yearly">🔥 The Advanced Pentester — Yearly (Model 2 Unlimited)</option>
+            <option value="jr_hacker_monthly">⚡ The Jr Hacker — Monthly (Model 1, 50/day)</option>
+            <option value="jr_hacker_yearly">⚡ The Jr Hacker — Yearly (Model 1, 50/day)</option>
+            <option value="founder_unlimited">👑 Founder / Admin (Lifetime VIP — All Models Unlimited)</option>
+            <option value="free">🛡️ Revert to Free Plan (5 chats/day limit)</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="duration-group">
+          <label class="form-label" for="grant-days">Access Duration (Days)</label>
+          <input type="number" id="grant-days" class="form-input" value="30" min="1" max="3650">
+          <small style="font-size: 11px; color: var(--text-dim); margin-top: 4px; display: block;">
+            e.g. 24 for a 24-day trial, 30 for monthly, 365 for yearly.
+          </small>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeGrantModal()">Cancel</button>
+          <button type="submit" id="btn-grant-submit" class="btn btn-primary">
+            Apply Access
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- ─── Script Logic ─────────────────────────────────────── -->
+  <script>
+    // ─── Environment & Backend URL ───────────────────────────
+    const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const PRODUCTION_DEFAULT_BACKEND = 'https://powerpoint-deal-loved-filling.trycloudflare.com';
+    const BACKEND_URL = window.FRIDAY_BACKEND_URL || localStorage.getItem('friday_backend_url') || (isLocalHost ? (window.location.port === '8008' ? 'http://127.0.0.1:8008' : 'http://127.0.0.1:8000') : PRODUCTION_DEFAULT_BACKEND);
+
+    // ─── Firebase Init ───────────────────────────────────────
+    const firebaseConfig = {
+      apiKey: "AIzaSyDC-RzT73KVHebhGMLFYlfNb5t8kpKxXqc",
+      authDomain: "friday-ai-27647.firebaseapp.com",
+      projectId: "friday-ai-27647",
+      storageBucket: "friday-ai-27647.firebasestorage.app",
+      messagingSenderId: "634753026307",
+      appId: "1:634753026307:web:22470d67ad0ae46e44c136"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+    // ─── State ───────────────────────────────────────────────
+    let allUsers = [];
+    let currentFilter = 'all';
+    let currentToken = null;
+    let currentUser = null;
+
+    // ─── Auth State Listener ─────────────────────────────────
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        currentUser = user;
+        try {
+          currentToken = await user.getIdToken();
+          document.getElementById('operator-pill').style.display = 'flex';
+          document.getElementById('operator-email').textContent = user.email || 'Admin';
+          if (user.photoURL) document.getElementById('operator-avatar').src = user.photoURL;
+
+          await fetchTelemetry();
+        } catch (err) {
+          console.error('Failed getting token:', err);
+          showGate("Failed to acquire authentication token. Please sign in again.");
+        }
+      } else {
+        currentUser = null;
+        currentToken = null;
+        showGate();
+      }
+    });
+
+    async function signInWithGoogle() {
+      try {
+        await auth.signInWithPopup(googleProvider);
+      } catch (err) {
+        console.error('Sign-in error:', err);
+        showToast('Google Sign-in failed: ' + err.message, 'error');
+      }
+    }
+
+    function showGate(message) {
+      document.getElementById('auth-gate').style.display = 'block';
+      document.getElementById('dashboard-view').style.display = 'none';
+      if (message) {
+        document.getElementById('gate-action-area').innerHTML = `
+          <div style="color: var(--crimson-neon); font-size: 13px; margin-bottom: 16px;">${message}</div>
+          <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px;" onclick="signInWithGoogle()">
+            Try Signing in Again
+          </button>
+        `;
+      }
+    }
+
+    // ─── Telemetry Fetcher ───────────────────────────────────
+    async function fetchTelemetry(isManual = false) {
+      const refreshIcon = document.getElementById('refresh-icon');
+      if (refreshIcon) refreshIcon.style.animation = 'spin 0.8s linear infinite';
+      document.getElementById('table-loading').style.display = 'flex';
+
+      try {
+        if (!currentToken && currentUser) {
+          currentToken = await currentUser.getIdToken(true);
+        }
+
+        const res = await fetch(`${BACKEND_URL}/api/admin/users`, {
+          headers: {
+            'Authorization': `Bearer ${currentToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (res.status === 401 || res.status === 403) {
+          showGate("Access Denied (403): You must be signed in with founder account 'sharonanil555@gmail.com'.");
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error(`Server returned HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        allUsers = data.users || [];
+
+        // Update KPIs
+        renderKPIs(data.summary, allUsers);
+
+        // Update Server Time
+        const sTime = new Date(data.server_time || Date.now());
+        document.getElementById('server-time-display').textContent = `Synced: ${sTime.toLocaleTimeString()} UTC`;
+
+        // Render Table
+        document.getElementById('auth-gate').style.display = 'none';
+        document.getElementById('dashboard-view').style.display = 'block';
+        renderUsers();
+
+        if (isManual) showToast('Telemetry synchronized successfully.', 'success');
+      } catch (err) {
+        console.error('Fetch telemetry error:', err);
+        showToast('Error syncing telemetry: ' + err.message, 'error');
+      } finally {
+        if (refreshIcon) refreshIcon.style.animation = 'none';
+        document.getElementById('table-loading').style.display = 'none';
+      }
+    }
+
+    // ─── Render KPI Cards ────────────────────────────────────
+    function renderKPIs(summary, users) {
+      document.getElementById('kpi-total-users').textContent = summary.total_users || users.length;
+      document.getElementById('kpi-paid-users').textContent = summary.paid_users || 0;
+      document.getElementById('kpi-free-users').textContent = summary.free_users || 0;
+      document.getElementById('kpi-founder-users').textContent = summary.founder_users || 0;
+      document.getElementById('kpi-expiring-users').textContent = summary.expiring_soon || 0;
+
+      // Filter Counts
+      document.getElementById('count-all').textContent = users.length;
+      document.getElementById('count-paid').textContent = summary.paid_users || 0;
+      document.getElementById('count-free').textContent = summary.free_users || 0;
+      document.getElementById('count-founder').textContent = summary.founder_users || 0;
+      document.getElementById('count-expiring').textContent = summary.expiring_soon || 0;
+    }
+
+    // ─── Render Users Table ──────────────────────────────────
+    function renderUsers() {
+      const tbody = document.getElementById('users-tbody');
+      tbody.innerHTML = '';
+
+      const query = (document.getElementById('search-input').value || '').trim().toLowerCase();
+
+      const filtered = allUsers.filter(u => {
+        // Filter tabs
+        if (currentFilter === 'paid' && (u.status !== 'active' || u.is_founder || u.plan_id === 'free')) return false;
+        if (currentFilter === 'free' && (u.status === 'active' && u.plan_id !== 'free' && !u.is_founder)) return false;
+        if (currentFilter === 'founder' && !u.is_founder) return false;
+        if (currentFilter === 'expiring' && (u.days_remaining === null || u.days_remaining > 7 || u.days_remaining < 0)) return false;
+
+        // Search query
+        if (query) {
+          const matchEmail = (u.email || '').toLowerCase().includes(query);
+          const matchName = (u.name || '').toLowerCase().includes(query);
+          const matchId = (u.id || '').toLowerCase().includes(query);
+          const matchPlan = (u.plan_label || '').toLowerCase().includes(query);
+          const matchTier = (u.model_tier || '').toLowerCase().includes(query);
+          return matchEmail || matchName || matchId || matchPlan || matchTier;
+        }
+
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        document.getElementById('table-empty').style.display = 'flex';
+        return;
+      }
+      document.getElementById('table-empty').style.display = 'none';
+
+      filtered.forEach(u => {
+        const tr = document.createElement('tr');
+
+        // 1. Operator Info
+        const avatarSrc = u.avatar || 'favicon.ico';
+        const founderCrown = u.is_founder ? '<span title="Founder / Administrator">👑</span>' : '';
+        const userCell = `
+          <td>
+            <div class="user-cell">
+              <img class="user-avatar" src="${escapeHtml(avatarSrc)}" alt="Avatar" onerror="this.src='favicon.ico'">
+              <div class="user-info-text">
+                <span class="user-name-title">${escapeHtml(u.name || 'Operator')} ${founderCrown}</span>
+                <span class="user-email-sub">${escapeHtml(u.email || 'No email')}</span>
+                <span class="uid-badge" onclick="copyToClipboard('${u.id}')" title="Click to copy UID">ID: ${u.id.substring(0, 14)}… 📋</span>
+              </div>
+            </div>
+          </td>
+        `;
+
+        // 2. Plan Badge
+        let planBadgeClass = 'plan-free';
+        let planEmoji = '🛡️';
+        if (u.is_founder) {
+          planBadgeClass = 'plan-founder';
+          planEmoji = '👑';
+        } else if (u.model_tier === 'model2' || (u.plan_id && u.plan_id.includes('advanced'))) {
+          planBadgeClass = 'plan-adv';
+          planEmoji = '🔥';
+        } else if (u.model_tier === 'model1' || (u.plan_id && u.plan_id.includes('jr_hacker'))) {
+          planBadgeClass = 'plan-jr';
+          planEmoji = '⚡';
+        }
+
+        const planCell = `
+          <td>
+            <span class="plan-badge ${planBadgeClass}">
+              ${planEmoji} ${escapeHtml(u.plan_label || 'Free Plan')}
+            </span>
+          </td>
+        `;
+
+        // 3. Model Tier
+        let tierLabel = 'Dual Model (5 chats/day)';
+        let tierIcon = '🛡️';
+        if (u.model_tier === 'model2') {
+          tierLabel = 'Model 2 (BaronLLM Abliterated)';
+          tierIcon = '🔥';
+        } else if (u.model_tier === 'model1') {
+          tierLabel = 'Model 1 (Jr Hacker Dolphin)';
+          tierIcon = '⚡';
+        }
+
+        const tierCell = `
+          <td>
+            <div style="font-weight: 500; font-size: 12px; color: #fff;">
+              ${tierIcon} ${tierLabel}
+            </div>
+            <div class="tier-indicator">
+              ${u.is_unlimited ? 'Unlimited chat turns' : (u.daily_limit ? `${u.daily_limit} chats / day` : '5 chats / day')}
+            </div>
+          </td>
+        `;
+
+        // 4. Status
+        let statusBadge = '<span class="status-pill status-free-tier">FREE</span>';
+        if (u.status === 'active') {
+          statusBadge = '<span class="status-pill status-active">● ACTIVE</span>';
+        } else if (u.status === 'expired') {
+          statusBadge = '<span class="status-pill status-expired">● EXPIRED</span>';
+        }
+
+        const statusCell = `<td>${statusBadge}</td>`;
+
+        // 5. Expiry Date & Countdown
+        let expiryHtml = '<span class="expiry-countdown exp-never">Lifetime / Permanent</span>';
+        if (u.expires_at) {
+          const expDate = new Date(u.expires_at);
+          const dateStr = expDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+          let countdownClass = 'exp-safe';
+          let countdownText = `${u.days_remaining} days remaining`;
+
+          if (u.days_remaining === -1 || expDate < new Date()) {
+            countdownClass = 'exp-past';
+            countdownText = 'Expired';
+          } else if (u.days_remaining <= 7) {
+            countdownClass = 'exp-soon';
+            countdownText = `Expires in ${u.days_remaining} days ⚠️`;
+          }
+
+          expiryHtml = `
+            <div class="expiry-block">
+              <span class="expiry-date">${dateStr}</span>
+              <span class="expiry-countdown ${countdownClass}">${countdownText}</span>
+            </div>
+          `;
+        }
+
+        const expiryCell = `<td>${expiryHtml}</td>`;
+
+        // 6. Today's Usage
+        const used = u.daily_used || 0;
+        const limit = u.daily_limit;
+        let usageText = `${used} / ${limit || 5}`;
+        let percent = limit ? Math.min(100, Math.round((used / limit) * 100)) : 10;
+        let fillClass = 'fill-green';
+        if (u.is_unlimited) {
+          usageText = `${used} (Unlimited)`;
+          percent = 100;
+          fillClass = 'fill-purple';
+        } else if (percent > 80) {
+          fillClass = 'fill-red';
+        } else if (percent > 50) {
+          fillClass = 'fill-amber';
+        }
+
+        const usageCell = `
+          <td>
+            <div class="usage-wrapper">
+              <div class="usage-label">
+                <span>Chats</span>
+                <span>${usageText}</span>
+              </div>
+              <div class="progress-bar-bg">
+                <div class="progress-fill ${fillClass}" style="width: ${percent}%;"></div>
+              </div>
+            </div>
+          </td>
+        `;
+
+        // 7. Conversations Count
+        const convCount = u.conversations_count || 0;
+        const convCell = `
+          <td>
+            <span style="font-family: var(--font-mono); font-size: 12px; color: var(--text-main);">
+              💬 ${convCount}
+            </span>
+          </td>
+        `;
+
+        // 8. Actions
+        const actionsCell = `
+          <td>
+            <div class="table-actions">
+              <button class="btn-action-sm" onclick="openGrantModalForUser('${escapeHtml(u.email || u.id)}')">
+                ✏️ Edit Plan
+              </button>
+              ${u.status === 'active' && !u.is_founder && u.plan_id !== 'free' ? `
+                <button class="btn-action-sm" style="color: var(--crimson-neon);" onclick="revokeUserSub('${escapeHtml(u.id)}')">
+                  Revoke
+                </button>
+              ` : ''}
+            </div>
+          </td>
+        `;
+
+        tr.innerHTML = userCell + planCell + tierCell + statusCell + expiryCell + usageCell + convCell + actionsCell;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ─── Filter & Search Handlers ────────────────────────────
+    function setFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-chip').forEach(c => {
+        c.classList.toggle('active', c.getAttribute('data-filter') === filter);
+      });
+      renderUsers();
+    }
+
+    function handleSearch() {
+      renderUsers();
+    }
+
+    // ─── Modal Actions ───────────────────────────────────────
+    function openGrantModal() {
+      document.getElementById('grant-email').value = '';
+      document.getElementById('grant-plan').value = 'advanced_monthly';
+      document.getElementById('grant-days').value = '30';
+      handlePlanSelectChange();
+      document.getElementById('grant-modal').classList.add('active');
+    }
+
+    function openGrantModalForUser(emailOrId) {
+      document.getElementById('grant-email').value = emailOrId;
+      document.getElementById('grant-plan').value = 'advanced_monthly';
+      document.getElementById('grant-days').value = '30';
+      handlePlanSelectChange();
+      document.getElementById('grant-modal').classList.add('active');
+    }
+
+    function closeGrantModal() {
+      document.getElementById('grant-modal').classList.remove('active');
+    }
+
+    function handlePlanSelectChange() {
+      const plan = document.getElementById('grant-plan').value;
+      const durationGroup = document.getElementById('duration-group');
+      if (plan === 'founder_unlimited' || plan === 'free') {
+        durationGroup.style.display = 'none';
+      } else {
+        durationGroup.style.display = 'block';
+        if (plan.includes('yearly')) {
+          document.getElementById('grant-days').value = '365';
+        } else if (plan.includes('monthly')) {
+          document.getElementById('grant-days').value = '30';
+        }
+      }
+    }
+
+    async function handleGrantSubmit(e) {
+      e.preventDefault();
+      const emailOrId = document.getElementById('grant-email').value.trim();
+      const planId = document.getElementById('grant-plan').value;
+      const daysVal = parseInt(document.getElementById('grant-days').value, 10);
+      const submitBtn = document.getElementById('btn-grant-submit');
+
+      if (!emailOrId) return;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Applying...';
+
+      try {
+        const payload = {
+          user_email_or_id: emailOrId,
+          plan_id: planId,
+          days: (planId === 'founder_unlimited' || planId === 'free') ? null : (daysVal || 30)
+        };
+
+        const res = await fetch(`${BACKEND_URL}/api/admin/grant-subscription`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${currentToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to update plan');
+
+        showToast(data.message || 'Subscription updated successfully!', 'success');
+        closeGrantModal();
+        await fetchTelemetry();
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Apply Access';
+      }
+    }
+
+    async function revokeUserSub(emailOrId) {
+      if (!confirm(`Are you sure you want to revoke this user's active paid plan and return them to Free tier?`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/admin/revoke-subscription`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${currentToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ user_email_or_id: emailOrId })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Revoke failed');
+
+        showToast(data.message || 'Subscription revoked.', 'success');
+        await fetchTelemetry();
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      }
+    }
+
+    // ─── Export CSV ──────────────────────────────────────────
+    function exportCSV() {
+      if (!allUsers.length) {
+        showToast('No user data to export.', 'error');
+        return;
+      }
+
+      const headers = ['UID', 'Name', 'Email', 'Plan', 'Model Tier', 'Status', 'Expires At', 'Days Remaining', 'Daily Used', 'Conversations', 'Created At'];
+      const rows = allUsers.map(u => [
+        `"${u.id}"`,
+        `"${(u.name || '').replace(/"/g, '""')}"`,
+        `"${(u.email || '').replace(/"/g, '""')}"`,
+        `"${u.plan_label}"`,
+        `"${u.model_tier}"`,
+        `"${u.status}"`,
+        `"${u.expires_at || (u.is_founder ? 'Lifetime' : 'None')}"`,
+        `"${u.days_remaining !== null ? u.days_remaining : (u.is_founder ? 'Unlimited' : '')}"`,
+        `"${u.daily_used || 0}"`,
+        `"${u.conversations_count || 0}"`,
+        `"${u.created_at}"`
+      ]);
+
+      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `FRIDAY-USERS-TELEMETRY-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('CSV export downloaded.', 'success');
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Copied ID to clipboard: ' + text, 'info');
+      });
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      let icon = 'ℹ️';
+      if (type === 'success') icon = '✅';
+      if (type === 'error') icon = '❌';
+      toast.innerHTML = `<span>${icon}</span> <span>${escapeHtml(message)}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    function escapeHtml(str) {
+      if (typeof str !== 'string') return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>

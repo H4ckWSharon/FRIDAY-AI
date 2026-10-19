@@ -15,6 +15,7 @@ from routes.auth import router as auth_router
 from routes.chat import router as chat_router
 from routes.conversations import router as conversations_router
 from routes.subscription import router as subscription_router
+from routes.admin import router as admin_router
 from services.db import init_db
 
 settings = get_settings()
@@ -125,3 +126,5 @@ app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(conversations_router)
 app.include_router(subscription_router)
+app.include_router(admin_router)
+

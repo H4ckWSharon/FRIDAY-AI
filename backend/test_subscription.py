@@ -51,6 +51,8 @@ def setup_mock_tokens():
             return {"uid": "usr_free_101", "email": "free_user@friday.sec", "name": "Free Operator", "picture": None}
         if token == "token-paid-user":
             return {"uid": "usr_paid_202", "email": "paid_user@friday.sec", "name": "Paid Operator", "picture": None}
+        if token == "token-founder-user":
+            return {"uid": "ih5zm1zzusd3gwZLF69fYKWA14d2", "email": "sharonanil555@gmail.com", "name": "Sharon Anil", "picture": None}
         return None
     set_mock_token_verifier(mock_verifier)
     yield
@@ -365,3 +367,74 @@ async def test_verify_payment_and_activate_plan(temp_db):
             },
         )
     assert chat_res.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_admin_endpoints(temp_db):
+    """Verify admin telemetry endpoint security and responses."""
+    # 1. Unauthenticated request to /api/admin/users should return 401
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        res = await ac.get("/api/admin/users")
+    assert res.status_code == 401
+
+    # 2. Non-admin operator should return 403 Forbidden
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        res = await ac.get(
+            "/api/admin/users",
+            headers={"Authorization": "Bearer token-free-user"},
+        )
+    assert res.status_code == 403
+
+    # 3. Founder / Admin (sharonanil555@gmail.com) should return 200 with summary and users
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        res = await ac.get(
+            "/api/admin/users",
+            headers={"Authorization": "Bearer token-founder-user"},
+        )
+    assert res.status_code == 200
+    data = res.json()
+    assert "summary" in data
+    assert "users" in data
+    assert data["summary"]["total_users"] >= 2
+
+    # 4. Admin grant-subscription to free user
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        grant_res = await ac.post(
+            "/api/admin/grant-subscription",
+            headers={"Authorization": "Bearer token-founder-user"},
+            json={
+                "user_email_or_id": "free_user@friday.sec",
+                "plan_id": "advanced_monthly",
+                "days": 30,
+            },
+        )
+    assert grant_res.status_code == 200
+    assert grant_res.json()["status"] == "success"
+
+    # Verify free user now has model2 tier
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        status_res = await ac.get(
+            "/api/subscription/status",
+            headers={"Authorization": "Bearer token-free-user"},
+        )
+    assert status_res.status_code == 200
+    assert status_res.json()["model_tier"] == "model2"
+
+    # 5. Admin revoke subscription
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        revoke_res = await ac.post(
+            "/api/admin/revoke-subscription",
+            headers={"Authorization": "Bearer token-founder-user"},
+            json={"user_email_or_id": "free_user@friday.sec"},
+        )
+    assert revoke_res.status_code == 200
+    assert revoke_res.json()["status"] == "success"
+
+    # Verify user is back on free tier
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        status_res2 = await ac.get(
+            "/api/subscription/status",
+            headers={"Authorization": "Bearer token-free-user"},
+        )
+    assert status_res2.status_code == 200
+    assert status_res2.json()["model_tier"] == "free"

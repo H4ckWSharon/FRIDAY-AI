@@ -397,6 +397,16 @@
       <span class="text-[9px] font-mono opacity-70" id="sub-badge-detail">5 chats/day</span>
     </button>
   </div>
+  <!-- Admin Console Link (Founder Only) -->
+  <div class="mt-2 px-1" id="admin-console-area" style="display: none;">
+    <a href="/admin" class="w-full flex items-center justify-between px-3 py-1.5 rounded-lg border border-[#ffd166]/30 bg-[#ffd166]/10 text-[#ffd166] hover:bg-[#ffd166]/20 transition-all hover:scale-[1.01] active:scale-[0.99]" title="Open User & Subscription Admin Console" style="text-decoration: none;">
+      <span class="flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-[14px]">admin_panel_settings</span>
+        <span class="text-[10px] font-mono font-semibold">Admin Console</span>
+      </span>
+      <span class="text-[9px] font-mono opacity-80">Users & Subs ➔</span>
+    </a>
+  </div>
 </div>
 </div>
 </aside>
@@ -3119,6 +3129,13 @@
       badge.classList.add('sub-badge-model2');
       label.textContent  = '🔥 Advanced Pentester';
       detail.textContent = 'Unlimited';
+    }
+
+    const adminArea = document.getElementById('admin-console-area');
+    if (adminArea) {
+      const isFounder = (status.plan_id === 'founder_unlimited') || 
+                        (currentFirebaseUser && currentFirebaseUser.email && currentFirebaseUser.email.toLowerCase() === 'sharonanil555@gmail.com');
+      adminArea.style.display = isFounder ? 'block' : 'none';
     }
   }
 
