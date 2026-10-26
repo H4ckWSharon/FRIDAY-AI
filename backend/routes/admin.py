@@ -412,7 +412,7 @@ async def delete_user_account(
 @router.get("/admin", include_in_schema=False)
 @router.get("/admin.html", include_in_schema=False)
 async def serve_admin_dashboard():
-    """Serve the admin dashboard web application."""
+    """Serve the admin dashboard web application with strict no-cache headers."""
     candidates = [
         Path(__file__).resolve().parent.parent.parent / "admin.html",
         Path(__file__).resolve().parent.parent / "admin.html",
@@ -420,5 +420,14 @@ async def serve_admin_dashboard():
     ]
     for p in candidates:
         if p.exists():
-            return FileResponse(p, media_type="text/html")
+            return FileResponse(
+                p,
+                media_type="text/html",
+                headers={
+                    "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+                    "Pragma": "no-cache",
+                    "Expires": "0",
+                },
+            )
     raise HTTPException(status_code=404, detail="Admin dashboard file (admin.html) not found.")
+

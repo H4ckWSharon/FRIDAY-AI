@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FRIDAY AI // Telemetry & User Subscription Console</title>
   <meta name="description" content="FRIDAY AI Administrator & Founder Telemetry Console — Monitor users, subscriptions, model tiers, and expirations in real time.">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
 
   <!-- Google Fonts: Inter & JetBrains Mono -->
@@ -215,6 +218,21 @@
     .btn-founder:hover {
       background: linear-gradient(135deg, rgba(255, 209, 102, 0.25), rgba(157, 78, 221, 0.3));
       box-shadow: 0 0 16px var(--gold-glow);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #e11d48, #be123c);
+      color: #ffffff !important;
+      border: 1px solid #ff3366;
+      font-weight: 700;
+      box-shadow: 0 0 14px rgba(225, 29, 72, 0.4);
+    }
+    .btn-danger:hover {
+      background: linear-gradient(135deg, #f43f5e, #e11d48);
+      border-color: #fda4af;
+      box-shadow: 0 0 22px rgba(225, 29, 72, 0.7);
+      transform: translateY(-1px);
+      color: #fff !important;
     }
 
     .user-pill {
@@ -446,16 +464,35 @@
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       border-radius: 14px;
-      overflow: hidden;
+      overflow-x: auto;
+      overflow-y: hidden;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
+      position: relative;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
     }
 
     .data-table {
       width: 100%;
+      min-width: 980px;
       border-collapse: collapse;
       text-align: left;
       font-size: 13px;
+    }
+
+    /* Sticky Actions Column — Always Visible! */
+    .data-table th:last-child,
+    .data-table td:last-child {
+      position: sticky;
+      right: 0;
+      background: #0b0f19;
+      z-index: 10;
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: -6px 0 16px rgba(0, 0, 0, 0.6);
+    }
+
+    .data-table tbody tr:hover td:last-child {
+      background: #151d2c;
     }
 
     .data-table th {
@@ -690,11 +727,19 @@
       border-color: var(--cyan-neon);
       color: var(--cyan-neon);
     }
+    .btn-action-delete {
+      background: #e11d48 !important;
+      border: 1px solid #ff3366 !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      box-shadow: 0 0 10px rgba(225, 29, 72, 0.45) !important;
+    }
     .btn-action-delete:hover {
-      background: rgba(255, 0, 85, 0.15) !important;
-      border-color: var(--crimson-neon) !important;
-      color: #ff0055 !important;
-      box-shadow: 0 0 10px rgba(255, 0, 85, 0.25);
+      background: #f43f5e !important;
+      border-color: #fda4af !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 18px rgba(225, 29, 72, 0.75) !important;
+      transform: translateY(-1px);
     }
 
     /* ─── Empty & Loading States ───────────────────────────── */
@@ -925,6 +970,9 @@
         <button class="btn btn-primary" onclick="openGrantModal()" title="Grant or modify user plan">
           ➕ Grant Plan
         </button>
+        <button class="btn btn-danger" onclick="openDeleteModal()" title="Delete any user directly from Supabase and Firebase">
+          🗑️ Delete User
+        </button>
         <a href="/" class="btn btn-secondary" title="Return to Friday AI Terminal">
           ⚡ Terminal
         </a>
@@ -1047,7 +1095,7 @@
               <th>Subscription Expiry</th>
               <th>Today's Usage</th>
               <th>Conversations</th>
-              <th>Actions</th>
+              <th>Actions / Delete</th>
             </tr>
           </thead>
           <tbody id="users-tbody">
@@ -1110,6 +1158,43 @@
           <button type="button" class="btn btn-secondary" onclick="closeGrantModal()">Cancel</button>
           <button type="submit" id="btn-grant-submit" class="btn btn-primary">
             Apply Access
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ─── Delete User Modal ──────────────────────────── -->
+  <div id="delete-modal" class="modal-overlay">
+    <div class="modal-card" style="border-color: rgba(255, 0, 85, 0.4); box-shadow: 0 0 35px rgba(255, 0, 85, 0.25);">
+      <div class="modal-header" style="border-color: rgba(255, 0, 85, 0.2);">
+        <h3 class="modal-title" style="color: #ff3366;">
+          <span>🗑️</span> Permanently Delete User
+        </h3>
+        <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+      </div>
+
+      <form id="delete-form" onsubmit="handleDeleteModalSubmit(event)">
+        <div style="background: rgba(255, 0, 85, 0.1); border: 1px solid rgba(255, 0, 85, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px; color: #fca5a5; line-height: 1.5;">
+          ⚠️ <strong>Permanent Action:</strong> This completely erases this user's account, conversations, chat messages, active/expired subscriptions, and daily usage from <strong>Supabase PostgreSQL</strong>, and deletes their profile from <strong>Firebase Auth</strong>.
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="delete-user-select">Select Registered Operator</label>
+          <select id="delete-user-select" class="form-select" onchange="handleDeleteSelectChange()">
+            <option value="">-- Choose operator to delete --</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="delete-email-input">Or Type User Email / Firebase UID</label>
+          <input type="text" id="delete-email-input" class="form-input" placeholder="e.g. operator@gmail.com or UID">
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+          <button type="submit" id="btn-delete-modal-submit" class="btn btn-danger">
+            🗑️ Permanently Delete User
           </button>
         </div>
       </form>
@@ -1303,7 +1388,12 @@
               <div class="user-info-text">
                 <span class="user-name-title">${escapeHtml(u.name || 'Operator')} ${founderCrown}</span>
                 <span class="user-email-sub">${escapeHtml(u.email || 'No email')}</span>
-                <span class="uid-badge" onclick="copyToClipboard('${u.id}')" title="Click to copy UID">ID: ${u.id.substring(0, 14)}… 📋</span>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 3px;">
+                  <span class="uid-badge" onclick="copyToClipboard('${u.id}')" title="Click to copy UID">ID: ${u.id.substring(0, 10)}… 📋</span>
+                  ${!u.is_founder ? `
+                    <button class="btn-action-sm btn-action-delete" style="padding: 2px 8px; font-size: 11px;" onclick="deleteUserAccount('${escapeHtml(u.id)}', '${escapeHtml(u.email || u.name || 'this user')}')" title="Permanently delete this user">🗑️ Delete</button>
+                  ` : ''}
+                </div>
               </div>
             </div>
           </td>
@@ -1442,7 +1532,7 @@
                 </button>
               ` : ''}
               ${!u.is_founder ? `
-                <button class="btn-action-sm btn-action-delete" style="color: #ff3366; border-color: rgba(255, 0, 85, 0.25);" onclick="deleteUserAccount('${escapeHtml(u.id)}', '${escapeHtml(u.email || u.name || 'this user')}')" title="Permanently delete user from Supabase & Firebase">
+                <button class="btn-action-sm btn-action-delete" style="padding: 5px 12px; font-size: 11px;" onclick="deleteUserAccount('${escapeHtml(u.id)}', '${escapeHtml(u.email || u.name || 'this user')}')" title="Permanently delete user from Supabase & Firebase">
                   🗑️ Delete
                 </button>
               ` : ''}
@@ -1591,7 +1681,8 @@
         if (!res.ok) throw new Error(data.detail || 'Delete failed');
 
         // Optimistic live update: remove immediately from in-memory user list
-        allUsers = allUsers.filter(u => u.id !== userId);
+        const deletedUid = data.user_id || userId;
+        allUsers = allUsers.filter(u => u.id !== deletedUid && u.email !== userId && u.id !== userId);
 
         // Update counts live
         updateKpisLocally();
@@ -1628,6 +1719,47 @@
         founder_users: founders,
         expiring_soon: expiring
       }, allUsers);
+    }
+
+    // ─── Delete Modal Handlers ───────────────────────────────
+    function openDeleteModal(emailOrId = '') {
+      const select = document.getElementById('delete-user-select');
+      select.innerHTML = '<option value="">-- Choose operator to delete --</option>';
+      allUsers.filter(u => !u.is_founder).forEach(u => {
+        const opt = document.createElement('option');
+        opt.value = u.id;
+        opt.textContent = `${u.name || 'Operator'} (${u.email || u.id}) — ${u.plan_label}`;
+        if (emailOrId && (u.email === emailOrId || u.id === emailOrId)) {
+          opt.selected = true;
+        }
+        select.appendChild(opt);
+      });
+      document.getElementById('delete-email-input').value = emailOrId || '';
+      document.getElementById('delete-modal').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('delete-modal').classList.remove('active');
+    }
+
+    function handleDeleteSelectChange() {
+      const select = document.getElementById('delete-user-select');
+      const val = select.value;
+      if (val) {
+        const user = allUsers.find(u => u.id === val);
+        document.getElementById('delete-email-input').value = user ? (user.email || user.id) : val;
+      }
+    }
+
+    async function handleDeleteModalSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('delete-email-input').value.trim();
+      if (!input) {
+        showToast('Please select or enter a user email or UID to delete.', 'error');
+        return;
+      }
+      closeDeleteModal();
+      await deleteUserAccount(input, input);
     }
 
     // ─── Export CSV ──────────────────────────────────────────
