@@ -254,3 +254,30 @@ def verify_firebase_token(id_token: str) -> Optional[dict]:
     _TOKEN_CACHE[token] = (min(exp_ts, now_ts + 1800), user_data)
 
     return user_data
+
+
+def delete_firebase_user(user_id: str) -> tuple[bool, str]:
+    """
+    Delete a user from Firebase Auth using Firebase Admin SDK.
+    Returns (success: bool, message: str).
+    """
+    if not user_id:
+        return False, "No user_id provided"
+
+    # In mock test mode:
+    if _mock_token_verifier is not None:
+        logger.info("Mock Firebase user deletion for uid=%s", user_id)
+        return True, "Deleted from Firebase Auth (test mode)"
+
+    try:
+        app = get_firebase_app()
+        firebase_auth.delete_user(user_id, app=app)
+        logger.info("Permanently deleted user %s from Firebase Auth", user_id)
+        return True, "Deleted from Firebase Auth"
+    except firebase_auth.UserNotFoundError:
+        logger.info("User %s was already not in Firebase Auth", user_id)
+        return True, "User was not present in Firebase Auth"
+    except Exception as exc:
+        logger.warning("Could not delete user %s from Firebase Auth: %s", user_id, exc)
+        return False, str(exc)
+

@@ -16,7 +16,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from routes.auth import get_current_user
+from routes.auth import get_current_user, _USER_CACHE
+from services.auth import delete_firebase_user
 from services.subscription import (
     is_admin_or_founder,
     FOUNDER_EMAILS,
@@ -30,6 +31,7 @@ from services.db import (
     get_user_by_email,
     get_user_by_id,
     create_subscription,
+    delete_user_by_id,
 )
 
 logger = logging.getLogger(__name__)
@@ -62,6 +64,10 @@ class GrantSubscriptionRequest(BaseModel):
 
 class RevokeSubscriptionRequest(BaseModel):
     user_email_or_id: str = Field(..., description="User email or Firebase UID")
+
+
+class DeleteUserRequest(BaseModel):
+    user_email_or_id: str = Field(..., description="User email or Firebase UID to permanently delete")
 
 
 # ─── Helper Functions ─────────────────────────────────────────────────────────
@@ -330,6 +336,76 @@ async def revoke_subscription(body: RevokeSubscriptionRequest, admin: dict = Dep
         "status": "success",
         "message": f"Subscription revoked for {user['email']}. User is now on Free tier.",
         "user_id": target_uid,
+    }
+
+
+@router.delete("/api/admin/users/{user_id}")
+@router.post("/api/admin/delete-user")
+async def delete_user_account(
+    user_id: Optional[str] = None,
+    body: Optional[DeleteUserRequest] = None,
+    admin: dict = Depends(require_admin),
+):
+    """
+    Permanently delete an operator account from Supabase PostgreSQL and Firebase Auth.
+    Cascades to delete conversations, messages, subscriptions, and daily usage records.
+    Founders and the current admin cannot be deleted.
+    """
+    target_identifier = user_id or (body.user_email_or_id if body else None)
+    if not target_identifier:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User ID or email is required.",
+        )
+
+    user = _resolve_user(target_identifier)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User '{target_identifier}' not found.",
+        )
+
+    target_uid = user["id"]
+    target_email = (user.get("email") or "").strip().lower()
+
+    # Safeguard 1: Cannot delete Founder / Admin accounts
+    if is_admin_or_founder(target_uid) or target_email in FOUNDER_EMAILS or target_uid in _FOUNDER_USER_IDS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete founder or administrator account.",
+        )
+
+    # Safeguard 2: Cannot delete yourself
+    admin_id = admin.get("id")
+    admin_email = (admin.get("email") or "").strip().lower()
+    if target_uid == admin_id or target_email == admin_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete your own admin account.",
+        )
+
+    # 1. Delete from Supabase PostgreSQL
+    db_success = delete_user_by_id(target_uid)
+
+    # 2. Delete from Firebase Auth
+    fb_success, fb_msg = delete_firebase_user(target_uid)
+
+    # 3. Clear from in-memory user cache
+    _USER_CACHE.pop(target_uid, None)
+
+    logger.info(
+        "Admin %s permanently deleted user %s (uid=%s). DB: %s, Firebase: %s (%s)",
+        admin_email, target_email, target_uid, db_success, fb_success, fb_msg,
+    )
+
+    return {
+        "status": "success",
+        "message": f"Operator '{target_email or target_uid}' permanently deleted from Supabase & Firebase Auth.",
+        "user_id": target_uid,
+        "email": target_email,
+        "supabase_deleted": db_success,
+        "firebase_deleted": fb_success,
+        "firebase_detail": fb_msg,
     }
 
 

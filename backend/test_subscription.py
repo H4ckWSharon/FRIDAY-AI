@@ -438,3 +438,34 @@ async def test_admin_endpoints(temp_db):
         )
     assert status_res2.status_code == 200
     assert status_res2.json()["model_tier"] == "free"
+
+    # 6. Attempting to delete founder account should fail with 400
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        del_founder_res = await ac.delete(
+            "/api/admin/users/ih5zm1zzusd3gwZLF69fYKWA14d2",
+            headers={"Authorization": "Bearer token-founder-user"},
+        )
+    assert del_founder_res.status_code == 400
+    assert "Cannot delete" in del_founder_res.json()["detail"]
+
+    # 7. Non-admin trying to delete user should fail with 403
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        unauth_del = await ac.delete(
+            "/api/admin/users/usr_free_101",
+            headers={"Authorization": "Bearer token-paid-user"},
+        )
+    assert unauth_del.status_code == 403
+
+    # 8. Admin successfully deletes user
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        del_res = await ac.delete(
+            "/api/admin/users/usr_paid_202",
+            headers={"Authorization": "Bearer token-founder-user"},
+        )
+    assert del_res.status_code == 200
+    assert del_res.json()["status"] == "success"
+    assert del_res.json()["supabase_deleted"] is True
+
+    # Verify user is gone from DB
+    assert temp_db.get_user_by_id("usr_paid_202") is None
+

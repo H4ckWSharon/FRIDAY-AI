@@ -690,6 +690,12 @@
       border-color: var(--cyan-neon);
       color: var(--cyan-neon);
     }
+    .btn-action-delete:hover {
+      background: rgba(255, 0, 85, 0.15) !important;
+      border-color: var(--crimson-neon) !important;
+      color: #ff0055 !important;
+      box-shadow: 0 0 10px rgba(255, 0, 85, 0.25);
+    }
 
     /* ─── Empty & Loading States ───────────────────────────── */
     .state-panel {
@@ -1435,6 +1441,11 @@
                   Revoke
                 </button>
               ` : ''}
+              ${!u.is_founder ? `
+                <button class="btn-action-sm btn-action-delete" style="color: #ff3366; border-color: rgba(255, 0, 85, 0.25);" onclick="deleteUserAccount('${escapeHtml(u.id)}', '${escapeHtml(u.email || u.name || 'this user')}')" title="Permanently delete user from Supabase & Firebase">
+                  🗑️ Delete
+                </button>
+              ` : ''}
             </div>
           </td>
         `;
@@ -1557,6 +1568,66 @@
       } catch (err) {
         showToast('Error: ' + err.message, 'error');
       }
+    }
+
+    async function deleteUserAccount(userId, userEmail) {
+      const confirmed = confirm(
+        `⚠️ PERMANENT USER DELETION\n\nAre you sure you want to permanently delete operator:\n${userEmail} (${userId})?\n\nThis will completely erase:\n• All conversations and message histories\n• All subscription records\n• All daily chat usage records\n• Supabase PostgreSQL user record\n• Firebase Authentication profile\n\nThis action cannot be undone!`
+      );
+      if (!confirmed) return;
+
+      showToast(`Deleting operator ${userEmail}...`, 'info');
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/admin/users/${encodeURIComponent(userId)}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${currentToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Delete failed');
+
+        // Optimistic live update: remove immediately from in-memory user list
+        allUsers = allUsers.filter(u => u.id !== userId);
+
+        // Update counts live
+        updateKpisLocally();
+        renderUsers();
+
+        showToast(data.message || `Operator ${userEmail} permanently deleted.`, 'success');
+
+        // Background sync to ensure server consistency
+        fetchTelemetry();
+      } catch (err) {
+        showToast('Delete error: ' + err.message, 'error');
+      }
+    }
+
+    function updateKpisLocally() {
+      const total = allUsers.length;
+      let paid = 0, free = 0, founders = 0, expiring = 0;
+      allUsers.forEach(u => {
+        if (u.is_founder) {
+          founders++;
+        } else if (u.status === 'active' && u.plan_id !== 'free') {
+          paid++;
+          if (u.days_remaining !== null && u.days_remaining <= 7 && u.days_remaining >= 0) {
+            expiring++;
+          }
+        } else {
+          free++;
+        }
+      });
+      renderKPIs({
+        total_users: total,
+        paid_users: paid,
+        free_users: free,
+        founder_users: founders,
+        expiring_soon: expiring
+      }, allUsers);
     }
 
     // ─── Export CSV ──────────────────────────────────────────

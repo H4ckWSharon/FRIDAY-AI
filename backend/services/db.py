@@ -504,6 +504,34 @@ def update_user_profile(user_id: str, name: Optional[str] = None, avatar: Option
     return dict(updated) if updated else None
 
 
+def delete_user_by_id(user_id: str) -> bool:
+    """
+    Permanently delete a user from the database and cascade delete all
+    their conversations, messages, subscriptions, and daily usage records.
+    Returns True if user row was deleted.
+    """
+    if not user_id:
+        return False
+    with get_db() as conn:
+        # 1. Delete messages from user's conversations
+        conn.execute(
+            """DELETE FROM messages WHERE conv_id IN (
+                   SELECT id FROM conversations WHERE user_id = ?
+               )""",
+            (user_id,),
+        )
+        # 2. Delete conversations
+        conn.execute("DELETE FROM conversations WHERE user_id = ?", (user_id,))
+        # 3. Delete subscriptions
+        conn.execute("DELETE FROM subscriptions WHERE user_id = ?", (user_id,))
+        # 4. Delete daily usage
+        conn.execute("DELETE FROM daily_usage WHERE user_id = ?", (user_id,))
+        # 5. Delete user
+        cursor = conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        return cursor.rowcount > 0
+
+
+
 # ─── Conversation CRUD ───────────────────────────────────────────────────────
 
 def create_conversation(
