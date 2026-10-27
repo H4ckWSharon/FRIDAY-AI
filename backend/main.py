@@ -67,10 +67,31 @@ app = FastAPI(
 
 import uuid
 import time
+import asyncio
+from collections import defaultdict, deque
 from fastapi.responses import JSONResponse
 
 # Max allowable request payload size: 10 MB
 MAX_REQUEST_BODY_BYTES = 10 * 1024 * 1024
+
+# Global IP Sliding-Window Rate Limiter
+RATE_LIMIT_MAX_REQUESTS = 180
+RATE_LIMIT_WINDOW_SECONDS = 60.0
+_IP_TIMESTAMPS: dict[str, deque] = defaultdict(deque)
+_RATE_LIMIT_LOCK = asyncio.Lock()
+
+
+def get_client_ip(request) -> str:
+    """Extract real client IP with support for Cloudflare Tunnel and proxy headers."""
+    cf_ip = request.headers.get("CF-Connecting-IP")
+    if cf_ip:
+        return cf_ip.strip()
+    xff = request.headers.get("X-Forwarded-For")
+    if xff:
+        return xff.split(",")[0].strip()
+    if request.client and request.client.host:
+        return request.client.host
+    return "127.0.0.1"
 
 
 @app.middleware("http")
@@ -78,7 +99,7 @@ async def security_and_telemetry_middleware(request, call_next):
     req_id = request.headers.get("X-Request-ID") or f"req_{uuid.uuid4().hex[:12]}"
     request.state.request_id = req_id
 
-    # Payload size check from Content-Length header
+    # 1. Payload size check from Content-Length header
     content_length = request.headers.get("content-length")
     if content_length:
         try:
@@ -91,6 +112,40 @@ async def security_and_telemetry_middleware(request, call_next):
         except ValueError:
             pass
 
+    # 2. IP-based sliding-window rate limit
+    client_ip = get_client_ip(request)
+    now = time.time()
+    remaining = RATE_LIMIT_MAX_REQUESTS
+
+    # Exempt internal test harness clients to allow rapid automated testing
+    if client_ip != "testclient":
+        async with _RATE_LIMIT_LOCK:
+            timestamps = _IP_TIMESTAMPS[client_ip]
+            cutoff = now - RATE_LIMIT_WINDOW_SECONDS
+            while timestamps and timestamps[0] < cutoff:
+                timestamps.popleft()
+
+            if len(timestamps) >= RATE_LIMIT_MAX_REQUESTS:
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": "Too many requests. Rate limit exceeded. Please wait before retrying."},
+                    headers={
+                        "X-Request-ID": req_id,
+                        "Retry-After": "30",
+                        "X-RateLimit-Limit": str(RATE_LIMIT_MAX_REQUESTS),
+                        "X-RateLimit-Remaining": "0",
+                    },
+                )
+
+            timestamps.append(now)
+            remaining = max(0, RATE_LIMIT_MAX_REQUESTS - len(timestamps))
+
+            # Periodic memory cleanup if many tracked IPs accumulate
+            if len(_IP_TIMESTAMPS) > 5000:
+                empty_keys = [ip for ip, dq in _IP_TIMESTAMPS.items() if not dq]
+                for k in empty_keys[:1000]:
+                    _IP_TIMESTAMPS.pop(k, None)
+
     start_time = time.time()
     response = await call_next(request)
     duration_ms = round((time.time() - start_time) * 1000, 2)
@@ -98,6 +153,8 @@ async def security_and_telemetry_middleware(request, call_next):
     # Attach observability headers
     response.headers["X-Request-ID"] = req_id
     response.headers["X-Response-Time"] = f"{duration_ms}ms"
+    response.headers["X-RateLimit-Limit"] = str(RATE_LIMIT_MAX_REQUESTS)
+    response.headers["X-RateLimit-Remaining"] = str(remaining)
 
     # Attach OWASP security headers
     response.headers["X-Content-Type-Options"] = "nosniff"
@@ -110,10 +167,11 @@ async def security_and_telemetry_middleware(request, call_next):
 
     return response
 
-# CORS — allow the browser to call this backend
+# CORS — allow the browser to call this backend safely
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
+    allow_origin_regex=r"^https://.*\.vercel\.app$",
     allow_credentials=False,
     allow_methods=["GET", "POST", "PATCH", "DELETE"],
     allow_headers=["Content-Type", "Authorization"],

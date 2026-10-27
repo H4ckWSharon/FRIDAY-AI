@@ -13,7 +13,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request, status
 from pydantic import BaseModel, Field
 
 from config import get_settings
@@ -26,8 +26,9 @@ from services.subscription import (
     verify_payment_signature,
     verify_and_activate,
     verify_webhook_signature,
+    fetch_razorpay_order,
 )
-from services.db import create_subscription
+from services.db import create_subscription, is_order_or_payment_redeemed
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Razorpay & Subscriptions"])
@@ -69,15 +70,16 @@ async def _handle_create_order(
     user_id = user["id"] if user else "guest"
     notes = body.notes or {}
 
-    # If plan_id is provided, derive price from PLAN_CONFIG
+    # If plan_id is provided, strictly derive and lock price from PLAN_CONFIG
     if plan_id:
-        if plan_id not in PLAN_CONFIG or plan_id == "free":
+        if plan_id not in PLAN_CONFIG or plan_id in ("free", "founder_unlimited"):
             raise HTTPException(status_code=400, detail=f"Invalid plan: {plan_id}")
         plan = PLAN_CONFIG[plan_id]
-        amount = plan["price_paise"]
+        amount = plan["price_paise"]  # Force exact server-side pricing; ignore client-supplied amount
         notes["plan_id"] = plan_id
         notes["plan_label"] = plan.get("label", plan_id)
         notes["user_id"] = user_id
+        notes["expected_amount"] = amount
 
     # If neither plan_id nor amount provided
     if amount is None:
@@ -135,7 +137,15 @@ async def _handle_verify_payment(
             detail="Missing required fields: order_id, payment_id, and signature are required.",
         )
 
-    # Validate HMAC signature
+    # 1. Anti-Replay: Prevent reusing already-activated order or payment IDs
+    if is_order_or_payment_redeemed(order_id, payment_id):
+        logger.warning("Order %s or payment %s has already been redeemed", order_id, payment_id)
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This payment or order has already been processed and activated.",
+        )
+
+    # 2. Validate HMAC signature
     is_valid = verify_payment_signature(
         razorpay_order_id=order_id,
         razorpay_payment_id=payment_id,
@@ -149,11 +159,41 @@ async def _handle_verify_payment(
             detail="Payment verification failed. Signature mismatch.",
         )
 
-    # If plan_id is present and user is identified, activate plan in database
+    # 3. Plan Price & Integrity Verification
     sub_record = None
     plan_id = body.plan_id
     if plan_id and plan_id in PLAN_CONFIG:
         plan = PLAN_CONFIG[plan_id]
+        if plan_id in ("free", "founder_unlimited"):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot activate tier '{plan_id}' via standard payment verification.",
+            )
+
+        # Server-side verification with Razorpay order API to prevent price tampering & spoofing
+        fetched_order = fetch_razorpay_order(order_id)
+        if fetched_order:
+            order_amount = fetched_order.get("amount")
+            if order_amount is not None and order_amount < plan["price_paise"]:
+                logger.warning(
+                    "Price tampering detected for order %s: paid %s paise but plan %s requires %s paise",
+                    order_id, order_amount, plan_id, plan["price_paise"]
+                )
+                raise HTTPException(
+                    status_code=400,
+                    detail="Payment validation failed. Paid amount does not match required plan price.",
+                )
+            order_plan = fetched_order.get("notes", {}).get("plan_id")
+            if order_plan and order_plan != plan_id:
+                logger.warning(
+                    "Plan spoofing detected for order %s: order notes specified %s but requested %s",
+                    order_id, order_plan, plan_id
+                )
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Plan mismatch: this order was created for '{order_plan}', not '{plan_id}'.",
+                )
+
         user_id = user["id"] if user else None
         if user_id:
             expires_at = None

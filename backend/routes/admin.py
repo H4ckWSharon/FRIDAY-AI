@@ -41,11 +41,34 @@ router = APIRouter(tags=["Admin & Founder Telemetry"])
 # ─── Security Dependency ──────────────────────────────────────────────────────
 
 def require_admin(current_user: dict = Depends(get_current_user)) -> dict:
-    """Ensure caller has founder or admin privileges."""
+    """
+    Ensure caller has founder or admin privileges.
+    Security invariants:
+      1. Explicit founder Firebase UID match (highest assurance).
+      2. If matching by founder email, email_verified MUST be True to prevent unverified spoofing.
+    """
     user_id = current_user.get("id")
     email = (current_user.get("email") or "").strip().lower()
+    email_verified = current_user.get("email_verified", False)
 
-    if email in FOUNDER_EMAILS or (user_id and user_id in _FOUNDER_USER_IDS) or is_admin_or_founder(user_id):
+    # 1. Direct UID match for verified founder
+    if user_id and user_id in _FOUNDER_USER_IDS:
+        return current_user
+
+    # 2. Email match: strictly require verified email from identity provider
+    if email in FOUNDER_EMAILS:
+        if not email_verified:
+            logger.warning(
+                "Unverified account attempted founder clearance: email=%s uid=%s",
+                email, user_id,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Email verification required for administrator clearance.",
+            )
+        return current_user
+
+    if is_admin_or_founder(user_id):
         return current_user
 
     raise HTTPException(

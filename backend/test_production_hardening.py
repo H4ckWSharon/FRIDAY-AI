@@ -171,3 +171,26 @@ async def test_concurrency_governor_global_backpressure(monkeypatch):
         await waiter_task
         ollama_service._inference_semaphore = None
         get_settings.cache_clear()
+
+
+def test_ip_rate_limiting_middleware():
+    """Verify IP sliding-window rate limiting returns 429 and Retry-After when threshold exceeded."""
+    import time
+    from main import _IP_TIMESTAMPS, RATE_LIMIT_MAX_REQUESTS
+    test_ip = "198.51.100.42"
+    _IP_TIMESTAMPS[test_ip].clear()
+
+    headers = {"X-Forwarded-For": test_ip}
+    # Pre-populate bucket up to the maximum allowable requests
+    now = time.time()
+    for _ in range(RATE_LIMIT_MAX_REQUESTS):
+        _IP_TIMESTAMPS[test_ip].append(now)
+
+    # Next request from this IP must be blocked with HTTP 429
+    blocked_res = client.get("/api/health", headers=headers)
+    assert blocked_res.status_code == 429
+    assert "Rate limit exceeded" in blocked_res.json()["detail"]
+    assert blocked_res.headers.get("Retry-After") == "30"
+    assert blocked_res.headers.get("X-RateLimit-Remaining") == "0"
+    _IP_TIMESTAMPS.pop(test_ip, None)
+

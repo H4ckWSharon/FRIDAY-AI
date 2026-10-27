@@ -349,6 +349,21 @@ def create_order_direct(
         raise HTTPException(status_code=500, detail="Failed to create Razorpay order.")
 
 
+def fetch_razorpay_order(order_id: str) -> Optional[dict]:
+    """
+    Fetch order details from Razorpay API to verify the server-side price, currency, and notes.
+    Returns the order dict or None if fetch fails.
+    """
+    if not order_id:
+        return None
+    try:
+        client = _get_razorpay_client()
+        return client.order.fetch(order_id)
+    except Exception as exc:
+        logger.debug("Razorpay order fetch for %s: %s", order_id, exc)
+        return None
+
+
 def create_razorpay_order(plan_id: str, user_id: str) -> dict:
     """
     Create a Razorpay order for the given plan.

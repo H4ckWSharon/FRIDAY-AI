@@ -85,8 +85,15 @@ else
   echo "  -> Existing .env preserved."
 fi
 
-# 7. Create & Start Isolated Systemd Service
-echo "[6/7] Creating systemd service: friday.service..."
+# 7. Create Dedicated Unprivileged Service User & Set Permissions
+echo "[6/7] Ensuring non-root service user 'friday' exists..."
+if ! id -u friday >/dev/null 2>&1; then
+  useradd -r -s /bin/false -d "$FRIDAY_DIR" friday
+fi
+chown -R friday:friday "$FRIDAY_DIR"
+
+# 8. Create & Start Isolated Systemd Service (Non-Root)
+echo "[7/7] Creating systemd service: friday.service (User=friday)..."
 cat <<EOF > /etc/systemd/system/friday.service
 [Unit]
 Description=FRIDAY AI Backend Service
@@ -94,7 +101,8 @@ After=network.target
 
 [Service]
 Type=simple
-User=root
+User=friday
+Group=friday
 WorkingDirectory=$FRIDAY_DIR/backend
 ExecStart=$FRIDAY_DIR/backend/.venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port $FRIDAY_PORT --workers 1 --proxy-headers
 Restart=always

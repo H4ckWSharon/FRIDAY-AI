@@ -87,13 +87,14 @@ def get_current_user_optional(authorization: Optional[str] = Header(None)) -> Op
     name = verified.get("name") or "Operator"
     picture = verified.get("picture")
 
-    user_record = upsert_firebase_user(
+    user_record = dict(upsert_firebase_user(
         user_id=uid,
         email=email,
         name=name,
         avatar=picture,
         provider="google-firebase",
-    )
+    ))
+    user_record["email_verified"] = bool(verified.get("email_verified", False))
     _USER_CACHE[uid] = (now_ts + _USER_CACHE_TTL, user_record)
     return user_record
 
@@ -138,13 +139,14 @@ def get_current_user(authorization: Optional[str] = Header(None)) -> dict:
     name = verified.get("name") or "Operator"
     picture = verified.get("picture")
 
-    user_record = upsert_firebase_user(
+    user_record = dict(upsert_firebase_user(
         user_id=uid,
         email=email,
         name=name,
         avatar=picture,
         provider="google-firebase",
-    )
+    ))
+    user_record["email_verified"] = bool(verified.get("email_verified", False))
     _USER_CACHE[uid] = (now_ts + _USER_CACHE_TTL, user_record)
     return user_record
 

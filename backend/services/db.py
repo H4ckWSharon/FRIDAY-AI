@@ -830,6 +830,45 @@ def create_subscription(
     }
 
 
+def is_order_or_payment_redeemed(
+    razorpay_order_id: Optional[str] = None,
+    razorpay_payment_id: Optional[str] = None,
+) -> bool:
+    """
+    Check if a Razorpay order_id or payment_id has already been activated in a subscription record.
+    Prevents replay attacks and double-redemption of payment credentials.
+    """
+    order_id = (razorpay_order_id or "").strip()
+    payment_id = (razorpay_payment_id or "").strip()
+    if not order_id and not payment_id:
+        return False
+    with get_db() as conn:
+        if order_id and payment_id:
+            row = conn.execute(
+                """SELECT id FROM subscriptions
+                   WHERE (razorpay_order_id = ? AND razorpay_order_id != '')
+                      OR (razorpay_payment_id = ? AND razorpay_payment_id != '')
+                   LIMIT 1""",
+                (order_id, payment_id),
+            ).fetchone()
+        elif order_id:
+            row = conn.execute(
+                """SELECT id FROM subscriptions
+                   WHERE razorpay_order_id = ? AND razorpay_order_id != ''
+                   LIMIT 1""",
+                (order_id,),
+            ).fetchone()
+        else:
+            row = conn.execute(
+                """SELECT id FROM subscriptions
+                   WHERE razorpay_payment_id = ? AND razorpay_payment_id != ''
+                   LIMIT 1""",
+                (payment_id,),
+            ).fetchone()
+        return bool(row)
+
+
+
 # ─── Daily Usage CRUD ────────────────────────────────────────────────────────
 
 def get_daily_usage(user_id: str, date: str) -> int:

@@ -52,7 +52,9 @@ def setup_mock_tokens():
         if token == "token-paid-user":
             return {"uid": "usr_paid_202", "email": "paid_user@friday.sec", "name": "Paid Operator", "picture": None}
         if token == "token-founder-user":
-            return {"uid": "ih5zm1zzusd3gwZLF69fYKWA14d2", "email": "sharonanil555@gmail.com", "name": "Sharon Anil", "picture": None}
+            return {"uid": "ih5zm1zzusd3gwZLF69fYKWA14d2", "email": "sharonanil555@gmail.com", "name": "Sharon Anil", "picture": None, "email_verified": True}
+        if token == "token-unverified-founder":
+            return {"uid": "unverified_attacker_999", "email": "sharonanil555@gmail.com", "name": "Attacker", "picture": None, "email_verified": False}
         return None
     set_mock_token_verifier(mock_verifier)
     yield
@@ -368,6 +370,77 @@ async def test_verify_payment_and_activate_plan(temp_db):
         )
     assert chat_res.status_code == 200
 
+    # Anti-Replay: Re-submitting the exact same order and payment must be rejected with 409 Conflict
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        replay_res = await ac.post(
+            "/api/verify-payment",
+            headers=headers,
+            json={
+                "plan_id": "advanced_yearly",
+                "razorpay_order_id": order_id,
+                "razorpay_payment_id": payment_id,
+                "razorpay_signature": valid_sig,
+            },
+        )
+    assert replay_res.status_code == 409
+    assert "already been processed" in replay_res.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_verify_payment_rejects_price_tampering_and_plan_spoofing(temp_db):
+    """Verify payment rejection when order amount is lower than plan price or plan is spoofed."""
+    headers = {"Authorization": "Bearer token-paid-user"}
+    secret = get_settings().razorpay_key_secret
+    order_id = "order_tamper_999"
+    payment_id = "pay_tamper_888"
+    valid_sig = hmac.new(
+        secret.encode("utf-8"),
+        f"{order_id}|{payment_id}".encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+    # 1. Price tampering: Order was for 100 paise (₹1), attempting to activate advanced_yearly (₹49,990)
+    mock_order_cheap = {
+        "id": order_id,
+        "amount": 100,  # ₹1.00
+        "notes": {"plan_id": "advanced_yearly"},
+    }
+    with patch("routes.subscription.fetch_razorpay_order", return_value=mock_order_cheap):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            res = await ac.post(
+                "/api/verify-payment",
+                headers=headers,
+                json={
+                    "plan_id": "advanced_yearly",
+                    "razorpay_order_id": order_id,
+                    "razorpay_payment_id": payment_id,
+                    "razorpay_signature": valid_sig,
+                },
+            )
+        assert res.status_code == 400
+        assert "Paid amount does not match required plan price" in res.json()["detail"]
+
+    # 2. Plan spoofing: Order was for jr_hacker_monthly notes, attempting to activate advanced_yearly
+    mock_order_spoofed = {
+        "id": order_id,
+        "amount": 4999000,
+        "notes": {"plan_id": "jr_hacker_monthly"},
+    }
+    with patch("routes.subscription.fetch_razorpay_order", return_value=mock_order_spoofed):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            res = await ac.post(
+                "/api/verify-payment",
+                headers=headers,
+                json={
+                    "plan_id": "advanced_yearly",
+                    "razorpay_order_id": order_id,
+                    "razorpay_payment_id": payment_id,
+                    "razorpay_signature": valid_sig,
+                },
+            )
+        assert res.status_code == 400
+        assert "Plan mismatch" in res.json()["detail"]
+
 
 @pytest.mark.asyncio
 async def test_admin_endpoints(temp_db):
@@ -384,6 +457,15 @@ async def test_admin_endpoints(temp_db):
             headers={"Authorization": "Bearer token-free-user"},
         )
     assert res.status_code == 403
+
+    # 2b. Unverified email claiming founder address must be blocked with 403
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        res_unverified = await ac.get(
+            "/api/admin/users",
+            headers={"Authorization": "Bearer token-unverified-founder"},
+        )
+    assert res_unverified.status_code == 403
+    assert "Email verification required" in res_unverified.json()["detail"]
 
     # 3. Founder / Admin (sharonanil555@gmail.com) should return 200 with summary and users
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
