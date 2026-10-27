@@ -603,6 +603,7 @@ class TestExecutionIntelligence:
         assert messages[1]["content"] == "Hello FRIDAY"
         assert "[ACTIVE STAGE DIRECTIVE:" not in messages[1]["content"]
 
+    @pytest.mark.asyncio
     async def test_database_persistence_preserves_clean_user_message(self, temp_db):
         """Database persistence receives the original, unmodified user text without directives."""
         from schemas import ChatRequest, ChatMessage

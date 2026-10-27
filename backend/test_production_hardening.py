@@ -66,8 +66,8 @@ def test_input_validation_schema_bounds():
 
 def test_dual_signal_health_endpoint():
     """Verify health endpoint reports both database and ollama reachability."""
-    with patch("services.ollama.check_ollama_reachable", return_value=True), \
-         patch("services.db.check_db_reachable", return_value=True):
+    with patch("routes.health.check_ollama_reachable", return_value=True), \
+         patch("routes.health.check_db_reachable", return_value=True):
         res = client.get("/api/health")
         assert res.status_code == 200
         data = res.json()
