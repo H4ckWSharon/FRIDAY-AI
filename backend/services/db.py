@@ -253,6 +253,44 @@ def init_db() -> None:
 
                         CREATE INDEX IF NOT EXISTS idx_daily_usage_user_date ON daily_usage(user_id, date);
                     """)
+
+                    # ── Row-Level Security ──────────────────────────────────
+                    # Enable RLS on all tables so the Supabase public REST API
+                    # (anon / authenticated roles) cannot read or modify data.
+                    # The backend's direct psycopg2 connection uses the postgres
+                    # (service_role) user which bypasses RLS automatically.
+                    rls_tables = ['users', 'conversations', 'messages', 'subscriptions', 'daily_usage']
+                    for tbl in rls_tables:
+                        try:
+                            conn.executescript(f"""
+                                ALTER TABLE public.{tbl} ENABLE ROW LEVEL SECURITY;
+                                ALTER TABLE public.{tbl} FORCE ROW LEVEL SECURITY;
+                            """)
+                        except Exception:
+                            pass  # Already enabled
+                        try:
+                            conn.executescript(f"""
+                                DO $$ BEGIN
+                                    IF NOT EXISTS (
+                                        SELECT 1 FROM pg_policies
+                                        WHERE schemaname = 'public'
+                                        AND tablename = '{tbl}'
+                                        AND policyname = 'deny_all_{tbl}'
+                                    ) THEN
+                                        CREATE POLICY "deny_all_{tbl}"
+                                        ON public.{tbl}
+                                        FOR ALL
+                                        USING (false)
+                                        WITH CHECK (false);
+                                    END IF;
+                                END $$;
+                                REVOKE ALL ON public.{tbl} FROM anon;
+                                REVOKE ALL ON public.{tbl} FROM authenticated;
+                            """)
+                        except Exception as rls_exc:
+                            logger.debug("RLS policy setup for %s: %s", tbl, rls_exc)
+                    logger.info("Row-Level Security enforced on all public tables.")
+
                     logger.info("PostgreSQL database initialized on Supabase.")
                     return
         except Exception as exc:
