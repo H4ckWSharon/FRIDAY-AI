@@ -37,6 +37,7 @@ async def acquire_inference_capacity(user_id: Optional[str] = None):
     """
     Guarantees bounded CPU inference capacity, prevents server starvation,
     enforces per-user generation concurrency, and provides instant backpressure.
+    Fully leak-proof against client disconnections, cancellations, and timeouts.
     """
     global _waiting_count
     settings = get_settings()
@@ -52,6 +53,12 @@ async def acquire_inference_capacity(user_id: Optional[str] = None):
 
         sem = get_inference_semaphore()
         if _waiting_count >= settings.max_inference_queue:
+            logger.warning(
+                "Inference queue full: waiting=%d >= max=%d (active_users=%d)",
+                _waiting_count,
+                settings.max_inference_queue,
+                len(_user_active_inferences),
+            )
             raise HTTPException(
                 status_code=503,
                 detail="FRIDAY neural engine is currently operating at peak capacity. Please retry shortly.",
@@ -59,27 +66,80 @@ async def acquire_inference_capacity(user_id: Optional[str] = None):
             )
         _waiting_count += 1
 
+    waiting_decremented = False
+    acquired_sem = False
+    user_tracked = False
+
     try:
-        await sem.acquire()
-    except Exception:
+        try:
+            # 60s queue wait timeout to prevent stale client accumulation
+            await asyncio.wait_for(sem.acquire(), timeout=60.0)
+            acquired_sem = True
+        except asyncio.TimeoutError:
+            raise HTTPException(
+                status_code=503,
+                detail="FRIDAY neural engine queue timed out. Please try again shortly.",
+                headers={"Retry-After": "5"},
+            )
+
         async with _governor_lock:
             _waiting_count = max(0, _waiting_count - 1)
-        raise
+            waiting_decremented = True
+            _user_active_inferences[uid] = _user_active_inferences.get(uid, 0) + 1
+            user_tracked = True
 
-    async with _governor_lock:
-        _waiting_count = max(0, _waiting_count - 1)
-        _user_active_inferences[uid] = _user_active_inferences.get(uid, 0) + 1
-
-    try:
         yield
+
     finally:
-        sem.release()
-        async with _governor_lock:
-            current = _user_active_inferences.get(uid, 1) - 1
-            if current <= 0:
-                _user_active_inferences.pop(uid, None)
-            else:
-                _user_active_inferences[uid] = current
+        # Guaranteed cleanup regardless of CancelledError, GeneratorExit, Exception, or return
+        if not waiting_decremented:
+            try:
+                async with _governor_lock:
+                    _waiting_count = max(0, _waiting_count - 1)
+                    waiting_decremented = True
+            except BaseException as e:
+                logger.error("Error decrementing waiting count: %s", e)
+
+        if user_tracked:
+            try:
+                async with _governor_lock:
+                    current = _user_active_inferences.get(uid, 1) - 1
+                    if current <= 0:
+                        _user_active_inferences.pop(uid, None)
+                    else:
+                        _user_active_inferences[uid] = current
+            except BaseException as e:
+                logger.error("Error releasing user active inference tracking: %s", e)
+
+        if acquired_sem:
+            try:
+                sem.release()
+            except BaseException as e:
+                logger.error("Error releasing inference semaphore: %s", e)
+
+
+async def get_governor_status() -> dict:
+    """Returns current load status of the inference governor for health checks and observability."""
+    async with _governor_lock:
+        sem = get_inference_semaphore()
+        available = getattr(sem, "_value", None)
+        return {
+            "waiting_in_queue": _waiting_count,
+            "available_slots": available,
+            "active_users_count": len(_user_active_inferences),
+            "user_inferences": dict(_user_active_inferences),
+        }
+
+
+async def reset_inference_governor():
+    """Safety reset for governor state during testing or recovery."""
+    global _waiting_count, _inference_semaphore, _user_active_inferences
+    async with _governor_lock:
+        _waiting_count = 0
+        _user_active_inferences.clear()
+        settings = get_settings()
+        _inference_semaphore = asyncio.Semaphore(settings.max_concurrent_inferences)
+        logger.info("Inference governor state reset successfully.")
 
 
 # ─── Shared HTTP Client ──────────────────────────────────────────────────────

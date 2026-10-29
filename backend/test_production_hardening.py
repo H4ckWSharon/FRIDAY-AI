@@ -169,8 +169,91 @@ async def test_concurrency_governor_global_backpressure(monkeypatch):
         event_release_holder.set()
         await holder_task
         await waiter_task
-        ollama_service._inference_semaphore = None
+        await ollama_service.reset_inference_governor()
         get_settings.cache_clear()
+
+
+@pytest.mark.asyncio
+async def test_concurrency_governor_cancellation_no_waiting_leak():
+    """
+    CRITICAL: Verify that when client disconnects/cancels while waiting in queue,
+    _waiting_count does NOT leak (CancelledError does not corrupt governor state).
+    """
+    import asyncio
+    from services.ollama import get_governor_status, reset_inference_governor
+    import services.ollama as ollama_service
+
+    await reset_inference_governor()
+    # Force single permit so waiters queue up
+    ollama_service._inference_semaphore = asyncio.Semaphore(1)
+
+    event_holder_started = asyncio.Event()
+    event_release_holder = asyncio.Event()
+
+    async def permit_holder():
+        async with acquire_inference_capacity("holder"):
+            event_holder_started.set()
+            await event_release_holder.wait()
+
+    async def cancelled_waiter(uid: str):
+        async with acquire_inference_capacity(uid):
+            pass
+
+    holder_task = asyncio.create_task(permit_holder())
+    await event_holder_started.wait()
+
+    # Launch 5 waiting tasks that block on the semaphore
+    waiters = [asyncio.create_task(cancelled_waiter(f"waiter_{i}")) for i in range(5)]
+    await asyncio.sleep(0.05)
+
+    status_before = await get_governor_status()
+    assert status_before["waiting_in_queue"] == 5
+
+    # Simulate client disconnects / tab close
+    for w in waiters:
+        w.cancel()
+
+    await asyncio.gather(*waiters, return_exceptions=True)
+
+    status_after_cancel = await get_governor_status()
+    # Waiting count MUST have decremented back to 0, NOT leaked!
+    assert status_after_cancel["waiting_in_queue"] == 0
+
+    # Release holder and cleanup
+    event_release_holder.set()
+    await holder_task
+    await reset_inference_governor()
+
+
+@pytest.mark.asyncio
+async def test_concurrency_governor_user_active_cancellation_no_leak():
+    """Verify that when client disconnects during active generation, user active tracking resets."""
+    import asyncio
+    from services.ollama import get_governor_status, reset_inference_governor
+
+    await reset_inference_governor()
+    started = asyncio.Event()
+
+    async def active_job():
+        async with acquire_inference_capacity("active_user"):
+            started.set()
+            await asyncio.sleep(10)
+
+    task = asyncio.create_task(active_job())
+    await started.wait()
+
+    status = await get_governor_status()
+    assert status["active_users_count"] == 1
+    assert "active_user" in status["user_inferences"]
+
+    # Cancel task while in active generation
+    task.cancel()
+    await asyncio.gather(task, return_exceptions=True)
+
+    status_after = await get_governor_status()
+    assert status_after["active_users_count"] == 0
+    assert "active_user" not in status_after["user_inferences"]
+    await reset_inference_governor()
 
 
 def test_ip_rate_limiting_middleware():
