@@ -323,6 +323,15 @@
   </style>
 </head>
 <body class="bg-black text-[#F5F5F5] antialiased flex w-full overflow-hidden selection:bg-[#FF3038]/30 selection:text-white" style="height: var(--app-height, 100dvh); max-height: var(--app-height, 100dvh);">
+  <!-- FRIDAY Scheduled Maintenance Banner -->
+  <div id="friday-maintenance-banner" class="fixed top-0 left-0 right-0 z-[99999] bg-gradient-to-r from-[#1c0d0e] via-[#2a0e10] to-[#1c0d0e] border-b border-[#FF3038] text-[#F5F5F5] px-4 py-2.5 flex items-center justify-between gap-3 shadow-lg shadow-[#FF3038]/20 select-none">
+    <div class="flex items-center gap-2.5 mx-auto text-center">
+      <span class="material-symbols-outlined text-[#FF3038] text-[20px] animate-pulse">engineering</span>
+      <span class="text-xs sm:text-sm font-semibold tracking-wide font-heading">
+        <strong class="text-[#FF3038] font-bold">SYSTEM NOTICE:</strong> FRIDAY is currently undergoing scheduled maintenance &amp; neural engine upgrades. Systems will return to normal shortly.
+      </span>
+    </div>
+  </div>
 <!-- Mobile Overlay Backdrop -->
 <div class="fixed inset-0 bg-black/75 backdrop-blur-sm z-40 hidden md:hidden transition-opacity duration-200" id="mobile-backdrop"></div>
 <!-- STREAMLINED LEFT SIDEBAR (Collapsible on Desktop, Drawer on Mobile) -->
