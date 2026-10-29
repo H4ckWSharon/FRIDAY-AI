@@ -37,6 +37,14 @@ def temp_db(tmp_path, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def enable_prompt_for_model_tests(monkeypatch):
+    monkeypatch.setenv("ENABLE_BLACKHAT_PROMPT", "true")
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
+
+
+@pytest.fixture(autouse=True)
 def setup_mock_firebase_verifier():
     """Configure mock token verification for simulated test tokens."""
     def mock_verifier(token: str):
@@ -243,3 +251,31 @@ async def test_quick_route_unaffected_by_model(temp_db):
         assert "FRIDAY" in m1_text
         assert "The Jr Hacker" in m1_text
         assert "junior pentester" in m1_text.lower()
+
+
+@pytest.mark.asyncio
+async def test_chat_prompt_disabled_by_default(temp_db, monkeypatch):
+    """When enable_blackhat_prompt=False, chat operates raw without system prompt overhead."""
+    monkeypatch.setenv("ENABLE_BLACKHAT_PROMPT", "false")
+    get_settings.cache_clear()
+    headers = {"Authorization": "Bearer valid-operator-token"}
+    called_messages = None
+
+    async def mock_stream(messages, model):
+        nonlocal called_messages
+        called_messages = messages
+        yield "response chunk"
+
+    with patch("routes.chat.chat_stream", side_effect=mock_stream):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            res = await ac.post(
+                "/api/chat",
+                headers=headers,
+                json={
+                    "messages": [{"role": "user", "content": "analyze buffer overflow"}],
+                    "stream": True,
+                },
+            )
+        assert res.status_code == 200
+        assert len(called_messages) == 1
+        assert called_messages[0]["role"] == "user"

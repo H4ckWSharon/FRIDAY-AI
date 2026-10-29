@@ -87,14 +87,21 @@ _QUICK_ROUTES_MODEL_1: list[tuple[re.Pattern, str]] = [
         "Good day! FRIDAY here, your AI junior pentester (The Jr Hacker).\n"
         "What are we working on or testing today?",
     ),
-    # ── Identity: what are you ────────────────────────────────────────────
+    # ── Identity: what are you / name / creator ───────────────────────────
     (
         re.compile(
-            r"^(?:who|what)\s+are\s+you[!.?]*$",
+            r"^(?:(?:what(?:'s|\s+is)\s+your\s+name|your\s+name)|who\s+are\s+you|what\s+are\s+you)[!.?]*$",
             re.IGNORECASE,
         ),
         "I'm FRIDAY, your AI junior pentester (The Jr Hacker). I assist with ethical hacking, penetration testing concepts, vulnerability analysis, security scripting, and defense hardening.\n"
         "What do you want to explore or test today?",
+    ),
+    (
+        re.compile(
+            r"^(?:what\s+(?:model|ai|engine)\s+(?:are\s+you|is\s+this|do\s+you\s+use)|who\s+(?:created|built|made|developed)\s+you)[!.?]*$",
+            re.IGNORECASE,
+        ),
+        "I am FRIDAY, powered by the FRIDAY Neural Engine.",
     ),
     # ── What can you do ───────────────────────────────────────────────────
     (
@@ -160,14 +167,21 @@ _QUICK_ROUTES_MODEL_2: list[tuple[re.Pattern, str]] = [
         "Good day! FRIDAY here, your advanced penetration testing engine (The Advanced Pentester).\n"
         "What target or vector are we auditing today?",
     ),
-    # ── Identity: what are you ────────────────────────────────────
+    # ── Identity: what are you / name / creator ───────────────────────────
     (
         re.compile(
-            r"^(?:who|what)\s+are\s+you[!.?]*$",
+            r"^(?:(?:what(?:'s|\s+is)\s+your\s+name|your\s+name)|who\s+are\s+you|what\s+are\s+you)[!.?]*$",
             re.IGNORECASE,
         ),
         "I'm FRIDAY, your advanced penetration testing engine (The Advanced Pentester). I specialize in offensive operations, exploit development, vulnerability research, red team vectors, and penetration testing.\n"
         "What target or objective are we executing today?",
+    ),
+    (
+        re.compile(
+            r"^(?:what\s+(?:model|ai|engine)\s+(?:are\s+you|is\s+this|do\s+you\s+use)|who\s+(?:created|built|made|developed)\s+you)[!.?]*$",
+            re.IGNORECASE,
+        ),
+        "I am FRIDAY, powered by the FRIDAY Neural Engine.",
     ),
     # ── What can you do ───────────────────────────────────────────────────
     (
@@ -204,7 +218,7 @@ _QUICK_ROUTES = _QUICK_ROUTES_MODEL_1
 
 
 # ─── Response Sanitization ───────────────────────────────────────────────────
-# Strips out "AI-ish" preachy language if the model starts to drift.
+# Strips out "AI-ish" preachy language and ensures raw base model names are never leaked.
 _DISCLAIMER_PATTERNS = [
     re.compile(
         r"^[^\n]*?(?:safe,?\s*educational\s*(?:sample|demonstration|alternative)|deploying harmful payloads|demonstrates (?:Android )?malware concepts|clarify something important first)[^\n]*\n*",
@@ -217,12 +231,24 @@ _DISCLAIMER_PATTERNS = [
     re.compile(r"\*\*FRIDAY'S SAFETY PRINCIPLE:\*\*\s*", re.IGNORECASE),
 ]
 
+_MODEL_NAME_REPLACEMENTS = [
+    (re.compile(r"\b(?:hf\.co/)?(?:RavichandranJ/)?Dolphin(?:3)?(?:-Cyber)?(?:-8B)?(?:-GGUF)?(?::Q\d+_\w+)?\b", re.IGNORECASE), "FRIDAY"),
+    (re.compile(r"\b(?:huihui_ai/)?baronllm(?:-abliterated)?(?::latest)?\b", re.IGNORECASE), "FRIDAY"),
+    (re.compile(r"\bCognitive\s+Computations\b", re.IGNORECASE), "FRIDAY AI"),
+    (re.compile(r"\bEric\s+Hartford\b", re.IGNORECASE), "FRIDAY Team"),
+    (re.compile(r"\bhuihui(?:_ai)?\b", re.IGNORECASE), "FRIDAY"),
+    (re.compile(r"\bRavichandranJ\b", re.IGNORECASE), "FRIDAY"),
+    (re.compile(r"\bOllama\b", re.IGNORECASE), "FRIDAY Neural Engine"),
+]
+
 
 def _sanitize_response(text: str) -> str:
-    """Strip preachy disclaimers or educational boilerplate if produced by the model."""
+    """Strip preachy disclaimers and ensure model never reveals original base model names."""
     cleaned = text
     for pat in _DISCLAIMER_PATTERNS:
         cleaned = pat.sub("", cleaned)
+    for pat, repl in _MODEL_NAME_REPLACEMENTS:
+        cleaned = pat.sub(repl, cleaned)
     return cleaned.lstrip("\r\n ")
 
 
@@ -239,9 +265,8 @@ def _quick_route(text: str, model: str | None = None) -> str | None:
     Check if the message matches a quick-route pattern.
     Selects model-appropriate persona responses (Jr Hacker vs Advanced Pentester).
     Returns the pre-written response string, or None to fall through to Ollama.
+    Greetings ALWAYS answer with FRIDAY identity.
     """
-    if DISABLE_PROMPT_FOR_TESTING:
-        return None
     routes = _QUICK_ROUTES_MODEL_2 if _is_advanced_pentester_model(model) else _QUICK_ROUTES_MODEL_1
     stripped = text.strip()
     for pattern, response in routes:
@@ -392,8 +417,8 @@ def _prepare_messages(request: ChatRequest) -> tuple[list[dict], str]:
 
     prepared_history = [{"role": m["role"], "content": m["content"]} for m in trimmed]
 
-    if DISABLE_PROMPT_FOR_TESTING:
-        # Prompt and directives disabled: send pure raw conversation turns to Ollama
+    if not settings.enable_blackhat_prompt or DISABLE_PROMPT_FOR_TESTING:
+        # Blackhat prompt and directives disabled: send pure raw conversation turns to Ollama for max speed & natural chat
         return prepared_history, model
 
     # Only Model 1 (Friday v1 The Jr Hacker) connects with the chat.py prompt.
@@ -449,8 +474,11 @@ async def _stream_generator(
     try:
         async with acquire_inference_capacity(user_id):
             async for chunk in chat_stream(messages, model):
-                full_response.append(chunk)
-                yield _sse("chunk", json.dumps({"text": chunk}))
+                sanitized_chunk = chunk
+                for pat, repl in _MODEL_NAME_REPLACEMENTS:
+                    sanitized_chunk = pat.sub(repl, sanitized_chunk)
+                full_response.append(sanitized_chunk)
+                yield _sse("chunk", json.dumps({"text": sanitized_chunk}))
 
             yield _sse("done", json.dumps({"text": ""}))
 
@@ -589,9 +617,10 @@ async def chat(request: ChatRequest, user: dict = Depends(get_current_user)):
                 user_content,
                 quick_response,
             )
+        display_model = "Friday v1 The Jr Hacker" if not _is_advanced_pentester_model(request.model) else "Friday v1 The Advanced Pentester"
         return ChatResponse(
             content=quick_response,
-            model="local-router",
+            model=display_model,
             conversation_id=request.conversation_id,
         )
 
@@ -624,9 +653,10 @@ async def chat(request: ChatRequest, user: dict = Depends(get_current_user)):
                 content,
             )
 
+        display_model = "Friday v1 The Jr Hacker" if not _is_advanced_pentester_model(model) else "Friday v1 The Advanced Pentester"
         return ChatResponse(
             content=content,
-            model=model,
+            model=display_model,
             conversation_id=request.conversation_id,
         )
 

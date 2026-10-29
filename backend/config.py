@@ -60,6 +60,10 @@ class Settings(BaseSettings):
     max_inference_queue: int = 40
     max_user_concurrent_inferences: int = 1
 
+    # Prompt Engineering Configuration
+    # When False, the heavy Black Hat prompt and stage directives are disabled for maximum speed & unconstrained natural chat
+    enable_blackhat_prompt: bool = False
+
     # Database connection URL (PostgreSQL / Supabase / Neon)
     # If set, PostgreSQL is used for persistence. If None/empty, SQLite is used.
     database_url: Optional[str] = None

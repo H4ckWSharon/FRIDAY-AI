@@ -501,6 +501,14 @@ class TestExecutionIntelligence:
         assert "USB" in directive
         assert "DISTINGUISH TRANSFER FROM EXECUTION" in directive
 
+    @pytest.fixture(autouse=True)
+    def enable_prompt_for_layout_tests(self, monkeypatch):
+        from config import get_settings
+        monkeypatch.setenv("ENABLE_BLACKHAT_PROMPT", "true")
+        get_settings.cache_clear()
+        yield
+        get_settings.cache_clear()
+
     def test_prepare_messages_injects_directive_dynamically(self):
         """Layout B: Directive is injected into final user message while system prompt remains static."""
         from schemas import ChatRequest, ChatMessage
@@ -602,6 +610,22 @@ class TestExecutionIntelligence:
         assert messages[1]["role"] == "user"
         assert messages[1]["content"] == "Hello FRIDAY"
         assert "[ACTIVE STAGE DIRECTIVE:" not in messages[1]["content"]
+
+    def test_prepare_messages_prompt_disabled_by_default(self, monkeypatch):
+        """When enable_blackhat_prompt=False, messages are sent without system prompt or directives."""
+        from config import get_settings
+        monkeypatch.setenv("ENABLE_BLACKHAT_PROMPT", "false")
+        get_settings.cache_clear()
+        from schemas import ChatRequest, ChatMessage
+        from routes.chat import _prepare_messages
+        req = ChatRequest(
+            messages=[ChatMessage(role="user", content="How do I run this?")],
+            stream=False,
+        )
+        messages, model = _prepare_messages(req)
+        assert len(messages) == 1
+        assert messages[0]["role"] == "user"
+        assert "[ACTIVE STAGE DIRECTIVE:" not in messages[0]["content"]
 
     @pytest.mark.asyncio
     async def test_database_persistence_preserves_clean_user_message(self, temp_db):
@@ -732,6 +756,12 @@ class TestQuickRouter:
         assert self._route("how's it going") is not None
         assert self._route("how are you friday") is not None
 
+    def test_identity_and_name_routes(self):
+        assert "FRIDAY" in self._route("what is your name")
+        assert "FRIDAY" in self._route("who are you")
+        assert "FRIDAY" in self._route("what model are you")
+        assert "FRIDAY" in self._route("who created you")
+
 
 class TestSanitization:
     def test_sanitize_android_malware_disclaimer(self):
@@ -757,3 +787,18 @@ class TestSanitization:
         cleaned = _sanitize_response(sample)
         assert "FRIDAY'S SAFETY PRINCIPLE" not in cleaned
         assert "## Project Plan" in cleaned
+
+    def test_sanitize_original_model_names(self):
+        from routes.chat import _sanitize_response
+        sample = (
+            "Hello, I am Dolphin3-Cyber developed by Cognitive Computations and Eric Hartford on Ollama. "
+            "BaronLLM by huihui_ai is another tool."
+        )
+        cleaned = _sanitize_response(sample)
+        assert "Dolphin3-Cyber" not in cleaned
+        assert "Cognitive Computations" not in cleaned
+        assert "Eric Hartford" not in cleaned
+        assert "BaronLLM" not in cleaned
+        assert "huihui_ai" not in cleaned
+        assert "Ollama" not in cleaned
+        assert "FRIDAY" in cleaned
