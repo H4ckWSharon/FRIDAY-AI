@@ -323,15 +323,6 @@
   </style>
 </head>
 <body class="bg-black text-[#F5F5F5] antialiased flex w-full overflow-hidden selection:bg-[#FF3038]/30 selection:text-white" style="height: var(--app-height, 100dvh); max-height: var(--app-height, 100dvh);">
-  <!-- FRIDAY Scheduled Maintenance Banner -->
-  <div id="friday-maintenance-banner" class="fixed top-0 left-0 right-0 z-[99999] bg-gradient-to-r from-[#1c0d0e] via-[#2a0e10] to-[#1c0d0e] border-b border-[#FF3038] text-[#F5F5F5] px-4 py-2.5 flex items-center justify-between gap-3 shadow-lg shadow-[#FF3038]/20 select-none">
-    <div class="flex items-center gap-2.5 mx-auto text-center">
-      <span class="material-symbols-outlined text-[#FF3038] text-[20px] animate-pulse">engineering</span>
-      <span class="text-xs sm:text-sm font-semibold tracking-wide font-heading">
-        <strong class="text-[#FF3038] font-bold">SYSTEM NOTICE:</strong> FRIDAY is currently undergoing scheduled maintenance &amp; neural engine upgrades. Systems will return to normal shortly.
-      </span>
-    </div>
-  </div>
 <!-- Mobile Overlay Backdrop -->
 <div class="fixed inset-0 bg-black/75 backdrop-blur-sm z-40 hidden md:hidden transition-opacity duration-200" id="mobile-backdrop"></div>
 <!-- STREAMLINED LEFT SIDEBAR (Collapsible on Desktop, Drawer on Mobile) -->
@@ -346,7 +337,7 @@
 </div>
 <div class="flex flex-col min-w-0 truncate">
 <span class="font-heading font-bold text-sm tracking-wide text-[#F5F5F5] flex items-center gap-1.5 truncate">
-              FRIDAY v1
+              friday Cyber Pro
               <span class="w-1.5 h-1.5 rounded-full bg-[#FF3038] animate-pulse shrink-0"></span>
 </span>
 <span class="text-[9px] font-mono tracking-wider text-[#A1A1AA] uppercase truncate">AI Assistant</span>
@@ -436,15 +427,15 @@
 <div class="relative min-w-0" id="model-selector-wrapper">
 <button class="flex items-center gap-1.5 sm:gap-2 h-9 px-2.5 sm:px-3 rounded-xl bg-[#121215] hover:bg-[#18181c] border border-[#27272a] text-xs font-medium text-[#F5F5F5] transition-all max-w-[130px] xs:max-w-[170px] sm:max-w-none cursor-pointer active:scale-95 select-none shrink-0 shadow-sm" id="model-dropdown-btn" type="button" aria-expanded="false" aria-haspopup="true" onclick="toggleModelDropdown(event)">
 <span class="w-2 h-2 rounded-full bg-[#FF3038] shadow-[0_0_8px_#FF3038] shrink-0" id="model-status-indicator"></span>
-<span class="font-mono text-[11px] sm:text-xs truncate font-medium" id="selected-model-label">Friday v1 The Jr Hacker</span>
+<span class="font-mono text-[11px] sm:text-xs truncate font-medium" id="selected-model-label">friday Cyber Pro</span>
 <span class="material-symbols-outlined text-[15px] text-[#A1A1AA] transition-transform duration-200 shrink-0" id="model-dropdown-chevron">expand_more</span>
 </button>
 
 <!-- Dropdown Popover Menu (Positioned cleanly on mobile & desktop) -->
 <div class="fixed sm:absolute left-2.5 right-2.5 sm:left-0 sm:right-auto top-[58px] sm:top-auto sm:mt-2 sm:w-84 max-w-[calc(100vw-20px)] bg-[#0d0d0f] border border-[#27272a] rounded-2xl shadow-[0_16px_50px_rgba(0,0,0,0.9)] py-2 px-1.5 z-50 hidden backdrop-blur-xl animate-fadeIn transition-all select-none" id="model-dropdown-menu" role="menu">
 <div class="px-3 py-1.5 mb-1 border-b border-[#202023] flex items-center justify-between">
-<span class="text-[10px] font-mono uppercase tracking-wider text-[#71717A]">Neural Engine Selection</span>
-<span class="text-[9px] font-mono text-[#FF3038] bg-[#FF3038]/10 px-1.5 py-0.5 rounded border border-[#FF3038]/20">FRIDAY Neural Core</span>
+<span class="text-[10px] font-mono uppercase tracking-wider text-[#71717A]">Active Neural Engine</span>
+<span class="text-[9px] font-mono text-[#FF3038] bg-[#FF3038]/10 px-1.5 py-0.5 rounded border border-[#FF3038]/20">friday Cyber Pro</span>
 </div>
 <div class="flex flex-col gap-1" id="model-options-list">
 <!-- Options injected dynamically by JS -->
@@ -467,6 +458,13 @@
 </button>
 </div>
 </header>
+<!-- FRIDAY Scheduled Maintenance Banner -->
+<div id="friday-maintenance-banner" class="w-full bg-gradient-to-r from-[#1c0809] via-[#3d0d12] to-[#1c0809] border-b border-[#FF3038] text-white px-3 sm:px-4 py-2.5 flex items-center justify-center gap-2.5 shadow-[0_4px_16px_rgba(255,48,56,0.3)] shrink-0 z-30 select-none">
+  <span class="material-symbols-outlined text-[#FF3038] text-[20px] animate-pulse shrink-0">engineering</span>
+  <span class="text-xs sm:text-sm font-semibold tracking-wide font-heading text-center">
+    <strong class="text-[#FF3038] font-bold tracking-wider">SYSTEM NOTICE:</strong> FRIDAY is currently undergoing scheduled maintenance &amp; neural engine upgrades. Systems will return to normal shortly.
+  </span>
+</div>
 <!-- CONTENT SCROLLER: Switches between Welcome State & Active Conversation -->
 <div class="flex-1 min-h-0 overflow-y-auto px-2.5 sm:px-6 md:px-8 py-2 sm:py-6 flex flex-col items-center touch-scroll" id="chat-scroller">
 <!-- 1. WELCOME STATE (Centered, clean, uncluttered, responsive) -->
@@ -1386,28 +1384,21 @@
   // ─── Multi-Model State ───────────────────────────────────────────────────
   const DEFAULT_MODELS_REGISTRY = [
     {
-      id: "hf.co/RavichandranJ/Dolphin3-Cyber-8B-GGUF:Q8_0",
-      name: "Friday v1 The Jr Hacker",
+      id: "orcasaq-cyber-27b:latest",
+      name: "friday Cyber Pro",
       description: "AI Junior Pentester & Security Mentor",
-      tag: "Jr Hacker (Default)",
+      tag: "Cyber Pro",
       is_default: true,
-    },
-    {
-      id: "huihui_ai/baronllm-abliterated:latest",
-      name: "Friday v1 The Advanced Pentester",
-      description: "Advanced Cyber Security & Penetration Testing Engine",
-      tag: "Advanced Pentester",
-      is_default: false,
     },
   ];
 
   let availableModels = [...DEFAULT_MODELS_REGISTRY];
   let savedSelectedModel = localStorage.getItem('friday_selected_model');
-  if (savedSelectedModel && (savedSelectedModel.includes('Huihui-Qwen3-Coder') || savedSelectedModel.includes('mradermacher'))) {
+  if (!savedSelectedModel || !DEFAULT_MODELS_REGISTRY.some(m => m.id === savedSelectedModel)) {
     savedSelectedModel = DEFAULT_MODELS_REGISTRY[0].id;
     localStorage.setItem('friday_selected_model', savedSelectedModel);
   }
-  let currentSelectedModel = savedSelectedModel || DEFAULT_MODELS_REGISTRY[0].id;
+  let currentSelectedModel = savedSelectedModel;
 
   function renderModelDropdown() {
     const listEl = document.getElementById('model-options-list');
@@ -1477,15 +1468,6 @@
   function selectModel(modelId, notify = true) {
     const found = availableModels.find(m => m.id === modelId);
     if (!found) return;
-
-    const isModel2 = modelId.includes('baronllm');
-    const tier = subscriptionStatus?.model_tier || 'free';
-    if (isModel2 && tier === 'model1') {
-      closeModelDropdown();
-      showPricingModal();
-      showToast('The Advanced Pentester requires an Advanced Pentester subscription.', 'warning');
-      return;
-    }
 
     currentSelectedModel = modelId;
     localStorage.setItem('friday_selected_model', modelId);
@@ -2154,7 +2136,7 @@
       </div>
       <div class="flex-1 flex flex-col max-w-2xl min-w-0">
         <div class="flex items-center gap-1.5 sm:gap-2 mb-1.5 flex-wrap">
-          <span class="font-heading font-semibold text-xs text-[#F5F5F5]">FRIDAY v1</span>
+          <span class="font-heading font-semibold text-xs text-[#F5F5F5]">friday Cyber Pro</span>
           <span class="text-[9px] font-mono bg-[#FF3038]/20 text-[#FF3038] px-1.5 py-0.5 rounded font-bold">AI</span>
           <span class="text-[10px] font-mono text-[#71717A]">Processing…</span>
         </div>
@@ -2328,7 +2310,7 @@
       </div>
       <div class="flex-1 flex flex-col max-w-full sm:max-w-3xl min-w-0">
         <div class="flex items-center gap-1.5 sm:gap-2 mb-1.5 flex-wrap">
-          <span class="font-heading font-semibold text-xs text-[#F5F5F5]">FRIDAY v1</span>
+          <span class="font-heading font-semibold text-xs text-[#F5F5F5]">friday Cyber Pro</span>
           <span class="text-[9px] font-mono bg-[#FF3038]/20 text-[#FF3038] px-1.5 py-0.5 rounded font-bold">AI</span>
           <span class="text-[10px] font-mono text-[#71717A]">${time}</span>
         </div>
@@ -2337,7 +2319,7 @@
         </div>
         <!-- Assistant Action Bar: Copy, Regenerate, Like, Dislike -->
         <div class="flex items-center justify-between gap-2 mt-1.5 text-[#71717A] px-0.5">
-          <span class="text-[10px] font-mono text-[#52525B] hidden xs:inline">FRIDAY AI</span>
+          <span class="text-[10px] font-mono text-[#52525B] hidden xs:inline">friday Cyber Pro</span>
           <div class="flex items-center gap-1 ml-auto">
             <!-- Copy Full Response Button -->
             <button class="copy-resp-btn px-2 py-1 hover:text-[#F5F5F5] transition-colors rounded-lg hover:bg-[#1a1a1a] active:scale-95 flex items-center gap-1 text-[11px] font-mono" title="Copy response">
@@ -2488,6 +2470,9 @@
     }
     if (
       lower.includes('ollama') ||
+      lower.includes('orcasaq') ||
+      lower.includes('baronllm') ||
+      lower.includes('dolphin') ||
       lower.includes('ssh tunnel') ||
       lower.includes('stream error') ||
       lower.includes('502') ||
@@ -2499,9 +2484,17 @@
       return 'FRIDAY neural engine is temporarily unavailable. Please try again shortly.';
     }
     return rawMessage
-      .replace(/hf\.co\/[^\s'"]+/gi, 'FRIDAY Engine')
-      .replace(/huihui_ai\/[^\s'"]+/gi, 'FRIDAY Engine')
-      .replace(/ollama/gi, 'FRIDAY');
+      .replace(/<\|[^>]*\|>/gi, '')
+      .replace(/<\/?think>/gi, '')
+      .replace(/\[\/?INST\]/gi, '')
+      .replace(/hf\.co\/[^\s'"]+/gi, 'friday Cyber Pro')
+      .replace(/huihui_ai\/[^\s'"]+/gi, 'friday Cyber Pro')
+      .replace(/orcasaq(?:-[a-z0-9]+)*(?::[a-z0-9_]+)?/gi, 'friday Cyber Pro')
+      .replace(/baronllm(?:-[a-z0-9]+)*(?::[a-z0-9_]+)?/gi, 'friday Cyber Pro')
+      .replace(/dolphin(?:3)?(?:-[a-z0-9]+)*(?::[a-z0-9_]+)?/gi, 'friday Cyber Pro')
+      .replace(/cognitive\s+computations/gi, 'FRIDAY AI')
+      .replace(/eric\s+hartford/gi, 'FRIDAY Team')
+      .replace(/ollama/gi, 'FRIDAY Neural Engine');
   }
 
   // ─── Render: Error Message ───────────────────────────────────────────────
@@ -3090,10 +3083,12 @@
   let billingYearly = false;       // default: show monthly plans (₹2,499/mo & ₹4,999/mo)
 
   const PLAN_LABELS = {
-    jr_hacker_monthly:  { name: 'Jr Hacker',          tier: 1, badge: 'model1' },
-    jr_hacker_yearly:   { name: 'Jr Hacker',          tier: 1, badge: 'model1' },
-    advanced_monthly:   { name: 'Advanced Pentester', tier: 2, badge: 'model2' },
-    advanced_yearly:    { name: 'Advanced Pentester', tier: 2, badge: 'model2' },
+    cyber_pro_monthly:  { name: 'friday Cyber Pro',   tier: 1, badge: 'cyber_pro' },
+    cyber_pro_yearly:   { name: 'friday Cyber Pro',   tier: 1, badge: 'cyber_pro' },
+    jr_hacker_monthly:  { name: 'friday Cyber Pro',   tier: 1, badge: 'model1' },
+    jr_hacker_yearly:   { name: 'friday Cyber Pro',   tier: 1, badge: 'model1' },
+    advanced_monthly:   { name: 'friday Cyber Pro',   tier: 2, badge: 'model2' },
+    advanced_yearly:    { name: 'friday Cyber Pro',   tier: 2, badge: 'model2' },
   };
 
   async function fetchSubscriptionStatus() {
@@ -3123,7 +3118,7 @@
       detail.textContent = `${rem} chat${rem !== 1 ? 's' : ''} left today`;
     } else if (tier === 'model1') {
       badge.classList.add('sub-badge-model1');
-      label.textContent = '⚡ Jr Hacker';
+      label.textContent = '⚡ friday Cyber Pro';
       if (status.chats_remaining !== null && status.chats_remaining !== undefined) {
         const rem = status.chats_remaining;
         detail.textContent = `${rem} / ${status.daily_limit || 50} chats left`;
@@ -3134,9 +3129,9 @@
       badge.classList.add('sub-badge-model2');
       label.textContent  = '👑 Founder / Admin';
       detail.textContent = 'Lifetime VIP • Unlimited';
-    } else if (tier === 'model2') {
+    } else if (tier === 'model2' || tier === 'cyber_pro') {
       badge.classList.add('sub-badge-model2');
-      label.textContent  = '🔥 Advanced Pentester';
+      label.textContent  = '🔥 friday Cyber Pro';
       detail.textContent = 'Unlimited';
     }
 
@@ -3149,37 +3144,17 @@
   }
 
   function updateModelDropdownLocks(status) {
-    // Called after models load & status loaded — adds lock icons to gated models
+    // Single consolidated model — no models gated behind locks
     if (!status) return;
-    const tier = status.model_tier || 'free';
     const listEl = document.getElementById('model-options-list');
     if (!listEl) return;
 
     listEl.querySelectorAll('button').forEach((btn, idx) => {
       const model = availableModels[idx];
       if (!model) return;
-      const isModel2 = model.id.includes('baronllm');
-      // Free users can use BOTH models up to 5 chats/day.
-      // Model 2 is only locked if the user is on the Model 1 tier (Jr Hacker).
-      const locked = isModel2 && (tier === 'model1');
-      // Visual lock indicator — add/remove lock badge
-      let lockBadge = btn.querySelector('.lock-badge');
-      if (locked) {
-        if (!lockBadge) {
-          lockBadge = document.createElement('span');
-          lockBadge.className = 'lock-badge text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#FF3038]/20 text-[#FF3038] border border-[#FF3038]/30 ml-auto shrink-0 flex items-center gap-1';
-          lockBadge.innerHTML = '<span class="material-symbols-outlined text-[11px]">lock</span> Upgrade';
-          btn.querySelector('div')?.appendChild(lockBadge);
-        }
-        btn.onclick = (e) => {
-          e.stopPropagation();
-          closeModelDropdown();
-          showPricingModal();
-        };
-      } else {
-        if (lockBadge) lockBadge.remove();
-        btn.onclick = () => selectModel(model.id);
-      }
+      const lockBadge = btn.querySelector('.lock-badge');
+      if (lockBadge) lockBadge.remove();
+      btn.onclick = () => selectModel(model.id);
     });
   }
 
@@ -3259,7 +3234,7 @@
 
         const priceINR = (plan.price_paise / 100).toLocaleString('en-IN');
         const period   = plan.is_yearly ? '/yr' : '/mo';
-        const tierLabel = isAdv ? 'Advanced Pentester' : 'Jr Hacker';
+        const tierLabel = 'friday Cyber Pro';
         const tierColor = isAdv ? 'text-[#FF3038]' : 'text-[#FFB300]';
         const tierBg    = isAdv ? 'bg-[#FF3038]/15 border-[#FF3038]/30' : 'bg-[#FFB300]/15 border-[#FFB300]/30';
 
