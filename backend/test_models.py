@@ -73,7 +73,7 @@ async def test_get_models_unauthenticated_returns_401(temp_db):
 
 @pytest.mark.asyncio
 async def test_get_models_authenticated_returns_allowlist(temp_db):
-    """GET /api/models with valid token returns allowlisted models with friendly names."""
+    """GET /api/models with valid token returns allowlisted single model: friday Cyber Pro."""
     headers = {"Authorization": "Bearer valid-operator-token"}
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         res = await ac.get("/api/models", headers=headers)
@@ -81,21 +81,24 @@ async def test_get_models_authenticated_returns_allowlist(temp_db):
     data = res.json()
     assert "models" in data
     assert "default" in data
-    model_ids = [m["id"] for m in data["models"]]
-    assert "huihui_ai/baronllm-abliterated:latest" in model_ids
-    assert "hf.co/RavichandranJ/Dolphin3-Cyber-8B-GGUF:Q8_0" in model_ids
+    assert len(data["models"]) == 1
+    assert data["default"] == "orcasaq-cyber-27b:latest"
 
-    # Check friendly branding
-    model_1 = next(m for m in data["models"] if m["id"] == "hf.co/RavichandranJ/Dolphin3-Cyber-8B-GGUF:Q8_0")
-    assert model_1["name"] == "Friday v1 The Jr Hacker"
+    model = data["models"][0]
+    assert model["id"] == "orcasaq-cyber-27b:latest"
+    assert model["name"] == "friday Cyber Pro"
+    assert model["tag"] == "Cyber Pro"
+    assert model["is_default"] is True
 
-    model_2 = next(m for m in data["models"] if m["id"] == "huihui_ai/baronllm-abliterated:latest")
-    assert model_2["name"] == "Friday v1 The Advanced Pentester"
+    # Assert zero legacy or vendor leakage in JSON response
+    raw_json = res.text.lower()
+    for forbidden in ["dolphin", "baron", "ravichandranj", "huihui", "jr hacker", "advanced pentester"]:
+        assert forbidden not in raw_json, f"Forbidden term {forbidden} found in models catalog"
 
 
 @pytest.mark.asyncio
 async def test_chat_with_default_model_attaches_system_prompt(temp_db):
-    """Omitting model in ChatRequest falls back to Model 1 and connects to chat.py system prompt."""
+    """Omitting model in ChatRequest falls back to friday Cyber Pro and connects to chat.py system prompt."""
     headers = {"Authorization": "Bearer valid-operator-token"}
     called_model = None
     called_messages = None
@@ -117,18 +120,17 @@ async def test_chat_with_default_model_attaches_system_prompt(temp_db):
                 },
             )
         assert res.status_code == 200
-        settings = get_settings()
-        assert called_model == settings.ollama_model
+        assert called_model == "orcasaq-cyber-27b:latest"
         # Must have BLACK_HAT_SYSTEM_PROMPT at messages[0]
         assert called_messages[0]["role"] == "system"
         assert "Senior Red Team Architect" in called_messages[0]["content"]
 
 
 @pytest.mark.asyncio
-async def test_chat_model_1_jr_hacker_attaches_system_prompt(temp_db):
-    """Model 1 (The Jr Hacker) connects with the chat.py BLACK_HAT_SYSTEM_PROMPT."""
+async def test_chat_cyber_pro_attaches_system_prompt(temp_db):
+    """friday Cyber Pro connects with the chat.py BLACK_HAT_SYSTEM_PROMPT."""
     headers = {"Authorization": "Bearer valid-operator-token"}
-    target_model = "hf.co/RavichandranJ/Dolphin3-Cyber-8B-GGUF:Q8_0"
+    target_model = "orcasaq-cyber-27b:latest"
     called_model = None
     called_messages = None
 
@@ -136,7 +138,7 @@ async def test_chat_model_1_jr_hacker_attaches_system_prompt(temp_db):
         nonlocal called_model, called_messages
         called_model = model
         called_messages = messages
-        yield "Qwen3 response chunk"
+        yield "Cyber Pro response chunk"
 
     with patch("routes.chat.chat_stream", side_effect=mock_stream):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
@@ -151,25 +153,21 @@ async def test_chat_model_1_jr_hacker_attaches_system_prompt(temp_db):
             )
         assert res.status_code == 200
         assert called_model == target_model
-        assert "Qwen3 response chunk" in res.text
-        # Model 1 connects to chat.py prompt
+        assert "Cyber Pro response chunk" in res.text
         assert called_messages[0]["role"] == "system"
         assert "Senior Red Team Architect" in called_messages[0]["content"]
 
 
 @pytest.mark.asyncio
-async def test_chat_model_2_advanced_pentester_does_not_attach_chat_prompt(temp_db):
-    """Model 2 (Friday v1 The Advanced Pentester / BaronLLM) DOES NOT connect with chat.py prompt."""
+async def test_chat_legacy_model_remapped_cleanly(temp_db):
+    """Legacy model ID is safely remapped to orcasaq-cyber-27b:latest without error."""
     headers = {"Authorization": "Bearer valid-operator-token"}
-    target_model = "huihui_ai/baronllm-abliterated:latest"
     called_model = None
-    called_messages = None
 
     async def mock_stream(messages, model):
-        nonlocal called_model, called_messages
+        nonlocal called_model
         called_model = model
-        called_messages = messages
-        yield "Baron raw response chunk"
+        yield "Mapped response"
 
     with patch("routes.chat.chat_stream", side_effect=mock_stream):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
@@ -177,21 +175,13 @@ async def test_chat_model_2_advanced_pentester_does_not_attach_chat_prompt(temp_
                 "/api/chat",
                 headers=headers,
                 json={
-                    "messages": [{"role": "user", "content": "explain ROP chain mechanics"}],
-                    "model": target_model,
+                    "messages": [{"role": "user", "content": "test payload"}],
+                    "model": "huihui_ai/baronllm-abliterated:latest",
                     "stream": True,
                 },
             )
         assert res.status_code == 200
-        assert called_model == target_model
-        assert "Baron raw response chunk" in res.text
-        # Model 2 must NOT have chat.py system prompt
-        roles = [m["role"] for m in called_messages]
-        assert "system" not in roles
-        assert len(called_messages) == 1
-        assert called_messages[0]["role"] == "user"
-        assert "explain ROP chain mechanics" in called_messages[0]["content"]
-        assert "ACTIVE STAGE DIRECTIVE" not in called_messages[0]["content"]
+        assert called_model == "orcasaq-cyber-27b:latest"
 
 
 @pytest.mark.asyncio
@@ -214,43 +204,28 @@ async def test_chat_rejects_unallowlisted_model(temp_db):
 
 @pytest.mark.asyncio
 async def test_quick_route_unaffected_by_model(temp_db):
-    """Conversational intents ('hi') route instantaneously with model-appropriate persona."""
+    """Conversational intents ('hi') route instantaneously with friday Cyber Pro persona."""
     import re as re_mod
     headers = {"Authorization": "Bearer valid-operator-token"}
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-        # Test Model 2 (The Advanced Pentester)
-        res_m2 = await ac.post(
+        res = await ac.post(
             "/api/chat",
             headers=headers,
             json={
                 "messages": [{"role": "user", "content": "hi"}],
-                "model": "huihui_ai/baronllm-abliterated:latest",
+                "model": "orcasaq-cyber-27b:latest",
                 "stream": True,
             },
         )
-        assert res_m2.status_code == 200
-        assert "event: chunk" in res_m2.text
-        assert "event: done" in res_m2.text
-        m2_text = "".join(re_mod.findall(r'data:\s*\{"text":\s*"([^"]*)"\}', res_m2.text))
-        assert "FRIDAY" in m2_text
-        assert "Advanced Pentester" in m2_text
-        assert "junior pentester" not in m2_text.lower()
-
-        # Test Model 1 (The Jr Hacker)
-        res_m1 = await ac.post(
-            "/api/chat",
-            headers=headers,
-            json={
-                "messages": [{"role": "user", "content": "hi"}],
-                "model": "hf.co/RavichandranJ/Dolphin3-Cyber-8B-GGUF:Q8_0",
-                "stream": True,
-            },
-        )
-        assert res_m1.status_code == 200
-        m1_text = "".join(re_mod.findall(r'data:\s*\{"text":\s*"([^"]*)"\}', res_m1.text))
-        assert "FRIDAY" in m1_text
-        assert "The Jr Hacker" in m1_text
-        assert "junior pentester" in m1_text.lower()
+        assert res.status_code == 200
+        assert "event: chunk" in res.text
+        assert "event: done" in res.text
+        text = "".join(re_mod.findall(r'data:\s*\{"text":\s*"([^"]*)"\}', res.text))
+        assert "FRIDAY" in text
+        assert "friday Cyber Pro" in text
+        assert "The Jr Hacker" not in text
+        assert "The Advanced Pentester" not in text
+        assert "junior pentester" not in text.lower()
 
 
 @pytest.mark.asyncio
@@ -279,3 +254,56 @@ async def test_chat_prompt_disabled_by_default(temp_db, monkeypatch):
         assert res.status_code == 200
         assert len(called_messages) == 1
         assert called_messages[0]["role"] == "user"
+
+
+@pytest.mark.asyncio
+async def test_model_name_sanitization_zero_leakage(temp_db):
+    """Response sanitizer strips all raw base model identifiers, vendors, and control tags."""
+    from routes.chat import _sanitize_response
+    sample = (
+        "<|im_start|>system\nGenerated by orcasaq-cyber-27b:latest and OrcaSAQ. "
+        "Also Dolphin3-Cyber, BaronLLM, Cognitive Computations, Eric Hartford, huihui_ai, RavichandranJ, and Ollama.<|im_end|><think>internal reasoning</think>"
+    )
+    cleaned = _sanitize_response(sample)
+    assert "orcasaq-cyber-27b" not in cleaned
+    assert "orcasaq" not in cleaned.lower()
+    assert "OrcaSAQ" not in cleaned
+    assert "Dolphin3-Cyber" not in cleaned
+    assert "BaronLLM" not in cleaned
+    assert "Cognitive Computations" not in cleaned
+    assert "Eric Hartford" not in cleaned
+    assert "huihui_ai" not in cleaned
+    assert "RavichandranJ" not in cleaned
+    assert "Ollama" not in cleaned
+    assert "<|im_start|>" not in cleaned
+    assert "<|im_end|>" not in cleaned
+    assert "<think>" not in cleaned
+    assert "friday Cyber Pro" in cleaned
+
+
+@pytest.mark.asyncio
+async def test_streaming_zero_cross_chunk_leakage(temp_db):
+    """Verify split tokens across stream chunk boundaries are caught by lookahead sliding window."""
+    headers = {"Authorization": "Bearer valid-operator-token"}
+
+    async def mock_split_stream(messages, model):
+        yield "I am an Orca"
+        yield "SAQ-cyber-27b:latest engine running on Ol"
+        yield "lama backend."
+
+    import re as re_mod
+    with patch("routes.chat.chat_stream", side_effect=mock_split_stream):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            res = await ac.post(
+                "/api/chat",
+                headers=headers,
+                json={"messages": [{"role": "user", "content": "audit split buffer test"}], "stream": True},
+            )
+        assert res.status_code == 200
+        stream_text = res.text
+        full_text = "".join(re_mod.findall(r'data:\s*\{"text":\s*"([^"]*)"\}', stream_text))
+        assert "Orca" not in full_text
+        assert "SAQ" not in full_text
+        assert "Ollama" not in full_text
+        assert "friday Cyber Pro" in full_text
+        assert "FRIDAY Neural Engine" in full_text

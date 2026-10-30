@@ -81,15 +81,52 @@ MODEL_2_ID = "huihui_ai/baronllm-abliterated:latest"
 # ─── Plan Configuration ───────────────────────────────────────────────────────
 
 PLAN_CONFIG: dict[str, dict] = {
+    # ─── Active Purchase Offering: Single Consolidated Tier ───
+    "cyber_pro_monthly": {
+        "label": "friday Cyber Pro — Monthly",
+        "model_tier": "model2",
+        "price_paise": 350000,      # ₹3,500/mo in paise
+        "days": 30,
+        "daily_limit": None,        # Unlimited chats
+        "purchasable": True,
+        "features": [
+            "Unlimited chats — zero daily throttling",
+            "friday Cyber Pro (27B neural offensive intelligence)",
+            "Deep pentesting, exploit dev & red-team execution",
+            "Uncensored security intelligence",
+            "Priority neural engine inference",
+            "Instant activation via UPI, Cards & NetBanking",
+        ],
+    },
+    "cyber_pro_yearly": {
+        "label": "friday Cyber Pro — Yearly",
+        "model_tier": "model2",
+        "price_paise": 3500000,     # ₹35,000/yr in paise (10 months = 2 months FREE)
+        "days": 365,
+        "daily_limit": None,        # Unlimited chats
+        "purchasable": True,
+        "features": [
+            "Unlimited chats — zero daily throttling",
+            "friday Cyber Pro (27B neural offensive intelligence)",
+            "Deep pentesting, exploit dev & red-team execution",
+            "Uncensored security intelligence",
+            "Priority neural engine inference",
+            "Save 2 months (₹7,000 discount / ₹35,000/yr)",
+            "Instant activation via UPI, Cards & NetBanking",
+        ],
+    },
+
+    # ─── Free & Founder Tiers ─────────────────────────────────
     "founder_unlimited": {
         "label": "Founder / Admin (Lifetime VIP)",
         "model_tier": "model2",
         "price_paise": 0,
         "days": None,
         "daily_limit": None,
+        "purchasable": False,
         "features": [
             "Permanent Founder & Admin Access",
-            "All models unlocked (Jr Hacker & Advanced Pentester)",
+            "friday Cyber Pro unlocked",
             "Unlimited chats — zero throttling",
             "Full developer & testing privileges",
         ],
@@ -100,73 +137,69 @@ PLAN_CONFIG: dict[str, dict] = {
         "price_paise": 0,
         "days": None,  # no expiry for free
         "daily_limit": FREE_DAILY_LIMIT,
+        "purchasable": False,
         "features": [
             "5 chats per day",
-            "Both models: Jr Hacker & Advanced Pentester",
-            "Step-by-step guides & pentesting preview",
+            "friday Cyber Pro preview",
             "Standard response speed",
         ],
     },
+
+    # ─── Grandfathered Legacy Tiers (Non-Purchasable) ─────────
     "jr_hacker_monthly": {
-        "label": "Jr Hacker — Monthly",
+        "label": "Jr Hacker — Monthly (Legacy)",
         "model_tier": "model1",
         "price_paise": 249900,  # ₹2,499 in paise
         "days": 30,
         "daily_limit": MODEL1_DAILY_LIMIT,
+        "purchasable": False,
         "features": [
             "50 chats per day (resets every 24 hrs)",
-            "Friday v1 The Jr Hacker (Model 1)",
+            "Legacy Jr Hacker tier",
             "Step-by-step security guides",
-            "Standard / slow thinking speed",
-            "Exploit dev & recon support",
+            "Standard response speed",
         ],
     },
     "jr_hacker_yearly": {
-        "label": "Jr Hacker — Yearly",
+        "label": "Jr Hacker — Yearly (Legacy)",
         "model_tier": "model1",
-        "price_paise": 2499000,  # ₹24,990 in paise (10 months = 2 months FREE)
+        "price_paise": 2499000,  # ₹24,990 in paise
         "days": 365,
         "daily_limit": MODEL1_DAILY_LIMIT,
+        "purchasable": False,
         "features": [
             "50 chats per day (resets every 24 hrs)",
-            "Friday v1 The Jr Hacker (Model 1)",
+            "Legacy Jr Hacker tier",
             "Step-by-step security guides",
-            "Standard / slow thinking speed",
-            "Exploit dev & recon support",
-            "Save 2 months (₹24,990/yr)",
+            "Standard response speed",
         ],
     },
     "advanced_monthly": {
-        "label": "Advanced Pentester — Monthly",
+        "label": "Advanced Pentester — Monthly (Legacy)",
         "model_tier": "model2",
         "price_paise": 499900,  # ₹4,999 in paise
         "days": 30,
         "daily_limit": None,
+        "purchasable": False,
         "features": [
             "No limits — unlimited chats",
-            "Both FRIDAY models unlocked",
-            "Friday v1 The Advanced Pentester (Model 2)",
-            "Fast thinking model",
+            "Legacy Advanced Pentester tier",
             "Deep pentesting & exploit guides",
-            "Full technical explanations",
             "Priority neural engine response",
         ],
     },
     "advanced_yearly": {
-        "label": "Advanced Pentester — Yearly",
+        "label": "Advanced Pentester — Yearly (Legacy)",
         "model_tier": "model2",
-        "price_paise": 4999000,  # ₹49,990 in paise (10 months = 2 months FREE)
+        "price_paise": 4999000,  # ₹49,990 in paise
         "days": 365,
         "daily_limit": None,
+        "purchasable": False,
         "features": [
             "No limits — unlimited chats",
-            "Both FRIDAY models unlocked",
-            "Friday v1 The Advanced Pentester (Model 2)",
-            "Fast thinking model",
+            "Legacy Advanced Pentester tier",
             "Deep pentesting & exploit guides",
-            "Full technical explanations",
             "Priority neural engine response",
-            "Save 2 months (₹49,990/yr)",
         ],
     },
 }
@@ -372,6 +405,8 @@ def create_razorpay_order(plan_id: str, user_id: str) -> dict:
     plan = PLAN_CONFIG.get(plan_id)
     if not plan:
         raise HTTPException(status_code=400, detail=f"Unknown plan: {plan_id}")
+    if not plan.get("purchasable", False):
+        raise HTTPException(status_code=400, detail=f"Plan '{plan_id}' is retired or no longer offered for purchase.")
     if plan["price_paise"] == 0:
         raise HTTPException(status_code=400, detail="Cannot create order for free plan.")
 
@@ -429,6 +464,12 @@ def verify_and_activate(
     plan = PLAN_CONFIG.get(plan_id)
     if not plan:
         raise HTTPException(status_code=400, detail=f"Unknown plan: {plan_id}")
+
+    if not plan.get("purchasable", False):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot activate plan '{plan_id}': plan is retired or not purchasable.",
+        )
 
     expires_at = None
     if plan["days"]:

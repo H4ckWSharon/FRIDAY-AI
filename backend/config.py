@@ -14,18 +14,11 @@ import os
 # Arbitrary client-provided model IDs are rejected at the API boundary.
 AVAILABLE_MODELS: list[dict[str, Any]] = [
     {
-        "id": "hf.co/RavichandranJ/Dolphin3-Cyber-8B-GGUF:Q8_0",
-        "name": "Friday v1 The Jr Hacker",
-        "description": "AI Junior Pentester & Security Mentor",
-        "tag": "Jr Hacker (Default)",
-        "is_default": True,
-    },
-    {
-        "id": "huihui_ai/baronllm-abliterated:latest",
-        "name": "Friday v1 The Advanced Pentester",
+        "id": "orcasaq-cyber-27b:latest",
+        "name": "friday Cyber Pro",
         "description": "Advanced Cyber Security & Penetration Testing Engine",
-        "tag": "Advanced Pentester",
-        "is_default": False,
+        "tag": "Cyber Pro",
+        "is_default": True,
     },
 ]
 
@@ -37,15 +30,15 @@ class Settings(BaseSettings):
 
     # Ollama connection
     ollama_base_url: str = "http://localhost:11434"
-    ollama_model: str = "hf.co/RavichandranJ/Dolphin3-Cyber-8B-GGUF:Q8_0"
-    ollama_timeout: float = 120.0
+    ollama_model: str = "orcasaq-cyber-27b:latest"
+    ollama_timeout: float = 300.0
 
     # Server
     backend_host: str = "127.0.0.1"
     backend_port: int = 8000
 
     # CORS — browser origins that may talk to this backend
-    cors_origins: str = "http://localhost:5500,http://127.0.0.1:5500,null"
+    cors_origins: str = "http://localhost:5500,http://127.0.0.1:5500"
 
     # Application environment
     app_env: str = "development"

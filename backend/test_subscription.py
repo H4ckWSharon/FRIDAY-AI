@@ -7,6 +7,7 @@ Razorpay order creation, payment signature verification, and plan activation.
 import hmac
 import hashlib
 import json
+from datetime import datetime, timezone, timedelta
 import pytest
 from httpx import AsyncClient, ASGITransport
 from unittest.mock import patch, MagicMock
@@ -37,6 +38,7 @@ def temp_db(tmp_path, monkeypatch):
     # Pre-create test users
     db_mod.create_user(email="free_user@friday.sec", name="Free Operator", user_id="usr_free_101", provider="google")
     db_mod.create_user(email="paid_user@friday.sec", name="Paid Operator", user_id="usr_paid_202", provider="google")
+    db_mod.create_user(email="sharonanil555@gmail.com", name="Sharon Anil", user_id="ih5zm1zzusd3gwZLF69fYKWA14d2", provider="google")
 
     yield db_mod
     get_settings.cache_clear()
@@ -63,26 +65,32 @@ def setup_mock_tokens():
 
 @pytest.mark.asyncio
 async def test_get_plans_returns_configured_pricing(temp_db):
-    """GET /api/subscription/plans returns Model 1 Monthly (₹2499) and Model 2 Monthly (₹4999)."""
+    """GET /api/subscription/plans returns strictly cyber_pro_monthly (₹3,500) and cyber_pro_yearly (₹35,000)."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         res = await ac.get("/api/subscription/plans")
     assert res.status_code == 200
     plans = res.json()["plans"]
     plan_map = {p["plan_id"]: p for p in plans}
 
-    assert "jr_hacker_monthly" in plan_map
-    assert plan_map["jr_hacker_monthly"]["price_inr"] == 2499.0
-    assert plan_map["jr_hacker_monthly"]["model_tier"] == "model1"
+    # Only single-tier Cyber Pro plans should be purchasable/returned
+    assert "cyber_pro_monthly" in plan_map
+    assert plan_map["cyber_pro_monthly"]["price_inr"] == 3500.0
+    assert plan_map["cyber_pro_monthly"]["price_paise"] == 350000
+    assert plan_map["cyber_pro_monthly"]["model_tier"] == "model2"
 
-    assert "advanced_monthly" in plan_map
-    assert plan_map["advanced_monthly"]["price_inr"] == 4999.0
-    assert plan_map["advanced_monthly"]["model_tier"] == "model2"
+    assert "cyber_pro_yearly" in plan_map
+    assert plan_map["cyber_pro_yearly"]["price_inr"] == 35000.0
+    assert plan_map["cyber_pro_yearly"]["price_paise"] == 3500000
+    assert plan_map["cyber_pro_yearly"]["model_tier"] == "model2"
+    assert plan_map["cyber_pro_yearly"]["days"] == 365
 
-    assert "jr_hacker_yearly" in plan_map
-    assert plan_map["jr_hacker_yearly"]["price_inr"] == 24990.0
-
-    assert "advanced_yearly" in plan_map
-    assert plan_map["advanced_yearly"]["price_inr"] == 49990.0
+    # Legacy and unpurchasable plans must be excluded from public offerings
+    assert "jr_hacker_monthly" not in plan_map
+    assert "jr_hacker_yearly" not in plan_map
+    assert "advanced_monthly" not in plan_map
+    assert "advanced_yearly" not in plan_map
+    assert "free" not in plan_map
+    assert "founder_unlimited" not in plan_map
 
 
 @pytest.mark.asyncio
@@ -140,26 +148,17 @@ async def test_free_user_can_use_both_models_within_limit(temp_db):
             )
         assert res.status_code == 200
 
-    # Model 1 subscribers, however, are blocked from Model 2 with 403
-    secret = "mock_secret_abc123xyz"
-    order_id = "order_m1_sub"
-    payment_id = "pay_m1_sub"
-    valid_sig = hmac.new(
-        secret.encode("utf-8"),
-        f"{order_id}|{payment_id}".encode("utf-8"),
-        hashlib.sha256,
-    ).hexdigest()
+    # Legacy Model 1 subscribers, however, are blocked from Model 2 with 403
+    expiry = (datetime.now(timezone.utc) + timedelta(days=15)).isoformat()
+    temp_db.create_subscription(
+        user_id="usr_free_101",
+        plan_id="jr_hacker_monthly",
+        model_tier="model1",
+        expires_at=expiry,
+        razorpay_order_id="order_m1_sub",
+        razorpay_payment_id="pay_m1_sub",
+    )
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-        await ac.post(
-            "/api/verify-payment",
-            headers=headers,
-            json={
-                "plan_id": "jr_hacker_monthly",
-                "razorpay_order_id": order_id,
-                "razorpay_payment_id": payment_id,
-                "razorpay_signature": valid_sig,
-            },
-        )
         res_blocked = await ac.post(
             "/api/chat",
             headers=headers,
@@ -204,31 +203,47 @@ async def test_free_user_hitting_limit_returns_429(temp_db):
 
 @pytest.mark.asyncio
 async def test_razorpay_order_creation(temp_db):
-    """POST /api/create-order and /api/subscription/create-order create orders."""
+    """POST /api/create-order creates orders for cyber_pro_monthly and cyber_pro_yearly."""
     headers = {"Authorization": "Bearer token-free-user"}
 
     mock_client = MagicMock()
     mock_client.order.create.return_value = {
         "id": "order_mock_test_999",
-        "amount": 249900,
+        "amount": 350000,
         "currency": "INR",
         "receipt": "friday_receipt_123",
     }
 
     with patch("services.subscription._get_razorpay_client", return_value=mock_client):
-        # 1. Via /api/create-order
+        # 1. Via /api/create-order for cyber_pro_monthly
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             res = await ac.post(
                 "/api/create-order",
                 headers=headers,
-                json={"plan_id": "jr_hacker_monthly"},
+                json={"plan_id": "cyber_pro_monthly"},
             )
         assert res.status_code == 200
         data = res.json()
         assert data["order_id"] == "order_mock_test_999"
-        assert data["amount"] == 249900
+        assert data["amount"] == 350000
 
-        # 2. Direct amount in paise (minimum 100 paise)
+        # 2. For cyber_pro_yearly
+        mock_client.order.create.return_value = {
+            "id": "order_mock_yearly_888",
+            "amount": 3500000,
+            "currency": "INR",
+            "receipt": "friday_rcpt_yr",
+        }
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            res_yr = await ac.post(
+                "/api/create-order",
+                headers=headers,
+                json={"plan_id": "cyber_pro_yearly"},
+            )
+        assert res_yr.status_code == 200
+        assert res_yr.json()["amount"] == 3500000
+
+        # 3. Direct amount in paise (minimum 100 paise)
         mock_client.order.create.return_value = {
             "id": "order_mock_direct_500",
             "amount": 5000,
@@ -243,6 +258,47 @@ async def test_razorpay_order_creation(temp_db):
             )
         assert res_direct.status_code == 200
         assert res_direct.json()["order_id"] == "order_mock_direct_500"
+
+
+@pytest.mark.asyncio
+async def test_create_order_rejects_retired_legacy_plans(temp_db):
+    """POST /api/create-order rejects retired legacy plans with HTTP 400."""
+    headers = {"Authorization": "Bearer token-free-user"}
+    for legacy_id in ["advanced_monthly", "advanced_yearly", "jr_hacker_monthly", "jr_hacker_yearly"]:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            res = await ac.post(
+                "/api/create-order",
+                headers=headers,
+                json={"plan_id": legacy_id},
+            )
+        assert res.status_code == 400
+        assert "retired or no longer offered" in res.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_grandfathered_active_subscriber_preservation(temp_db):
+    """Existing customers on legacy plans retain active status and model access until expiration."""
+    # Seed active legacy subscription in database
+    expiry = (datetime.now(timezone.utc) + timedelta(days=15)).isoformat()
+    temp_db.create_subscription(
+        user_id="usr_free_101",
+        plan_id="advanced_monthly",
+        model_tier="model2",
+        expires_at=expiry,
+        razorpay_order_id="order_legacy_active_01",
+        razorpay_payment_id="pay_legacy_active_01",
+    )
+
+    headers = {"Authorization": "Bearer token-free-user"}
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        status_res = await ac.get("/api/subscription/status", headers=headers)
+    assert status_res.status_code == 200
+    data = status_res.json()
+    assert data["status"] == "active"
+    assert data["plan_id"] == "advanced_monthly"
+    assert data["model_tier"] == "model2"
+    assert data["is_unlimited"] is True
+    assert data["expires_at"] == expiry
 
 
 @pytest.mark.asyncio
@@ -339,7 +395,7 @@ async def test_verify_payment_and_activate_plan(temp_db):
             "/api/verify-payment",
             headers=headers,
             json={
-                "plan_id": "advanced_yearly",
+                "plan_id": "cyber_pro_yearly",
                 "razorpay_order_id": order_id,
                 "razorpay_payment_id": payment_id,
                 "razorpay_signature": valid_sig,
@@ -376,7 +432,7 @@ async def test_verify_payment_and_activate_plan(temp_db):
             "/api/verify-payment",
             headers=headers,
             json={
-                "plan_id": "advanced_yearly",
+                "plan_id": "cyber_pro_yearly",
                 "razorpay_order_id": order_id,
                 "razorpay_payment_id": payment_id,
                 "razorpay_signature": valid_sig,
@@ -399,11 +455,11 @@ async def test_verify_payment_rejects_price_tampering_and_plan_spoofing(temp_db)
         hashlib.sha256,
     ).hexdigest()
 
-    # 1. Price tampering: Order was for 100 paise (₹1), attempting to activate advanced_yearly (₹49,990)
+    # 1. Price tampering: Order was for 100 paise (₹1), attempting to activate cyber_pro_yearly (₹35,000)
     mock_order_cheap = {
         "id": order_id,
         "amount": 100,  # ₹1.00
-        "notes": {"plan_id": "advanced_yearly"},
+        "notes": {"plan_id": "cyber_pro_yearly"},
     }
     with patch("routes.subscription.fetch_razorpay_order", return_value=mock_order_cheap):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
@@ -411,7 +467,7 @@ async def test_verify_payment_rejects_price_tampering_and_plan_spoofing(temp_db)
                 "/api/verify-payment",
                 headers=headers,
                 json={
-                    "plan_id": "advanced_yearly",
+                    "plan_id": "cyber_pro_yearly",
                     "razorpay_order_id": order_id,
                     "razorpay_payment_id": payment_id,
                     "razorpay_signature": valid_sig,
@@ -420,11 +476,11 @@ async def test_verify_payment_rejects_price_tampering_and_plan_spoofing(temp_db)
         assert res.status_code == 400
         assert "Paid amount does not match required plan price" in res.json()["detail"]
 
-    # 2. Plan spoofing: Order was for jr_hacker_monthly notes, attempting to activate advanced_yearly
+    # 2. Plan spoofing: Order was for cyber_pro_monthly notes, attempting to activate cyber_pro_yearly
     mock_order_spoofed = {
         "id": order_id,
-        "amount": 4999000,
-        "notes": {"plan_id": "jr_hacker_monthly"},
+        "amount": 3500000,
+        "notes": {"plan_id": "cyber_pro_monthly"},
     }
     with patch("routes.subscription.fetch_razorpay_order", return_value=mock_order_spoofed):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
@@ -432,7 +488,7 @@ async def test_verify_payment_rejects_price_tampering_and_plan_spoofing(temp_db)
                 "/api/verify-payment",
                 headers=headers,
                 json={
-                    "plan_id": "advanced_yearly",
+                    "plan_id": "cyber_pro_yearly",
                     "razorpay_order_id": order_id,
                     "razorpay_payment_id": payment_id,
                     "razorpay_signature": valid_sig,

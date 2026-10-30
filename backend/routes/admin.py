@@ -381,6 +381,14 @@ async def delete_user_account(
             detail="User ID or email is required.",
         )
 
+    # Safeguard 1: Cannot delete Founder / Admin accounts
+    clean_target = target_identifier.strip().lower()
+    if clean_target in FOUNDER_EMAILS or target_identifier.strip() in _FOUNDER_USER_IDS or is_admin_or_founder(target_identifier.strip()):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete founder or administrator account.",
+        )
+
     user = _resolve_user(target_identifier)
     if not user:
         raise HTTPException(
@@ -391,7 +399,6 @@ async def delete_user_account(
     target_uid = user["id"]
     target_email = (user.get("email") or "").strip().lower()
 
-    # Safeguard 1: Cannot delete Founder / Admin accounts
     if is_admin_or_founder(target_uid) or target_email in FOUNDER_EMAILS or target_uid in _FOUNDER_USER_IDS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

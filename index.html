@@ -205,6 +205,119 @@
       animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
+    /* ─── Tactical Radar HUD & Neural Pulse State ───────────────────────── */
+    .tactical-radar-hud {
+      position: relative;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 48, 56, 0.12) 0%, rgba(13, 13, 16, 0.95) 75%);
+      border: 1.5px solid rgba(255, 48, 56, 0.5);
+      box-shadow: 0 0 16px rgba(255, 48, 56, 0.25), inset 0 0 12px rgba(255, 48, 56, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .tactical-radar-ring-1 {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1px dashed rgba(255, 48, 56, 0.4);
+    }
+    .tactical-radar-ring-2 {
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 48, 56, 0.25);
+    }
+    .tactical-radar-crosshair-v {
+      position: absolute;
+      width: 1px;
+      height: 100%;
+      background: linear-gradient(to bottom, transparent, rgba(255, 48, 56, 0.4), transparent);
+    }
+    .tactical-radar-crosshair-h {
+      position: absolute;
+      height: 1px;
+      width: 100%;
+      background: linear-gradient(to right, transparent, rgba(255, 48, 56, 0.4), transparent);
+    }
+    .tactical-radar-sweep {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, rgba(255, 48, 56, 0.75) 0deg, rgba(255, 48, 56, 0.15) 50deg, transparent 90deg);
+      animation: radar-sweep 2.4s linear infinite;
+    }
+    @keyframes radar-sweep {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .tactical-radar-core {
+      position: absolute;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ff3038;
+      box-shadow: 0 0 8px #ff3038, 0 0 16px #ff3038;
+      animation: tactical-pulse 1.4s ease-in-out infinite;
+      z-index: 2;
+    }
+    @keyframes tactical-pulse {
+      0%, 100% { transform: scale(0.85); opacity: 0.75; }
+      50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 14px #ff3038, 0 0 24px rgba(255, 48, 56, 0.85); }
+    }
+    .tactical-progress-container {
+      background: linear-gradient(135deg, rgba(20, 10, 12, 0.85) 0%, rgba(10, 10, 13, 0.95) 100%);
+      border: 1px solid rgba(255, 48, 56, 0.3);
+      border-radius: 14px;
+      padding: 12px 14px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 0 12px rgba(255, 48, 56, 0.08);
+    }
+    .tactical-telemetry-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #ff4d54;
+      background: rgba(255, 48, 56, 0.14);
+      border: 1px solid rgba(255, 48, 56, 0.35);
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
+    .tactical-timer-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #A1A1AA;
+    }
+    .tactical-progress-bar-bg {
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 9999px;
+      overflow: hidden;
+      position: relative;
+    }
+    .tactical-progress-bar-fill {
+      position: absolute;
+      height: 100%;
+      width: 35%;
+      background: linear-gradient(90deg, transparent, #ff3038, #ff7b39, #ff3038, transparent);
+      animation: tactical-indeterminate 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+    @keyframes tactical-indeterminate {
+      0% { left: -40%; width: 30%; }
+      50% { width: 60%; }
+      100% { left: 105%; width: 30%; }
+    }
+
     /* ─── Delete History Item Animation ───────────────────────────────────── */
     @keyframes deleteSlideFade {
       0% {
@@ -458,13 +571,6 @@
 </button>
 </div>
 </header>
-<!-- FRIDAY Scheduled Maintenance Banner -->
-<div id="friday-maintenance-banner" class="w-full bg-gradient-to-r from-[#1c0809] via-[#3d0d12] to-[#1c0809] border-b border-[#FF3038] text-white px-3 sm:px-4 py-2.5 flex items-center justify-center gap-2.5 shadow-[0_4px_16px_rgba(255,48,56,0.3)] shrink-0 z-30 select-none">
-  <span class="material-symbols-outlined text-[#FF3038] text-[20px] animate-pulse shrink-0">engineering</span>
-  <span class="text-xs sm:text-sm font-semibold tracking-wide font-heading text-center">
-    <strong class="text-[#FF3038] font-bold tracking-wider">SYSTEM NOTICE:</strong> FRIDAY is currently undergoing scheduled maintenance &amp; neural engine upgrades. Systems will return to normal shortly.
-  </span>
-</div>
 <!-- CONTENT SCROLLER: Switches between Welcome State & Active Conversation -->
 <div class="flex-1 min-h-0 overflow-y-auto px-2.5 sm:px-6 md:px-8 py-2 sm:py-6 flex flex-col items-center touch-scroll" id="chat-scroller">
 <!-- 1. WELCOME STATE (Centered, clean, uncluttered, responsive) -->
@@ -617,18 +723,14 @@
           </div>
         </div>
 
-        <!-- Mobile Plan Switcher Tabs (Allows 1-tap switching on mobile without huge vertical scroll) -->
-        <div class="grid grid-cols-2 p-1 rounded-xl bg-[#09090c] border border-[#27272a] md:hidden gap-1" id="mobile-plan-tabs">
-          <button type="button" onclick="setMobilePlanTab('model1')" id="mobile-plan-tab-model1" class="py-2 px-2 rounded-lg text-xs font-mono font-medium transition-all text-[#A1A1AA] text-center cursor-pointer">
-            Starter Pro (₹2,499)
-          </button>
-          <button type="button" onclick="setMobilePlanTab('model2')" id="mobile-plan-tab-model2" class="py-2 px-2 rounded-lg text-xs font-mono font-bold transition-all bg-[#FF3038]/20 text-[#FF3038] border border-[#FF3038]/40 text-center cursor-pointer shadow-[0_0_12px_rgba(255,48,56,0.2)]">
-            ★ Advanced (₹4,999)
-          </button>
+        <!-- Single Tier Branded Banner -->
+        <div class="p-2.5 rounded-xl bg-[#09090c] border border-[#27272a] flex items-center justify-center gap-2 text-center" id="single-plan-banner">
+          <span class="w-2 h-2 rounded-full bg-[#FF3038] animate-pulse"></span>
+          <span class="text-xs font-mono font-bold text-[#F5F5F5] uppercase tracking-wider">friday Cyber Pro — Uncensored Neural Arsenal</span>
         </div>
 
         <!-- Plans Grid (injected by renderPricingCards) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4" id="pricing-cards-grid">
+        <div class="max-w-xl mx-auto w-full grid grid-cols-1 gap-3 sm:gap-4" id="pricing-cards-grid">
           <!-- Dynamically populated -->
         </div>
 
@@ -1537,19 +1639,21 @@
   }
   toggleDesktopSidebarBtn?.addEventListener('click', toggleDesktopSidebar);
 
+  let isSubmitting = false;
+
   // Dynamic Send Button States based on input presence
   function updateSendButtonState() {
     const sendButton = document.getElementById('send-btn');
     if (!sendButton) return;
     const hasText = !!chatInput.value.trim();
-    if (hasText && !isStreaming) {
+    if (hasText && !isStreaming && !isSubmitting) {
       sendButton.disabled = false;
-      sendButton.classList.remove('opacity-40', 'cursor-not-allowed', 'bg-[#222228]', 'text-[#71717A]');
+      sendButton.classList.remove('opacity-40', 'cursor-not-allowed', 'bg-[#222228]', 'text-[#71717A]', 'pointer-events-none');
       sendButton.classList.add('opacity-100', 'cursor-pointer', 'bg-[#FF3038]', 'hover:bg-[#e02028]', 'text-white', 'shadow-[0_0_14px_rgba(255,48,56,0.45)]');
     } else {
       sendButton.disabled = true;
       sendButton.classList.remove('opacity-100', 'cursor-pointer', 'bg-[#FF3038]', 'hover:bg-[#e02028]', 'text-white', 'shadow-[0_0_14px_rgba(255,48,56,0.45)]');
-      sendButton.classList.add('opacity-40', 'cursor-not-allowed', 'bg-[#222228]', 'text-[#71717A]');
+      sendButton.classList.add('opacity-40', 'cursor-not-allowed', 'bg-[#222228]', 'text-[#71717A]', 'pointer-events-none');
     }
   }
 
@@ -1744,7 +1848,11 @@
   // ─── Send Message ────────────────────────────────────────────────────────
   async function sendMessage() {
     const text = chatInput.value.trim();
-    if (!text || isStreaming) return;
+    if (!text || isStreaming || isSubmitting) return;
+
+    isSubmitting = true;
+    sendBtn.disabled = true;
+    sendBtn.classList.add('opacity-40', 'cursor-not-allowed', 'pointer-events-none');
 
     const user = auth.currentUser || currentFirebaseUser;
     const isGuest = !user;
@@ -1813,14 +1921,20 @@
       // Refresh sidebar so title updates after first turn
       loadSidebarHistory();
     } catch (err) {
-      if (typingEl.isConnected) typingEl.remove();
+      if (typingEl) {
+        const radarInt = Number(typingEl.dataset.radarInterval);
+        if (radarInt) clearInterval(radarInt);
+        if (typingEl.isConnected) typingEl.remove();
+      }
       if (err.name !== 'AbortError' && !err.message?.includes('cancel')) {
         renderErrorMessage(err.message || 'Something went wrong.');
       }
     } finally {
+      isSubmitting = false;
       isStreaming = false;
       activeReader = null;
       setInputEnabled(true);
+      updateSendButtonState();
       chatInput.focus({ preventScroll: true });
       scrollToBottom(false);
       fetchSubscriptionStatus(); // Instant server sync after each chat completes or errors
@@ -2126,21 +2240,48 @@
     }
   }
 
-  // ─── Render: Typing Indicator (Thinking Orb) ────────────────────────────
+  // ─── Render: Typing Indicator (Tactical Radar HUD & Telemetry) ───────────
   function renderTypingIndicator() {
     const div = document.createElement('div');
-    div.className = 'flex gap-2.5 sm:gap-4 items-start typing-indicator-row w-full min-w-0';
+    div.className = 'flex gap-3 sm:gap-4 items-start typing-indicator-row w-full min-w-0';
     div.innerHTML = `
-      <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[#FF3038]/50 bg-[#121316] p-1 flex items-center justify-center shadow-[0_0_12px_rgba(255,48,56,0.3)] shrink-0">
-        <img alt="FRIDAY AI" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcrt12zOQcu1F3t5EOzwK-rp1yIcJrvdOkVmBiOwevjii1-OjUzmyYh_FzsUdOuj5KX4SMPjW5eGF2UrVtixvPJMxUqjnUncXZI6Q4Qzue6eShB1fxdx8tEIfvF7qPyedJ5n0Zs4jsM9AoIvYdPA6EURCrdVjcWBBjqf0aZlrXGSWf030Aa1-vCTBTZ1bqFN1nP5HIFi96xXLH0DfCXVFS8wgFjvjKdkBfS2tXJs0PUEREhvDw4fiB27Rd-Iwl2H1VdA">
+      <div class="tactical-radar-hud shrink-0" title="FRIDAY Neural Radar">
+        <div class="tactical-radar-ring-1"></div>
+        <div class="tactical-radar-ring-2"></div>
+        <div class="tactical-radar-crosshair-v"></div>
+        <div class="tactical-radar-crosshair-h"></div>
+        <div class="tactical-radar-sweep"></div>
+        <div class="tactical-radar-core"></div>
       </div>
-      <div class="flex-1 flex flex-col max-w-2xl min-w-0">
-        <div class="flex items-center gap-1.5 sm:gap-2 mb-1.5 flex-wrap">
+      <div class="flex-1 flex flex-col max-w-2xl min-w-0 gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           <span class="font-heading font-semibold text-xs text-[#F5F5F5]">friday Cyber Pro</span>
-          <span class="text-[9px] font-mono bg-[#FF3038]/20 text-[#FF3038] px-1.5 py-0.5 rounded font-bold">AI</span>
-          <span class="text-[10px] font-mono text-[#71717A]">Processing…</span>
+          <span class="tactical-telemetry-badge">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#FF3038] animate-ping"></span>
+            NEURAL RADAR
+          </span>
+          <span class="text-[10px] font-mono text-[#71717A] ml-auto tactical-timer-badge" id="tactical-radar-timer">00:00</span>
         </div>
-        <div class="thinking-orb-wrap" id="thinking-orb-wrap-${Date.now()}">
+        <div class="tactical-progress-container flex flex-col gap-2">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="material-symbols-outlined text-[15px] text-[#FF3038] animate-spin shrink-0">autorenew</span>
+              <span class="font-mono text-xs text-[#F5F5F5] font-medium tracking-wide truncate" id="tactical-status-label">Initializing Neural Matrix & Security Weights...</span>
+            </div>
+            <span class="text-[9px] font-mono text-[#71717A] shrink-0 font-bold uppercase tracking-wider hidden sm:inline">CPU 27B</span>
+          </div>
+          <div class="tactical-progress-bar-bg">
+            <div class="tactical-progress-bar-fill"></div>
+          </div>
+          <div class="flex items-center justify-between text-[10px] font-mono text-[#71717A]">
+            <span class="flex items-center gap-1.5 truncate">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              Deep CPU inference in progress (~2-3 mins). Model is computing full tactical response.
+            </span>
+            <span class="text-[9px] text-[#FF3038] font-bold shrink-0 uppercase tracking-wider">DO NOT REFRESH</span>
+          </div>
+        </div>
+        <div class="thinking-orb-wrap hidden" id="thinking-orb-wrap-${Date.now()}">
           <div class="thinking-orb-box">
             <div class="thinking-orb"></div>
             <div class="thinking-orb-ring"></div>
@@ -2150,6 +2291,38 @@
       </div>
     `;
     conversationView.appendChild(div);
+
+    const statusSequence = [
+      { at: 0, text: 'Initializing Neural Matrix & Security Weights...' },
+      { at: 8, text: 'Synthesizing Threat Vector Matrix & CVE Telemetry...' },
+      { at: 20, text: 'Engaging 27B Deep Reasoning Engine...' },
+      { at: 40, text: 'Deconstructing Target Attack Surface & Protocols...' },
+      { at: 70, text: 'Formulating Offensive Exploit Chains & Mitigations...' },
+      { at: 110, text: 'Neural Attention Optimization & Token Assembly...' },
+      { at: 150, text: 'Finalizing Structured Cyber Intelligence Payload...' },
+    ];
+
+    let startSeconds = 0;
+    const timerEl = div.querySelector('#tactical-radar-timer');
+    const labelEl = div.querySelector('#tactical-status-label');
+
+    const intervalId = setInterval(() => {
+      startSeconds++;
+      const mins = String(Math.floor(startSeconds / 60)).padStart(2, '0');
+      const secs = String(startSeconds % 60).padStart(2, '0');
+      if (timerEl) timerEl.textContent = `${mins}:${secs}`;
+
+      for (let i = statusSequence.length - 1; i >= 0; i--) {
+        if (startSeconds >= statusSequence[i].at) {
+          if (labelEl && labelEl.textContent !== statusSequence[i].text) {
+            labelEl.textContent = statusSequence[i].text;
+          }
+          break;
+        }
+      }
+    }, 1000);
+
+    div.dataset.radarInterval = String(intervalId);
     return div;
   }
 
@@ -2259,10 +2432,12 @@
           try { payload = JSON.parse(dataMatch[1]); } catch { continue; }
 
           if (eventType === 'chunk') {
-            // First chunk: cancel orb timer, swap indicator for bubble
+            // First chunk: cancel orb timer & radar interval, swap indicator for bubble
             if (!firstChunkReceived) {
               firstChunkReceived = true;
               clearTimeout(orbTimer);
+              const radarInt = Number(typingEl.dataset.radarInterval);
+              if (radarInt) clearInterval(radarInt);
               typingEl.replaceWith(assistantEl);
             }
             rawText += payload.text;
@@ -2272,17 +2447,23 @@
             // Swap in bubble now if no chunks were ever received (empty response)
             if (!firstChunkReceived) {
               clearTimeout(orbTimer);
+              const radarInt = Number(typingEl.dataset.radarInterval);
+              if (radarInt) clearInterval(radarInt);
               typingEl.replaceWith(assistantEl);
             }
             break;
           } else if (eventType === 'error') {
             clearTimeout(orbTimer);
+            const radarInt = Number(typingEl.dataset.radarInterval);
+            if (radarInt) clearInterval(radarInt);
             throw new Error(payload.message || 'FRIDAY service temporarily unavailable.');
           }
         }
       }
     } catch (err) {
       clearTimeout(orbTimer);
+      const radarInt = Number(typingEl.dataset.radarInterval);
+      if (radarInt) clearInterval(radarInt);
       if (!rawText) throw err;
     }
 
@@ -3080,7 +3261,7 @@
 
   // ─── Subscription System ─────────────────────────────────────────────────
   let subscriptionStatus = null;   // cached subscription status
-  let billingYearly = false;       // default: show monthly plans (₹2,499/mo & ₹4,999/mo)
+  let billingYearly = false;       // default: show monthly plan (₹3,500/mo)
 
   const PLAN_LABELS = {
     cyber_pro_monthly:  { name: 'friday Cyber Pro',   tier: 1, badge: 'cyber_pro' },
@@ -3210,7 +3391,7 @@
   async function renderPricingCards() {
     const grid = document.getElementById('pricing-cards-grid');
     if (!grid) return;
-    grid.innerHTML = '<div class="col-span-1 md:col-span-2 text-center text-[11px] font-mono text-[#71717A] py-8 flex items-center justify-center gap-2"><span class="w-3.5 h-3.5 border-2 border-[#FF3038] border-t-transparent rounded-full animate-spin"></span> Loading neural plans…</div>';
+    grid.innerHTML = '<div class="text-center text-[11px] font-mono text-[#71717A] py-8 flex items-center justify-center gap-2"><span class="w-3.5 h-3.5 border-2 border-[#FF3038] border-t-transparent rounded-full animate-spin"></span> Loading neural plans…</div>';
     try {
       const res = await fetch(`${BACKEND_URL_SUB}/api/subscription/plans`);
       if (!res.ok) throw new Error('Failed to load plans');
@@ -3220,14 +3401,13 @@
 
       grid.innerHTML = '';
       filtered.forEach(plan => {
-        const isAdv = plan.model_tier === 'model2';
         const card = document.createElement('div');
-        card.id = isAdv ? 'pricing-card-adv' : 'pricing-card-jr';
-        card.className = `pricing-card p-4 sm:p-5 flex flex-col justify-between gap-4 ${isAdv ? 'pricing-card-adv shimmer' : 'pricing-card-jr shimmer-gold'}`;
+        card.id = 'pricing-card-adv'; // Retain pricing-card-adv class & id for styling & backward compatibility
+        card.className = 'pricing-card p-5 sm:p-6 flex flex-col justify-between gap-5 pricing-card-adv shimmer';
 
         const features = plan.features.map(f =>
-          `<li class="flex items-start gap-2 text-xs text-[#D4D4D8] leading-tight">
-            <span class="material-symbols-outlined text-[15px] ${isAdv ? 'text-[#FF3038]' : 'text-[#FFB300]'} shrink-0 mt-0.5">check_circle</span>
+          `<li class="flex items-start gap-2.5 text-xs text-[#D4D4D8] leading-tight">
+            <span class="material-symbols-outlined text-[16px] text-[#FF3038] shrink-0 mt-0.5">check_circle</span>
             <span>${escapeHtml(f)}</span>
           </li>`
         ).join('');
@@ -3235,29 +3415,19 @@
         const priceINR = (plan.price_paise / 100).toLocaleString('en-IN');
         const period   = plan.is_yearly ? '/yr' : '/mo';
         const tierLabel = 'friday Cyber Pro';
-        const tierColor = isAdv ? 'text-[#FF3038]' : 'text-[#FFB300]';
-        const tierBg    = isAdv ? 'bg-[#FF3038]/15 border-[#FF3038]/30' : 'bg-[#FFB300]/15 border-[#FFB300]/30';
 
-        const quotaPill = isAdv
-          ? '<span class="text-[9px] font-mono px-2 py-0.5 rounded-full bg-[#FF3038]/20 text-[#FF3038] border border-[#FF3038]/40 font-bold uppercase tracking-wider flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-[#FF3038] animate-pulse"></span> Unlimited Chats</span>'
-          : '<span class="text-[9px] font-mono px-2 py-0.5 rounded-full bg-[#FFB300]/20 text-[#FFB300] border border-[#FFB300]/40 font-bold uppercase tracking-wider flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-[#FFB300]"></span> 50 Chats / Day</span>';
+        const quotaPill = '<span class="text-[9px] font-mono px-2 py-0.5 rounded-full bg-[#FF3038]/20 text-[#FF3038] border border-[#FF3038]/40 font-bold uppercase tracking-wider flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-[#FF3038] animate-pulse"></span> Unlimited Chats</span>';
 
-        const headerBadge = isAdv
-          ? `<div class="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-[#FF3038]/30">
-              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-[#FF3038] to-[#e01e26] text-white text-[10px] font-mono font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(255,48,56,0.6)] border border-white/20">
-                <span class="material-symbols-outlined text-[13px]">bolt</span> RECOMMENDED • MOST POPULAR
-              </span>
-              <span class="text-[10px] font-mono text-[#FF3038] font-bold uppercase tracking-wider">FULL ARSENAL</span>
-            </div>`
-          : `<div class="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-[#FFB300]/20">
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FFB300]/15 text-[#FFB300] text-[10px] font-mono font-semibold uppercase tracking-wider border border-[#FFB300]/30">
-                <span class="material-symbols-outlined text-[13px]">terminal</span> STARTER PRO
-              </span>
-              <span class="text-[10px] font-mono text-[#FFB300] font-semibold uppercase tracking-wider">50 CHATS / DAY</span>
-            </div>`;
+        const headerBadge = `
+          <div class="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-[#FF3038]/30">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-[#FF3038] to-[#e01e26] text-white text-[10px] font-mono font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(255,48,56,0.6)] border border-white/20">
+              <span class="material-symbols-outlined text-[13px]">bolt</span> ALL-IN-ONE OFFENSIVE INTELLIGENCE
+            </span>
+            ${plan.is_yearly ? '<span class="text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full">Save 2 months (17%)</span>' : '<span class="text-[10px] font-mono text-[#FF3038] font-bold uppercase tracking-wider">FULL ARSENAL</span>'}
+          </div>`;
 
         const effectiveMo = plan.is_yearly
-          ? `<div class="text-[10px] font-mono text-[#A1A1AA] mt-0.5">Equivalent to <span class="text-[#F5F5F5] font-semibold">₹${Math.round((plan.price_paise / 100) / 12).toLocaleString('en-IN')}/mo</span></div>`
+          ? `<div class="text-[10px] font-mono text-[#A1A1AA] mt-1">Equivalent to <span class="text-[#F5F5F5] font-semibold">₹${Math.round((plan.price_paise / 100) / 12).toLocaleString('en-IN')}/mo</span> (2 months FREE)</div>`
           : '';
 
         card.innerHTML = `
@@ -3267,43 +3437,39 @@
               <div class="flex items-start justify-between gap-2 pt-1">
                 <div class="flex flex-col gap-1.5">
                   <div class="flex items-center gap-2">
-                    <span class="text-[9px] font-mono px-2 py-0.5 rounded border ${tierBg} ${tierColor} font-bold uppercase tracking-wider">${escapeHtml(tierLabel)}</span>
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded border bg-[#FF3038]/15 border-[#FF3038]/30 text-[#FF3038] font-bold uppercase tracking-wider">${escapeHtml(tierLabel)}</span>
                     ${quotaPill}
                   </div>
                   <div class="flex items-baseline gap-1.5 mt-1">
-                    <span class="text-2xl sm:text-3xl font-heading font-extrabold text-[#F5F5F5] tracking-tight">₹${escapeHtml(priceINR)}</span>
+                    <span class="text-3xl sm:text-4xl font-heading font-extrabold text-[#F5F5F5] tracking-tight">₹${escapeHtml(priceINR)}</span>
                     <span class="text-xs font-mono text-[#71717A]">${period}</span>
                   </div>
                   ${effectiveMo}
                 </div>
-                <div class="w-10 h-10 rounded-xl ${isAdv ? 'bg-[#FF3038]/15 border border-[#FF3038]/30 text-[#FF3038]' : 'bg-[#FFB300]/15 border border-[#FFB300]/30 text-[#FFB300]'} flex items-center justify-center shrink-0">
-                  <span class="material-symbols-outlined text-[22px]">${isAdv ? 'shield_lock' : 'terminal'}</span>
+                <div class="w-12 h-12 rounded-xl bg-[#FF3038]/15 border border-[#FF3038]/30 text-[#FF3038] flex items-center justify-center shrink-0">
+                  <span class="material-symbols-outlined text-[26px]">shield_lock</span>
                 </div>
               </div>
 
-              <div class="h-[1px] w-full bg-[#1e1e24]"></div>
+              <div class="h-[1px] w-full bg-[#1e1e24] my-1"></div>
 
               <ul class="flex flex-col gap-2.5 py-1">${features}</ul>
             </div>
           </div>
 
           <div class="pt-2 flex flex-col gap-2">
-            <button onclick="openCheckoutReview('${escapeHtml(plan.plan_id)}')" class="w-full py-3 rounded-xl font-heading font-bold text-xs sm:text-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${
-              isAdv
-                ? 'bg-[#FF3038] hover:bg-[#e02028] text-white shadow-[0_0_20px_rgba(255,48,56,0.35)]'
-                : 'bg-[#FFB300]/20 hover:bg-[#FFB300]/30 text-[#FFB300] border border-[#FFB300]/40'
-            }" id="choose-btn-${escapeHtml(plan.plan_id)}">
-              <span>${isAdv ? 'Unlock Full Access (Recommended)' : 'Select ' + escapeHtml(tierLabel)}</span>
+            <button onclick="openCheckoutReview('${escapeHtml(plan.plan_id)}')" class="w-full py-3.5 rounded-xl font-heading font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 bg-[#FF3038] hover:bg-[#e02028] text-white shadow-[0_0_20px_rgba(255,48,56,0.35)] cursor-pointer" id="choose-btn-${escapeHtml(plan.plan_id)}">
+              <span>Unlock friday Cyber Pro</span>
               <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
             </button>
-            <span class="text-center text-[9px] font-mono text-[#52525B]">Instant UPI, Cards & NetBanking checkout</span>
+            <span class="text-center text-[10px] font-mono text-[#71717A]">Instant UPI, Cards & NetBanking checkout</span>
           </div>
         `;
         grid.appendChild(card);
       });
       setMobilePlanTab(activeMobilePlan);
     } catch (err) {
-      grid.innerHTML = `<div class="col-span-1 md:col-span-2 text-center text-xs font-mono text-[#FF3038] py-8">Failed to load plans. Please try again.</div>`;
+      grid.innerHTML = `<div class="text-center text-xs font-mono text-[#FF3038] py-8">Failed to load plans. Please try again.</div>`;
     }
   }
 
@@ -3311,43 +3477,13 @@
 
   function setMobilePlanTab(tier) {
     activeMobilePlan = tier;
-    const tabJr = document.getElementById('mobile-plan-tab-model1');
-    const tabAdv = document.getElementById('mobile-plan-tab-model2');
-    const cardJr = document.getElementById('pricing-card-jr');
-    const cardAdv = document.getElementById('pricing-card-adv');
-
-    if (tier === 'model1') {
-      tabJr?.classList.add('bg-[#FFB300]/20', 'text-[#FFB300]', 'border', 'border-[#FFB300]/40', 'font-bold');
-      tabJr?.classList.remove('text-[#A1A1AA]');
-      tabAdv?.classList.remove('bg-[#FF3038]/20', 'text-[#FF3038]', 'border', 'border-[#FF3038]/40', 'font-bold', 'shadow-[0_0_12px_rgba(255,48,56,0.2)]');
-      tabAdv?.classList.add('text-[#A1A1AA]');
-
-      if (window.innerWidth < 768) {
-        if (cardJr) cardJr.style.display = 'flex';
-        if (cardAdv) cardAdv.style.display = 'none';
-      }
-    } else {
-      tabAdv?.classList.add('bg-[#FF3038]/20', 'text-[#FF3038]', 'border', 'border-[#FF3038]/40', 'font-bold', 'shadow-[0_0_12px_rgba(255,48,56,0.2)]');
-      tabAdv?.classList.remove('text-[#A1A1AA]');
-      tabJr?.classList.remove('bg-[#FFB300]/20', 'text-[#FFB300]', 'border', 'border-[#FFB300]/40', 'font-bold');
-      tabJr?.classList.add('text-[#A1A1AA]');
-
-      if (window.innerWidth < 768) {
-        if (cardAdv) cardAdv.style.display = 'flex';
-        if (cardJr) cardJr.style.display = 'none';
-      }
-    }
+    const cardCyber = document.getElementById('pricing-card-adv');
+    if (cardCyber) cardCyber.style.display = 'flex';
   }
 
   window.addEventListener('resize', () => {
-    const cardJr = document.getElementById('pricing-card-jr');
-    const cardAdv = document.getElementById('pricing-card-adv');
-    if (window.innerWidth >= 768) {
-      if (cardJr) cardJr.style.display = 'flex';
-      if (cardAdv) cardAdv.style.display = 'flex';
-    } else {
-      setMobilePlanTab(activeMobilePlan);
-    }
+    const cardCyber = document.getElementById('pricing-card-adv');
+    if (cardCyber) cardCyber.style.display = 'flex';
   });
 
   async function openCheckoutReview(planId) {
@@ -3364,28 +3500,25 @@
         emailEl.textContent = user ? (user.email || user.displayName || 'Authenticated Operator') : 'Sign-in required';
       }
 
-      const isAdv = plan.model_tier === 'model2';
-      const tierColor = isAdv ? 'text-[#FF3038]' : 'text-[#FFB300]';
-      const tierBg = isAdv ? 'bg-[#FF3038]/15 border-[#FF3038]/30' : 'bg-[#FFB300]/15 border-[#FFB300]/30';
       const priceINR = (plan.price_paise / 100).toLocaleString('en-IN');
-      const periodLabel = plan.is_yearly ? 'Annual Plan (365 Days Access)' : 'Monthly Plan (30 Days Access)';
-      const quotaLabel = isAdv ? 'Unlimited daily chats' : '50 chats per day (resets every 24h)';
+      const periodLabel = plan.is_yearly ? 'Annual Plan (365 Days Access • 2 Months Free)' : 'Monthly Plan (30 Days Access)';
+      const quotaLabel = 'Unlimited daily chats';
 
       const cardEl = document.getElementById('checkout-selected-plan-card');
       if (cardEl) {
-        cardEl.className = `p-4 sm:p-5 rounded-2xl border ${isAdv ? 'bg-[#150d10] border-[#FF3038]/40 shadow-[0_0_25px_rgba(255,48,56,0.15)]' : 'bg-[#14120a] border-[#FFB300]/40 shadow-[0_0_25px_rgba(255,179,0,0.12)]'}`;
+        cardEl.className = 'p-4 sm:p-5 rounded-2xl border bg-[#150d10] border-[#FF3038]/40 shadow-[0_0_25px_rgba(255,48,56,0.15)]';
         cardEl.innerHTML = `
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <div class="flex items-center gap-2">
-                <span class="text-[9px] font-mono px-2 py-0.5 rounded border ${tierBg} ${tierColor} font-bold uppercase tracking-wider">${escapeHtml(plan.label)}</span>
+                <span class="text-[9px] font-mono px-2 py-0.5 rounded border bg-[#FF3038]/15 border-[#FF3038]/30 text-[#FF3038] font-bold uppercase tracking-wider">${escapeHtml(plan.label)}</span>
                 <span class="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Instant Activation</span>
               </div>
               <h3 class="font-heading font-bold text-base sm:text-lg text-[#F5F5F5] mt-1">${escapeHtml(plan.label)}</h3>
               <p class="text-[11px] font-mono text-[#A1A1AA] flex items-center gap-2 mt-0.5">
                 <span>${periodLabel}</span>
                 <span>•</span>
-                <span class="${tierColor} font-semibold">${quotaLabel}</span>
+                <span class="text-[#FF3038] font-semibold">${quotaLabel}</span>
               </p>
             </div>
             <div class="flex flex-col items-start sm:items-end">

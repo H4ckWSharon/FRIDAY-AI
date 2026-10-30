@@ -24,6 +24,6 @@ async def health_check() -> HealthResponse:
         status="ok" if overall_ok else "degraded",
         ollama_reachable=ollama_ok,
         database_reachable=db_ok,
-        model="FRIDAY Neural Engine",
+        model="friday Cyber Pro",
         version="2.0.0",
     )

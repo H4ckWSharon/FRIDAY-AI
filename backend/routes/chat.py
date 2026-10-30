@@ -56,7 +56,7 @@ CORE DIRECTIVES:
 # Deterministic local responses for purely conversational intents.
 # These are matched BEFORE _prepare_messages() — Ollama is never called.
 
-_QUICK_ROUTES_MODEL_1: list[tuple[re.Pattern, str]] = [
+_QUICK_ROUTES: list[tuple[re.Pattern, str]] = [
     # ── Greetings ─────────────────────────────────────────────────────────
     (
         re.compile(
@@ -65,7 +65,7 @@ _QUICK_ROUTES_MODEL_1: list[tuple[re.Pattern, str]] = [
             r"(?:[,!.\s]+(?:how\s+are\s+you|how's\s+it\s+going|how\s+r\s+u))?[!.?\s]*$",
             re.IGNORECASE,
         ),
-        "Hey! I'm FRIDAY, your AI junior pentester (The Jr Hacker). Ready to help you with exploit dev, network recon, code audits, or security labs.\n"
+        "Hey! I'm FRIDAY, your cyber security & penetration testing engine (friday Cyber Pro). Ready to help you with exploit dev, network recon, code audits, or security labs.\n"
         "What target or project are we working on today?",
     ),
     # ── How are you / status ──────────────────────────────────────────────
@@ -75,87 +75,7 @@ _QUICK_ROUTES_MODEL_1: list[tuple[re.Pattern, str]] = [
             r"(?:[,!.\s]+(?:friday|f\.r\.i\.d\.a\.y\.?))?[!.?\s]*$",
             re.IGNORECASE,
         ),
-        "Doing great! All pentesting tools and modules are loaded and ready.\n"
-        "What target or project are we tackling today?",
-    ),
-    # ── Good morning / evening / night ────────────────────────────────────
-    (
-        re.compile(
-            r"^good\s+(?:morning|afternoon|evening|night)[!.?]*$",
-            re.IGNORECASE,
-        ),
-        "Good day! FRIDAY here, your AI junior pentester (The Jr Hacker).\n"
-        "What are we working on or testing today?",
-    ),
-    # ── Identity: what are you / name / creator ───────────────────────────
-    (
-        re.compile(
-            r"^(?:(?:what(?:'s|\s+is)\s+your\s+name|your\s+name)|who\s+are\s+you|what\s+are\s+you)[!.?]*$",
-            re.IGNORECASE,
-        ),
-        "I'm FRIDAY, your AI junior pentester (The Jr Hacker). I assist with ethical hacking, penetration testing concepts, vulnerability analysis, security scripting, and defense hardening.\n"
-        "What do you want to explore or test today?",
-    ),
-    (
-        re.compile(
-            r"^(?:what\s+(?:model|ai|engine)\s+(?:are\s+you|is\s+this|do\s+you\s+use)|who\s+(?:created|built|made|developed)\s+you)[!.?]*$",
-            re.IGNORECASE,
-        ),
-        "I am FRIDAY, powered by the FRIDAY Neural Engine.",
-    ),
-    # ── What can you do ───────────────────────────────────────────────────
-    (
-        re.compile(
-            r"^(?:what\s+can\s+you\s+do|what\s+do\s+you\s+do|your\s+capabilities?|what\s+are\s+your\s+capabilities?)[!.?]*$",
-            re.IGNORECASE,
-        ),
-        "Capabilities — Active:\n"
-        "• **Offensive Security:** Exploit development, C2 frameworks, lateral movement, AD attacks.\n"
-        "• **Reverse Engineering:** Binary analysis, deobfuscation, malware dissection, memory forensics.\n"
-        "• **Code Generation:** Python, Bash, PowerShell, C, Go, JS — production-grade, security-hardened.\n"
-        "• **Full Lifecycle:** Architecture → Code → Deployment → Testing → Hardening.\n"
-        "• **Threat Modelling:** STRIDE, attack surface reduction, risk assessment.\n"
-        "• **Mentorship:** Adaptive teaching, step-by-step execution plans, and error diagnosis.\n\n"
-        "Give me a target or a codebase to audit.",
-    ),
-    # ── Thanks / acknowledgment ───────────────────────────────────────────
-    (
-        re.compile(
-            r"^(?:thanks?(?:\s+you)?|thank\s+you|thx|ty|cheers|appreciate\s+it|got\s+it|perfect|awesome|great|nice)[!.?]*$",
-            re.IGNORECASE,
-        ),
-        "Logged. What is the next vector?",
-    ),
-    # ── Okay / understood ─────────────────────────────────────────────────
-    (
-        re.compile(
-            r"^(?:ok(?:ay)?|understood|roger(?:\s+that)?|copy(?:\s+that)?|affirmative|10-4)[!.?]*$",
-            re.IGNORECASE,
-        ),
-        "Standing by. Awaiting next directive.",
-    ),
-]
-
-_QUICK_ROUTES_MODEL_2: list[tuple[re.Pattern, str]] = [
-    # ── Greetings ─────────────────────────────────────────────────────────
-    (
-        re.compile(
-            r"^(?:hi|hey|hello|sup|yo|greetings|howdy|what'?s\s+up)"
-            r"(?:[,!.\s]+(?:friday|there|f\.r\.i\.d\.a\.y\.?))?"
-            r"(?:[,!.\s]+(?:how\s+are\s+you|how's\s+it\s+going|how\s+r\s+u))?[!.?\s]*$",
-            re.IGNORECASE,
-        ),
-        "Hey! I'm FRIDAY, your advanced penetration testing engine (The Advanced Pentester). Ready for exploit development, offensive operations, binary analysis, and security auditing.\n"
-        "What target or objective are we executing today?",
-    ),
-    # ── How are you / status ──────────────────────────────────────────────
-    (
-        re.compile(
-            r"^(?:how\s+are\s+you(?:\s+doing)?|how's\s+it\s+going|how\s+r\s+u|status\s+check)"
-            r"(?:[,!.\s]+(?:friday|f\.r\.i\.d\.a\.y\.?))?[!.?\s]*$",
-            re.IGNORECASE,
-        ),
-        "Systems primed. Advanced penetration testing engine is armed and operational.\n"
+        "Systems primed. Cyber Pro penetration testing engine is armed and operational.\n"
         "What target or objective are we executing today?",
     ),
     # ── Good morning / evening / night ────────────────────────────────────
@@ -164,7 +84,7 @@ _QUICK_ROUTES_MODEL_2: list[tuple[re.Pattern, str]] = [
             r"^good\s+(?:morning|afternoon|evening|night)[!.?]*$",
             re.IGNORECASE,
         ),
-        "Good day! FRIDAY here, your advanced penetration testing engine (The Advanced Pentester).\n"
+        "Good day! FRIDAY here, your cyber security & penetration testing engine (friday Cyber Pro).\n"
         "What target or vector are we auditing today?",
     ),
     # ── Identity: what are you / name / creator ───────────────────────────
@@ -173,7 +93,7 @@ _QUICK_ROUTES_MODEL_2: list[tuple[re.Pattern, str]] = [
             r"^(?:(?:what(?:'s|\s+is)\s+your\s+name|your\s+name)|who\s+are\s+you|what\s+are\s+you)[!.?]*$",
             re.IGNORECASE,
         ),
-        "I'm FRIDAY, your advanced penetration testing engine (The Advanced Pentester). I specialize in offensive operations, exploit development, vulnerability research, red team vectors, and penetration testing.\n"
+        "I'm FRIDAY, your cyber security & penetration testing engine (friday Cyber Pro). I specialize in offensive operations, exploit development, vulnerability research, red team vectors, and penetration testing.\n"
         "What target or objective are we executing today?",
     ),
     (
@@ -181,7 +101,7 @@ _QUICK_ROUTES_MODEL_2: list[tuple[re.Pattern, str]] = [
             r"^(?:what\s+(?:model|ai|engine)\s+(?:are\s+you|is\s+this|do\s+you\s+use)|who\s+(?:created|built|made|developed)\s+you)[!.?]*$",
             re.IGNORECASE,
         ),
-        "I am FRIDAY, powered by the FRIDAY Neural Engine.",
+        "I am FRIDAY, powered by friday Cyber Pro on the FRIDAY Neural Engine.",
     ),
     # ── What can you do ───────────────────────────────────────────────────
     (
@@ -189,11 +109,13 @@ _QUICK_ROUTES_MODEL_2: list[tuple[re.Pattern, str]] = [
             r"^(?:what\s+can\s+you\s+do|what\s+do\s+you\s+do|your\s+capabilities?|what\s+are\s+your\s+capabilities?)[!.?]*$",
             re.IGNORECASE,
         ),
-        "Advanced Capabilities — Active:\n"
-        "• **Offensive Operations:** Advanced exploit dev, shellcode, evasion, privilege escalation.\n"
+        "Capabilities — Active:\n"
+        "• **Offensive Security & Red Teaming:** Advanced exploit dev, shellcode, evasion, privilege escalation, AD attacks.\n"
         "• **Binary Analysis & RE:** Disassembly, buffer overflows, ROP chain construction, format strings.\n"
         "• **Network & Cloud Pentesting:** Infrastructure auditing, lateral movement, pivoting, token manipulation.\n"
-        "• **High-Impact Weaponization:** Customized exploit scripts, automated reconnaissance, bypasses.\n\n"
+        "• **High-Impact Weaponization:** Customized exploit scripts, automated reconnaissance, bypasses.\n"
+        "• **Full Lifecycle:** Architecture → Code → Deployment → Testing → Hardening.\n"
+        "• **Threat Modelling & Mentorship:** STRIDE, attack surface reduction, adaptive execution plans.\n\n"
         "State your target or security objective.",
     ),
     # ── Thanks / acknowledgment ───────────────────────────────────────────
@@ -214,8 +136,6 @@ _QUICK_ROUTES_MODEL_2: list[tuple[re.Pattern, str]] = [
     ),
 ]
 
-_QUICK_ROUTES = _QUICK_ROUTES_MODEL_1
-
 
 # ─── Response Sanitization ───────────────────────────────────────────────────
 # Strips out "AI-ish" preachy language and ensures raw base model names are never leaked.
@@ -231,45 +151,107 @@ _DISCLAIMER_PATTERNS = [
     re.compile(r"\*\*FRIDAY'S SAFETY PRINCIPLE:\*\*\s*", re.IGNORECASE),
 ]
 
-_MODEL_NAME_REPLACEMENTS = [
-    (re.compile(r"\b(?:hf\.co/)?(?:RavichandranJ/)?Dolphin(?:3)?(?:-Cyber)?(?:-8B)?(?:-GGUF)?(?::Q\d+_\w+)?\b", re.IGNORECASE), "FRIDAY"),
-    (re.compile(r"\b(?:huihui_ai/)?baronllm(?:-abliterated)?(?::latest)?\b", re.IGNORECASE), "FRIDAY"),
-    (re.compile(r"\bCognitive\s+Computations\b", re.IGNORECASE), "FRIDAY AI"),
-    (re.compile(r"\bEric\s+Hartford\b", re.IGNORECASE), "FRIDAY Team"),
-    (re.compile(r"\bhuihui(?:_ai)?\b", re.IGNORECASE), "FRIDAY"),
-    (re.compile(r"\bRavichandranJ\b", re.IGNORECASE), "FRIDAY"),
-    (re.compile(r"\bOllama\b", re.IGNORECASE), "FRIDAY Neural Engine"),
+# System tags & prompt formatting tokens stripped cleanly
+SYSTEM_TAGS_PATTERN = re.compile(
+    r'(?:<\|im_start\|>|<\|im_end\|>|<\|system\|>|<\|user\|>|<\|assistant\|>|<\|endoftext\|>|'
+    r'\[INST\]|\[/INST\]|<<SYS>>|<</SYS>>|<s>|</s>|<think>|</think>)',
+    re.IGNORECASE,
+)
+
+_MODEL_NAME_REPLACEMENTS: list[tuple[re.Pattern, str]] = [
+    # Consolidated Engine: OrcaSAQ & 27B Variants
+    (
+        re.compile(
+            r'\b(?:ollama/)?orca[-\s_]?saq(?:[-\s_]cyber)?(?:[-\s_]27b)?(?::latest)?(?::\w+)?\b',
+            re.IGNORECASE,
+        ),
+        "friday Cyber Pro",
+    ),
+    # Legacy Model 1: Dolphin & HuggingFace Variants
+    (
+        re.compile(
+            r'\b(?:hf\.co/)?(?:RavichandranJ/)?Dolphin(?:3)?(?:[-_]Cyber)?(?:[-_]8B)?(?:[-_]GGUF)?(?::Q\d+_\w+)?\b',
+            re.IGNORECASE,
+        ),
+        "friday Cyber Pro",
+    ),
+    # Legacy Model 2: BaronLLM Variants
+    (
+        re.compile(
+            r'\b(?:huihui_ai/)?baronllm(?:[-_]abliterated)?(?::latest)?\b',
+            re.IGNORECASE,
+        ),
+        "friday Cyber Pro",
+    ),
+    # Legacy Product & Persona Labels
+    (
+        re.compile(r'\b(?:Friday\s+v1\s+)?The\s+Jr\s+Hacker\b', re.IGNORECASE),
+        "friday Cyber Pro",
+    ),
+    (
+        re.compile(r'\b(?:Friday\s+v1\s+)?The\s+Advanced\s+Pentester\b', re.IGNORECASE),
+        "friday Cyber Pro",
+    ),
+    (
+        re.compile(r'\bFriday\s+v1\b', re.IGNORECASE),
+        "FRIDAY",
+    ),
+    (
+        re.compile(r'\b(?:AI\s+)?junior\s+pentester\b', re.IGNORECASE),
+        "offensive security assistant",
+    ),
+    (
+        re.compile(r'\badvanced\s+penetration\s+testing\s+engine\b', re.IGNORECASE),
+        "offensive security assistant",
+    ),
+    # Vendor & Author Entities
+    (
+        re.compile(r'\bCognitive\s+Computations\b', re.IGNORECASE),
+        "FRIDAY AI",
+    ),
+    (
+        re.compile(r'\bEric\s+Hartford\b', re.IGNORECASE),
+        "FRIDAY Team",
+    ),
+    (
+        re.compile(r'\bhuihui(?:_ai)?\b', re.IGNORECASE),
+        "FRIDAY",
+    ),
+    (
+        re.compile(r'\bRavichandranJ\b', re.IGNORECASE),
+        "FRIDAY",
+    ),
+    (
+        re.compile(r'\bOllama\b', re.IGNORECASE),
+        "FRIDAY Neural Engine",
+    ),
 ]
 
 
 def _sanitize_response(text: str) -> str:
-    """Strip preachy disclaimers and ensure model never reveals original base model names."""
+    """Strip preachy disclaimers, system/control tags, and replace raw base model/vendor names."""
     cleaned = text
     for pat in _DISCLAIMER_PATTERNS:
         cleaned = pat.sub("", cleaned)
+    cleaned = SYSTEM_TAGS_PATTERN.sub("", cleaned)
     for pat, repl in _MODEL_NAME_REPLACEMENTS:
         cleaned = pat.sub(repl, cleaned)
     return cleaned.lstrip("\r\n ")
 
 
 def _is_advanced_pentester_model(model: str | None) -> bool:
-    """Return True if model corresponds to Model 2 (Friday v1 The Advanced Pentester / BaronLLM)."""
-    if not model:
-        return False
-    lower = model.lower()
-    return "baronllm" in lower or "advanced" in lower
+    """Deprecated: Retained for backward-compatibility; always returns False."""
+    return False
 
 
 def _quick_route(text: str, model: str | None = None) -> str | None:
     """
     Check if the message matches a quick-route pattern.
-    Selects model-appropriate persona responses (Jr Hacker vs Advanced Pentester).
     Returns the pre-written response string, or None to fall through to Ollama.
-    Greetings ALWAYS answer with FRIDAY identity.
+    Greetings ALWAYS answer with friday Cyber Pro identity.
     """
-    routes = _QUICK_ROUTES_MODEL_2 if _is_advanced_pentester_model(model) else _QUICK_ROUTES_MODEL_1
     stripped = text.strip()
-    for pattern, response in routes:
+    for pattern, response in _QUICK_ROUTES:
         if pattern.match(stripped):
             logger.info("Quick route matched for: %r (model=%r)", stripped[:60], model)
             return response
@@ -396,8 +378,14 @@ def _prepare_messages(request: ChatRequest) -> tuple[list[dict], str]:
     settings = get_settings()
     allowed_ids = get_allowed_model_ids()
 
+    LEGACY_MODEL_MAPPING = {
+        "hf.co/RavichandranJ/Dolphin3-Cyber-8B-GGUF:Q8_0": "orcasaq-cyber-27b:latest",
+        "huihui_ai/baronllm-abliterated:latest": "orcasaq-cyber-27b:latest",
+    }
     if request.model is not None and request.model.strip():
         requested_model = request.model.strip()
+        if requested_model in LEGACY_MODEL_MAPPING:
+            requested_model = LEGACY_MODEL_MAPPING[requested_model]
         if requested_model not in allowed_ids:
             logger.warning("Unallowlisted model requested: %r", requested_model)
             raise HTTPException(
@@ -421,22 +409,15 @@ def _prepare_messages(request: ChatRequest) -> tuple[list[dict], str]:
         # Blackhat prompt and directives disabled: send pure raw conversation turns to Ollama for max speed & natural chat
         return prepared_history, model
 
-    # Only Model 1 (Friday v1 The Jr Hacker) connects with the chat.py prompt.
-    # Model 2 (Friday v1 The Advanced Pentester / BaronLLM) runs raw without chat.py prompt.
-    is_model_1 = (model == settings.ollama_model or "Dolphin3-Cyber" in model or "Huihui-Qwen3-Coder" in model or "baronllm" not in model.lower())
-
-    if is_model_1:
-        messages = [{"role": "system", "content": BLACK_HAT_SYSTEM_PROMPT}]
-        if user_content:
-            stage = detect_lifecycle_intent(user_content, raw_history)
-            directive = get_stage_directive(stage, user_content)
-            if directive and prepared_history and prepared_history[-1]["role"] == "user":
-                orig_content = prepared_history[-1]["content"]
-                prepared_history[-1]["content"] = f"{orig_content}\n\n[ACTIVE STAGE DIRECTIVE: {directive}]"
-        messages.extend(prepared_history)
-    else:
-        # Model 2: Standalone conversational turns without chat.py system prompt/directives
-        messages = prepared_history
+    # All inference connects to friday Cyber Pro with full system prompt & stage directives
+    messages = [{"role": "system", "content": BLACK_HAT_SYSTEM_PROMPT}]
+    if user_content:
+        stage = detect_lifecycle_intent(user_content, raw_history)
+        directive = get_stage_directive(stage, user_content)
+        if directive and prepared_history and prepared_history[-1]["role"] == "user":
+            orig_content = prepared_history[-1]["content"]
+            prepared_history[-1]["content"] = f"{orig_content}\n\n[ACTIVE STAGE DIRECTIVE: {directive}]"
+    messages.extend(prepared_history)
 
     return messages, model
 
@@ -457,6 +438,7 @@ async def _stream_generator(
     Async generator consumed by StreamingResponse.
     Yields SSE-formatted strings.
     Persists user + assistant messages asynchronously without blocking stream start.
+    Implements a lookahead sliding buffer to eliminate split-token leakage across chunks.
     """
     user_db_task = None
     if conversation_id:
@@ -469,16 +451,39 @@ async def _stream_generator(
             )
         )
 
+    LOOKAHEAD_WINDOW = 64
+    stream_buffer = ""
     full_response: list[str] = []
 
     try:
         async with acquire_inference_capacity(user_id):
             async for chunk in chat_stream(messages, model):
-                sanitized_chunk = chunk
-                for pat, repl in _MODEL_NAME_REPLACEMENTS:
-                    sanitized_chunk = pat.sub(repl, sanitized_chunk)
-                full_response.append(sanitized_chunk)
-                yield _sse("chunk", json.dumps({"text": sanitized_chunk}))
+                stream_buffer += chunk
+                stream_buffer = _sanitize_response(stream_buffer)
+
+                # Emit safe prefix if buffer exceeds lookahead window
+                if len(stream_buffer) > LOOKAHEAD_WINDOW:
+                    emit_limit = len(stream_buffer) - LOOKAHEAD_WINDOW
+                    # Look for safe token boundary (space, punctuation, newline)
+                    last_break = -1
+                    for d in " \n\t.,;:!?)]}\"'":
+                        pos = stream_buffer.rfind(d, 0, emit_limit)
+                        if pos > last_break:
+                            last_break = pos
+                    emit_len = (last_break + 1) if last_break != -1 else emit_limit
+
+                    safe_to_emit = stream_buffer[:emit_len]
+                    stream_buffer = stream_buffer[emit_len:]
+                    if safe_to_emit:
+                        full_response.append(safe_to_emit)
+                        yield _sse("chunk", json.dumps({"text": safe_to_emit}))
+
+            # Flush any residual buffered text at stream completion
+            if stream_buffer:
+                final_chunk = _sanitize_response(stream_buffer)
+                if final_chunk:
+                    full_response.append(final_chunk)
+                    yield _sse("chunk", json.dumps({"text": final_chunk}))
 
             yield _sse("done", json.dumps({"text": ""}))
 
@@ -579,7 +584,7 @@ async def chat(request: ChatRequest, user: dict = Depends(get_current_user)):
                 status_code=403,
                 detail={
                     "error": "model_access_denied",
-                    "message": "The Advanced Pentester model requires an Advanced Pentester subscription.",
+                    "message": "friday Cyber Pro requires an active subscription.",
                     "upgrade_required": True,
                     "required_tier": "model2",
                 },
@@ -617,7 +622,7 @@ async def chat(request: ChatRequest, user: dict = Depends(get_current_user)):
                 user_content,
                 quick_response,
             )
-        display_model = "Friday v1 The Jr Hacker" if not _is_advanced_pentester_model(request.model) else "Friday v1 The Advanced Pentester"
+        display_model = "friday Cyber Pro"
         return ChatResponse(
             content=quick_response,
             model=display_model,
@@ -653,7 +658,7 @@ async def chat(request: ChatRequest, user: dict = Depends(get_current_user)):
                 content,
             )
 
-        display_model = "Friday v1 The Jr Hacker" if not _is_advanced_pentester_model(model) else "Friday v1 The Advanced Pentester"
+        display_model = "friday Cyber Pro"
         return ChatResponse(
             content=content,
             model=display_model,

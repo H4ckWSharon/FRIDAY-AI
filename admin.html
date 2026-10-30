@@ -1010,7 +1010,7 @@
           <div>
             <h1 class="main-heading">User & Subscription Telemetry</h1>
             <div class="sub-heading">
-              <span>Real-time operator access records across PostgreSQL & Ollama inference nodes</span>
+              <span>Real-time operator access records across PostgreSQL & FRIDAY inference nodes</span>
             </div>
           </div>
           <div style="font-family: var(--font-mono); font-size: 12px; color: var(--text-dim);" id="server-time-display">
@@ -1036,7 +1036,7 @@
             <span class="metric-icon">⚡</span>
           </div>
           <div class="metric-value" id="kpi-paid-users" style="color: var(--green-neon);">0</div>
-          <div class="metric-sub" id="kpi-paid-sub">Model 1 & Model 2 paid</div>
+          <div class="metric-sub" id="kpi-paid-sub">Active Cyber Pro plans</div>
         </div>
 
         <div class="metric-card card-free">
@@ -1137,11 +1137,9 @@
         <div class="form-group">
           <label class="form-label" for="grant-plan">Select Plan Tier</label>
           <select id="grant-plan" class="form-select" onchange="handlePlanSelectChange()">
-            <option value="advanced_monthly">🔥 The Advanced Pentester — Monthly (Model 2 Unlimited)</option>
-            <option value="advanced_yearly">🔥 The Advanced Pentester — Yearly (Model 2 Unlimited)</option>
-            <option value="jr_hacker_monthly">⚡ The Jr Hacker — Monthly (Model 1, 50/day)</option>
-            <option value="jr_hacker_yearly">⚡ The Jr Hacker — Yearly (Model 1, 50/day)</option>
-            <option value="founder_unlimited">👑 Founder / Admin (Lifetime VIP — All Models Unlimited)</option>
+            <option value="cyber_pro_monthly">🔥 friday Cyber Pro — Monthly (Unlimited)</option>
+            <option value="cyber_pro_yearly">🔥 friday Cyber Pro — Yearly (Unlimited)</option>
+            <option value="founder_unlimited">👑 Founder / Admin (Lifetime VIP — Unlimited)</option>
             <option value="free">🛡️ Revert to Free Plan (5 chats/day limit)</option>
           </select>
         </div>
@@ -1405,7 +1403,7 @@
         if (u.is_founder) {
           planBadgeClass = 'plan-founder';
           planEmoji = '👑';
-        } else if (u.model_tier === 'model2' || (u.plan_id && u.plan_id.includes('advanced'))) {
+        } else if (u.model_tier === 'cyber_pro' || (u.plan_id && u.plan_id.includes('cyber_pro')) || u.model_tier === 'model2' || (u.plan_id && u.plan_id.includes('advanced'))) {
           planBadgeClass = 'plan-adv';
           planEmoji = '🔥';
         } else if (u.model_tier === 'model1' || (u.plan_id && u.plan_id.includes('jr_hacker'))) {
@@ -1422,13 +1420,13 @@
         `;
 
         // 3. Model Tier
-        let tierLabel = 'Dual Model (5 chats/day)';
+        let tierLabel = 'friday Cyber Pro (Free, 5/day)';
         let tierIcon = '🛡️';
-        if (u.model_tier === 'model2') {
-          tierLabel = 'Model 2 (BaronLLM Abliterated)';
+        if (u.is_founder || u.model_tier === 'cyber_pro' || u.model_tier === 'model2' || (u.plan_id && (u.plan_id.includes('advanced') || u.plan_id.includes('cyber_pro')))) {
+          tierLabel = 'friday Cyber Pro (Unlimited)';
           tierIcon = '🔥';
-        } else if (u.model_tier === 'model1') {
-          tierLabel = 'Model 1 (Jr Hacker Dolphin)';
+        } else if (u.model_tier === 'model1' || (u.plan_id && u.plan_id.includes('jr_hacker'))) {
+          tierLabel = 'friday Cyber Pro (50 chats/day)';
           tierIcon = '⚡';
         }
 
@@ -1561,7 +1559,7 @@
     // ─── Modal Actions ───────────────────────────────────────
     function openGrantModal() {
       document.getElementById('grant-email').value = '';
-      document.getElementById('grant-plan').value = 'advanced_monthly';
+      document.getElementById('grant-plan').value = 'cyber_pro_monthly';
       document.getElementById('grant-days').value = '30';
       handlePlanSelectChange();
       document.getElementById('grant-modal').classList.add('active');
@@ -1569,7 +1567,7 @@
 
     function openGrantModalForUser(emailOrId) {
       document.getElementById('grant-email').value = emailOrId;
-      document.getElementById('grant-plan').value = 'advanced_monthly';
+      document.getElementById('grant-plan').value = 'cyber_pro_monthly';
       document.getElementById('grant-days').value = '30';
       handlePlanSelectChange();
       document.getElementById('grant-modal').classList.add('active');

@@ -75,6 +75,11 @@ async def _handle_create_order(
         if plan_id not in PLAN_CONFIG or plan_id in ("free", "founder_unlimited"):
             raise HTTPException(status_code=400, detail=f"Invalid plan: {plan_id}")
         plan = PLAN_CONFIG[plan_id]
+        if not plan.get("purchasable", False):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Plan '{plan_id}' is retired or no longer offered for purchase.",
+            )
         amount = plan["price_paise"]  # Force exact server-side pricing; ignore client-supplied amount
         notes["plan_id"] = plan_id
         notes["plan_label"] = plan.get("label", plan_id)
@@ -162,13 +167,13 @@ async def _handle_verify_payment(
     # 3. Plan Price & Integrity Verification
     sub_record = None
     plan_id = body.plan_id
-    if plan_id and plan_id in PLAN_CONFIG:
-        plan = PLAN_CONFIG[plan_id]
-        if plan_id in ("free", "founder_unlimited"):
+    if plan_id:
+        if plan_id not in PLAN_CONFIG or not PLAN_CONFIG[plan_id].get("purchasable", False):
             raise HTTPException(
                 status_code=400,
-                detail=f"Cannot activate tier '{plan_id}' via standard payment verification.",
+                detail=f"Cannot activate plan '{plan_id}': plan is retired or not purchasable.",
             )
+        plan = PLAN_CONFIG[plan_id]
 
         # Server-side verification with Razorpay order API to prevent price tampering & spoofing
         fetched_order = fetch_razorpay_order(order_id)
@@ -283,7 +288,7 @@ async def list_plans():
     """Return all available subscription plans with pricing and features (public)."""
     plans = []
     for plan_id, config in PLAN_CONFIG.items():
-        if plan_id == "free":
+        if not config.get("purchasable", False):
             continue
         plans.append({
             "plan_id": plan_id,
