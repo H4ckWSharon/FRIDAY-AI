@@ -117,8 +117,9 @@ async def security_and_telemetry_middleware(request, call_next):
     now = time.time()
     remaining = RATE_LIMIT_MAX_REQUESTS
 
-    # Exempt internal test harness clients to allow rapid automated testing
-    if client_ip != "testclient":
+    # Exempt internal test harness clients and loopback requests without proxy headers to allow rapid automated testing
+    is_internal_localhost = client_ip in ("testclient", "127.0.0.1") and not request.headers.get("CF-Connecting-IP") and not request.headers.get("X-Forwarded-For")
+    if not is_internal_localhost:
         async with _RATE_LIMIT_LOCK:
             timestamps = _IP_TIMESTAMPS[client_ip]
             cutoff = now - RATE_LIMIT_WINDOW_SECONDS

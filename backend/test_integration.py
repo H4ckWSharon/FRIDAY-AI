@@ -68,7 +68,9 @@ async def test_empty():
         report("Empty messages rejected 422", r.status_code == 422, f"HTTP {r.status_code}")
 
 def test_frontend():
-    with open("../index.html", encoding="utf-8", errors="replace") as f: html = f.read()
+    import os
+    index_path = os.path.join(os.path.dirname(__file__), "..", "index.html")
+    with open(index_path, encoding="utf-8", errors="replace") as f: html = f.read()
     ok = "http://127.0.0.1:8000" in html and "/api/chat" in html and "stream: true" in html
     report("Frontend endpoint config", ok)
 
