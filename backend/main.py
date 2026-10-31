@@ -108,7 +108,17 @@ async def security_and_telemetry_middleware(request, call_next):
     # 0. Global Maintenance Lockdown Gate
     if getattr(settings, "maintenance_mode", True):
         p = request.url.path
-        if p.startswith("/api/chat") or p.startswith("/api/conversations") or p.startswith("/api/subscription"):
+        if p.startswith("/health"):
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "status": "maintenance",
+                    "detail": "Server maintenance active. All systems will resume tomorrow.",
+                    "resuming": "tomorrow",
+                },
+                headers={"X-Request-ID": req_id},
+            )
+        if p.startswith("/api/"):
             return JSONResponse(
                 status_code=503,
                 content={

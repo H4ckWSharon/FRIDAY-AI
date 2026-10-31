@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>FRIDAY AI — Server Maintenance</title>
-  <meta name="description" content="FRIDAY AI is currently offline for scheduled infrastructure maintenance and upgrades. Resuming tomorrow.">
+  <title>FRIDAY AI — Website Temporarily Locked</title>
+  <meta name="description" content="We are performing scheduled maintenance and full system upgrades across all nodes. Chat sessions and operator consoles are locked. We will be fully back online tomorrow.">
   <meta name="theme-color" content="#050507">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%230b0b0e' stroke='%23FF3038' stroke-width='6'/><text x='50' y='63' font-family='sans-serif' font-size='42' font-weight='bold' fill='%23FF3038' text-anchor='middle'>F</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,13 +45,6 @@
     .animate-pulse-ring {
       animation: pulse-ring 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
-    @keyframes scanline {
-      0% { transform: translateY(-100%); }
-      100% { transform: translateY(1000%); }
-    }
-    .scanline-bar {
-      animation: scanline 8s linear infinite;
-    }
     @keyframes indeterminate-bar {
       0% { transform: translateX(-100%); width: 40%; }
       50% { transform: translateX(100%); width: 60%; }
@@ -65,11 +58,6 @@
 <body class="min-h-screen flex flex-col justify-between selection:bg-[#FF3038] selection:text-white relative cyber-grid">
   <!-- Subtle ambient glow background -->
   <div class="fixed inset-0 pointer-events-none radial-crimson z-0"></div>
-
-  <!-- Scanline subtle sweep -->
-  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0 opacity-20">
-    <div class="w-full h-24 bg-gradient-to-b from-transparent via-[#FF3038]/10 to-transparent scanline-bar"></div>
-  </div>
 
   <!-- Header / Status Bar -->
   <header class="relative z-10 w-full border-b border-[#1c1c22] bg-[#08080a]/80 backdrop-blur-md px-6 py-4 flex items-center justify-between">
@@ -86,7 +74,7 @@
     <!-- Active status pill -->
     <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-[#160b0c] border border-[#FF3038]/40 shadow-[0_0_12px_rgba(255,48,56,0.2)]">
       <span class="w-2 h-2 rounded-full bg-[#FF3038] animate-ping"></span>
-      <span class="font-mono text-[11px] font-semibold text-[#FF3038] tracking-wider uppercase">SERVER MAINTENANCE ACTIVE</span>
+      <span class="font-mono text-[11px] font-semibold text-[#FF3038] tracking-wider uppercase">STATUS: LOCKED</span>
     </div>
   </header>
 
@@ -104,8 +92,8 @@
 
       <!-- Badge -->
       <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#160b0c] border border-[#FF3038]/40 text-[#FF555D] text-xs font-mono font-medium mb-5 shadow-[0_0_15px_rgba(255,48,56,0.15)]">
-        <span class="material-symbols-outlined text-[14px]">engineering</span>
-        <span>SCHEDULED INFRASTRUCTURE UPGRADE</span>
+        <span class="material-symbols-outlined text-[14px]">lock</span>
+        <span>STATUS: LOCKED &bull; 100% LOCKED OUT (MAINTENANCE MODE) &bull; RESUMING: TOMORROW</span>
       </div>
 
       <!-- Main Headline -->
@@ -113,39 +101,43 @@
         Website Temporarily Locked
       </h1>
 
-      <!-- Description -->
-      <p class="text-sm sm:text-base text-[#A1A1AA] leading-relaxed max-w-md mb-8">
-        We are performing scheduled maintenance and full system upgrades across all nodes. Chat sessions and operator consoles are locked. <strong class="text-white">We will be fully back online tomorrow.</strong>
+      <!-- Description / Notice -->
+      <p class="text-sm sm:text-base text-[#D4D4D8] leading-relaxed max-w-lg mb-8">
+        We are performing scheduled maintenance and full system upgrades across all nodes. Chat sessions and operator consoles are locked. <strong class="text-white block mt-2 text-base">We will be fully back online tomorrow.</strong>
       </p>
 
       <!-- Terminal Diagnostics Box -->
-      <div class="w-full rounded-xl bg-[#09090c] border border-[#222228] p-4 text-left font-mono text-xs shadow-2xl mb-8">
+      <div class="w-full rounded-xl bg-[#09090c] border border-[#222228] p-5 text-left font-mono text-xs shadow-2xl mb-8">
         <div class="flex items-center justify-between pb-3 mb-3 border-b border-[#1c1c22]">
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-[#FF3038]"></span>
             <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></span>
             <span class="w-2.5 h-2.5 rounded-full bg-zinc-700"></span>
-            <span class="text-[11px] text-[#71717A] ml-2 font-medium">MAINTENANCE_LOCKDOWN.SYS</span>
+            <span class="text-[11px] text-[#A1A1AA] ml-2 font-medium">CORE_MAINTENANCE_LOCKDOWN.SYS</span>
           </div>
           <span class="text-[10px] text-[#FF555D] font-bold">STATUS: LOCKED</span>
         </div>
 
-        <div class="space-y-2 text-[11px]">
+        <div class="space-y-2.5 text-[11px]">
           <div class="flex items-center justify-between">
-            <span class="text-[#71717A]">Access Barrier:</span>
-            <span class="text-[#FF3038] font-semibold">100% Locked Out (Maintenance Mode)</span>
+            <span class="text-[#71717A]">Access Status:</span>
+            <span class="text-[#FF3038] font-bold">100% Locked Out (Maintenance Mode)</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-[#71717A]">Operations Status:</span>
-            <span class="text-amber-400 font-semibold">Offline for Upgrades</span>
+            <span class="text-[#71717A]">Chat Sessions:</span>
+            <span class="text-[#FF555D] font-semibold">Disabled (Locked)</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-[#71717A]">Resuming:</span>
-            <span class="text-emerald-400 font-semibold">Tomorrow</span>
+            <span class="text-[#71717A]">Operator Consoles:</span>
+            <span class="text-[#FF555D] font-semibold">Disabled (Locked)</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-[#71717A]">Active Node:</span>
-            <span class="text-zinc-400">213.133.97.141</span>
+            <span class="text-[#71717A]">Inference & Background Calls:</span>
+            <span class="text-[#FF555D] font-semibold">Completely Disabled</span>
+          </div>
+          <div class="flex items-center justify-between pt-1 border-t border-[#1c1c22]">
+            <span class="text-[#71717A]">Operations Resuming:</span>
+            <span class="text-emerald-400 font-bold uppercase tracking-wider">Tomorrow</span>
           </div>
         </div>
 
@@ -153,7 +145,7 @@
         <div class="mt-4 pt-3 border-t border-[#1c1c22]">
           <div class="flex justify-between text-[10px] text-[#71717A] mb-1.5">
             <span>UPGRADE PIPELINE</span>
-            <span class="text-zinc-400">IN PROGRESS &bull; RESUMING TOMORROW</span>
+            <span class="text-zinc-400 font-semibold">IN PROGRESS &bull; RESUMING TOMORROW</span>
           </div>
           <div class="w-full h-1.5 bg-[#141419] rounded-full overflow-hidden relative">
             <div class="h-full bg-gradient-to-r from-[#FF3038] via-rose-500 to-[#FF3038] rounded-full animate-indeterminate"></div>
@@ -199,11 +191,12 @@
 
       try {
         const res = await fetch('/health', { cache: 'no-store' });
-        if (res.ok) {
-          msg.textContent = 'Server backend is online. Maintenance window active — resuming tomorrow.';
+        const data = await res.json().catch(() => ({}));
+        if (data.status === 'maintenance' || res.status === 503) {
+          msg.textContent = 'Server maintenance active. All systems will resume tomorrow.';
           msg.className = 'text-[11px] font-mono text-amber-400 mt-4 min-h-[18px]';
         } else {
-          msg.textContent = 'Maintenance mode active. Upgrades in progress.';
+          msg.textContent = 'Maintenance window active — resuming tomorrow.';
           msg.className = 'text-[11px] font-mono text-zinc-400 mt-4 min-h-[18px]';
         }
       } catch (err) {
