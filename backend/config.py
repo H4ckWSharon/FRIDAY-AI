@@ -19,10 +19,31 @@ AVAILABLE_MODELS: list[dict[str, Any]] = [
         "description": "Advanced Cyber Security & Penetration Testing Engine",
         "tag": "Cyber Pro",
         "is_default": True,
+        "provider": "ollama",
     },
 ]
 
-ALLOWED_MODEL_IDS: set[str] = {m["id"] for m in AVAILABLE_MODELS}
+# OpenRouter Uncensored Cloud Models (active when OPENROUTER_API_KEY is configured in .env)
+OPENROUTER_MODELS: list[dict[str, Any]] = [
+    {
+        "id": "cognitivecomputations/dolphin-2.9.2-qwen2-72b",
+        "name": "friday Cyber Cloud (Uncensored 72B)",
+        "description": "Ultra-Fast Uncensored Red Team & Exploit Engine (Cloud GPU)",
+        "tag": "Cloud Ultra",
+        "is_default": False,
+        "provider": "openrouter",
+    },
+    {
+        "id": "deepseek/deepseek-r1:free",
+        "name": "friday Cyber Reasoning (DeepSeek-R1)",
+        "description": "High-Density Reasoning & Exploit Chain Architecture (Free Cloud)",
+        "tag": "Cloud R1",
+        "is_default": False,
+        "provider": "openrouter",
+    },
+]
+
+ALLOWED_MODEL_IDS: set[str] = {m["id"] for m in AVAILABLE_MODELS} | {m["id"] for m in OPENROUTER_MODELS}
 
 
 class Settings(BaseSettings):
@@ -74,6 +95,10 @@ class Settings(BaseSettings):
     razorpay_key_id: str = ""
     razorpay_key_secret: str = ""
     razorpay_webhook_secret: str = ""
+
+    # OpenRouter API (High-Performance Uncensored Cloud GPU Inference)
+    openrouter_api_key: str = ""
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(__file__), ".env"),
@@ -127,7 +152,11 @@ def get_available_models() -> list[dict[str, Any]]:
     settings = get_settings()
     default_id = settings.ollama_model
     results = []
-    for m in AVAILABLE_MODELS:
+    models_pool = list(AVAILABLE_MODELS)
+    if settings.openrouter_api_key and settings.openrouter_api_key.strip():
+        models_pool.extend(OPENROUTER_MODELS)
+
+    for m in models_pool:
         item = dict(m)
         item["is_default"] = (item["id"] == default_id)
         results.append(item)

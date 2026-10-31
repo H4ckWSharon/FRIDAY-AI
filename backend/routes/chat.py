@@ -8,9 +8,10 @@ import httpx
 from fastapi import APIRouter, HTTPException, Header, Depends
 from fastapi.responses import StreamingResponse
 
-from config import get_settings, get_allowed_model_ids, get_available_models
+from config import get_settings, get_allowed_model_ids, get_available_models, OPENROUTER_MODELS
 from schemas import ChatRequest, ChatResponse, ModelListResponse
 from services.ollama import chat_stream, chat_complete, acquire_inference_capacity
+from services.openrouter import openrouter_stream, openrouter_complete, is_openrouter_configured
 from services import db as db_service
 from services.execution_intelligence import detect_lifecycle_intent, get_stage_directive, LifecycleStage
 from services.subscription import (
@@ -456,9 +457,12 @@ async def _stream_generator(
     stream_buffer = ""
     full_response: list[str] = []
 
+    is_openrouter = any(m["id"] == model for m in OPENROUTER_MODELS) or model.startswith("openrouter/")
+    stream_iter = openrouter_stream(messages, model) if is_openrouter else chat_stream(messages, model)
+
     try:
         async with acquire_inference_capacity(user_id):
-            async for chunk in chat_stream(messages, model):
+            async for chunk in stream_iter:
                 stream_buffer += chunk
                 stream_buffer = _sanitize_response(stream_buffer)
 
@@ -650,9 +654,13 @@ async def chat(request: ChatRequest, user: dict = Depends(get_current_user)):
         )
 
     # Non-streaming path
+    is_openrouter = any(m["id"] == model for m in OPENROUTER_MODELS) or model.startswith("openrouter/")
     try:
         async with acquire_inference_capacity(user_id):
-            raw_content = await chat_complete(messages, model)
+            if is_openrouter:
+                raw_content = await openrouter_complete(messages, model)
+            else:
+                raw_content = await chat_complete(messages, model)
             content = _sanitize_response(raw_content)
 
         # Persist non-streaming turn in thread pool
