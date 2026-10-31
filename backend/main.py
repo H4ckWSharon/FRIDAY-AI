@@ -196,5 +196,9 @@ app.include_router(admin_router)
 async def serve_index():
     index_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "index.html"))
     if os.path.exists(index_path):
-        return FileResponse(index_path, media_type="text/html")
+        resp = FileResponse(index_path, media_type="text/html")
+        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Expires"] = "0"
+        return resp
     return {"status": "ok", "message": "FRIDAY AI Engine Operational"}

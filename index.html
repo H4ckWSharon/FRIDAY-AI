@@ -2282,12 +2282,12 @@
 
     const statusSequence = [
       { at: 0, text: 'Thinking', sub: 'Analyzing query & security context...', icon: 'autorenew' },
-      { at: 4, text: 'Searching', sub: 'Scanning vulnerability databases & attack vectors...', icon: 'search' },
-      { at: 9, text: 'Gathering information', sub: 'Collecting CVE intelligence & target footprints...', icon: 'hub' },
-      { at: 16, text: 'Executing analysis', sub: 'Evaluating exploit logic & mitigation protocols...', icon: 'terminal' },
-      { at: 26, text: 'Executing deep reasoning', sub: 'It will take some time for better results, please be patient...', icon: 'hourglass_top' },
-      { at: 42, text: 'Synthesizing verified solution', sub: 'Formulating precise commands & payload syntax...', icon: 'code' },
-      { at: 60, text: 'Finalizing response', sub: 'Streaming verified technical intelligence...', icon: 'auto_awesome' },
+      { at: 3, text: 'Executing', sub: 'Initiating neural execution engine...', icon: 'terminal' },
+      { at: 7, text: 'Searching', sub: 'Scanning vulnerability database & intelligence feeds...', icon: 'search' },
+      { at: 12, text: 'Gathering information', sub: 'Collecting threat vectors & technical specs...', icon: 'hub' },
+      { at: 20, text: 'Executing analysis', sub: 'It will take some time for better results... please be patient...', icon: 'hourglass_top' },
+      { at: 35, text: 'Synthesizing verified solution', sub: 'Formulating precise commands & payload syntax...', icon: 'code' },
+      { at: 55, text: 'Finalizing response', sub: 'Streaming verified technical intelligence...', icon: 'auto_awesome' },
     ];
 
     let startSeconds = 0;
@@ -2443,10 +2443,13 @@
             streamDone = true;
             // Swap in bubble now if no chunks were ever received (empty response)
             if (!firstChunkReceived) {
+              firstChunkReceived = true;
               clearTimeout(orbTimer);
               const radarInt = Number(typingEl.dataset.radarInterval);
               if (radarInt) clearInterval(radarInt);
               typingEl.replaceWith(assistantEl);
+              rawText = "FRIDAY Cyber Pro standing by. State your target or directive.";
+              scheduleContentRender();
             }
             break;
           } else if (eventType === 'error') {

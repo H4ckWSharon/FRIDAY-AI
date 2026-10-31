@@ -181,9 +181,14 @@ def _ollama_url(path: str) -> str:
 
 def _build_payload(messages: list[dict], model: str, stream: bool) -> dict:
     """Construct the JSON body for Ollama's /api/chat endpoint."""
+    processed_messages = list(messages)
+    # Pre-close think tag if the last turn is from user to trigger instant content generation without token-wasting loops
+    if processed_messages and processed_messages[-1].get("role") == "user":
+        processed_messages.append({"role": "assistant", "content": "</think>\n"})
+
     return {
         "model": model,
-        "messages": messages,
+        "messages": processed_messages,
         "stream": stream,
         "keep_alive": -1,  # Keep model permanently in VRAM, eliminating 20s+ cold reloads
         "options": {
@@ -191,7 +196,7 @@ def _build_payload(messages: list[dict], model: str, stream: bool) -> dict:
             "temperature": 0.6,
             "top_p": 0.9,
             "top_k": 40,
-            "num_predict": 160,
+            "num_predict": 512,  # Sufficient for complete code payloads and scripts
             "num_ctx": 4096,     # Optimized KV cache size (prevents 16k bloat on CPU RAM)
             "num_thread": 6,     # Match Intel i7-8700 6 physical cores to prevent thread thrashing
         },
@@ -275,10 +280,19 @@ async def chat_stream(
                 continue
 
             # Ollama streams one JSON object per line.
-            # The text content lives at chunk["message"]["content"].
+            # Support both content and thinking chunks gracefully:
             text = chunk.get("message", {}).get("content", "")
+            if not text:
+                text = chunk.get("message", {}).get("thinking", "")
+
+            # Filter out echoed thinking closure tags if present
             if text:
-                yield text
+                if text.startswith("</think>\n"):
+                    text = text[9:]
+                elif text.startswith("</think>"):
+                    text = text[8:]
+                if text:
+                    yield text
 
             # "done": true signals end of stream
             if chunk.get("done"):

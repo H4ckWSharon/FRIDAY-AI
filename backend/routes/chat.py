@@ -486,6 +486,12 @@ async def _stream_generator(
                     full_response.append(final_chunk)
                     yield _sse("chunk", json.dumps({"text": final_chunk}))
 
+            # Safety fallback: ensure an empty bubble is never emitted to the operator
+            if not full_response:
+                fallback_msg = "FRIDAY Cyber Pro standing by. State your target or directive."
+                full_response.append(fallback_msg)
+                yield _sse("chunk", json.dumps({"text": fallback_msg}))
+
             yield _sse("done", json.dumps({"text": ""}))
 
     except HTTPException as exc:
