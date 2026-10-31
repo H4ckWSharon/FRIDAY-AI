@@ -27,18 +27,10 @@ AVAILABLE_MODELS: list[dict[str, Any]] = [
 OPENROUTER_MODELS: list[dict[str, Any]] = [
     {
         "id": "cognitivecomputations/dolphin-mistral-24b-venice-edition",
-        "name": "friday Cyber Cloud (Uncensored 24B)",
+        "name": "friday Cyber Cloud",
         "description": "Ultra-Fast Uncensored Red Team & Exploit Engine (Cloud GPU)",
-        "tag": "Cloud Ultra",
-        "is_default": False,
-        "provider": "openrouter",
-    },
-    {
-        "id": "deepseek/deepseek-chat",
-        "name": "friday Cyber Reasoning (DeepSeek V3)",
-        "description": "State-of-the-Art Red Team Code & Exploit Architecture (Cloud GPU)",
-        "tag": "DeepSeek V3",
-        "is_default": False,
+        "tag": "Cyber Cloud",
+        "is_default": True,
         "provider": "openrouter",
     },
 ]
@@ -148,15 +140,14 @@ def get_allowed_model_ids() -> set[str]:
 
 
 def get_available_models() -> list[dict[str, Any]]:
-    """Return list of models with current default marked accurately."""
+    """Return available models. When OpenRouter API key is configured, exclusively serve friday Cyber Cloud."""
     settings = get_settings()
+    if settings.openrouter_api_key and settings.openrouter_api_key.strip():
+        return [dict(OPENROUTER_MODELS[0])]
+
     default_id = settings.ollama_model
     results = []
-    models_pool = list(AVAILABLE_MODELS)
-    if settings.openrouter_api_key and settings.openrouter_api_key.strip():
-        models_pool.extend(OPENROUTER_MODELS)
-
-    for m in models_pool:
+    for m in AVAILABLE_MODELS:
         item = dict(m)
         item["is_default"] = (item["id"] == default_id)
         results.append(item)

@@ -396,7 +396,10 @@ def _prepare_messages(request: ChatRequest) -> tuple[list[dict], str]:
             )
         model = requested_model
     else:
-        model = settings.ollama_model
+        if settings.openrouter_api_key and settings.openrouter_api_key.strip():
+            model = "cognitivecomputations/dolphin-mistral-24b-venice-edition"
+        else:
+            model = settings.ollama_model
 
     raw_history = [{"role": m.role, "content": m.content} for m in request.messages]
     trimmed = _trim_history(raw_history, settings.max_history_turns)
@@ -553,9 +556,11 @@ async def list_models(user: dict = Depends(get_current_user)) -> ModelListRespon
     Includes user-friendly display metadata and the active default model.
     """
     settings = get_settings()
+    models = get_available_models()
+    default_model = models[0]["id"] if models else settings.ollama_model
     return ModelListResponse(
-        models=get_available_models(),
-        default=settings.ollama_model,
+        models=models,
+        default=default_model,
     )
 
 
