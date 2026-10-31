@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     # Server
     backend_host: str = "127.0.0.1"
     backend_port: int = 8000
+    maintenance_mode: bool = True
 
     # CORS — browser origins that may talk to this backend
     cors_origins: str = "http://localhost:5500,http://127.0.0.1:5500"

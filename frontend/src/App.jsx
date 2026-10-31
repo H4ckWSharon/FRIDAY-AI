@@ -1,3 +1,6 @@
+import MaintenanceView from './components/MaintenanceView';
+
+export const MAINTENANCE_LOCKDOWN = true;
 import React, { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -21,6 +24,9 @@ import {
 } from './services/api';
 
 export default function App() {
+  if (MAINTENANCE_LOCKDOWN) {
+    return <MaintenanceView />;
+  }
   // Application State
   const [currentUser, setCurrentUser] = useState(null);
   const [subscription, setSubscription] = useState(null);

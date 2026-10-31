@@ -105,6 +105,22 @@ async def security_and_telemetry_middleware(request, call_next):
     req_id = request.headers.get("X-Request-ID") or f"req_{uuid.uuid4().hex[:12]}"
     request.state.request_id = req_id
 
+    # 0. Global Maintenance Lockdown Gate
+    if getattr(settings, "maintenance_mode", True):
+        p = request.url.path
+        if p.startswith("/api/chat") or p.startswith("/api/conversations") or p.startswith("/api/subscription"):
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "status": "maintenance",
+                    "error": "maintenance_mode_active",
+                    "detail": "Website Temporarily Locked. Scheduled maintenance active across all nodes. Chat sessions and operator consoles are locked. Resuming tomorrow.",
+                    "message": "Website Temporarily Locked. Scheduled maintenance active across all nodes. Chat sessions and operator consoles are locked. Resuming tomorrow.",
+                    "resuming": "tomorrow",
+                },
+                headers={"X-Request-ID": req_id, "Retry-After": "86400"},
+            )
+
     # 1. Payload size check from Content-Length header
     content_length = request.headers.get("content-length")
     if content_length:
