@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 import os
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -205,3 +206,18 @@ async def serve_index():
         resp.headers["Expires"] = "0"
         return resp
     return {"status": "ok", "message": "FRIDAY AI Engine Operational"}
+
+# ─── React Frontend Delivery ────────────────────────────────────────────────
+dist_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "dist"))
+dist_assets_dir = os.path.join(dist_dir, "assets")
+if os.path.exists(dist_assets_dir):
+    app.mount("/assets", StaticFiles(directory=dist_assets_dir), name="assets")
+
+@app.get("/app", include_in_schema=False)
+async def serve_react_app():
+    react_index = os.path.join(dist_dir, "index.html")
+    if os.path.exists(react_index):
+        resp = FileResponse(react_index, media_type="text/html")
+        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        return resp
+    return {"status": "error", "message": "React build not found"}
