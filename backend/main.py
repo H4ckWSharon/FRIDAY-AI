@@ -7,6 +7,8 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+import os
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import get_settings
@@ -187,3 +189,12 @@ app.include_router(conversations_router)
 app.include_router(subscription_router)
 app.include_router(admin_router)
 
+
+# ─── Frontend Static Delivery ────────────────────────────────────────────────
+@app.get("/", include_in_schema=False)
+@app.get("/index.html", include_in_schema=False)
+async def serve_index():
+    index_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "index.html"))
+    if os.path.exists(index_path):
+        return FileResponse(index_path, media_type="text/html")
+    return {"status": "ok", "message": "FRIDAY AI Engine Operational"}
