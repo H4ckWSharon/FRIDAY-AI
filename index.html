@@ -2243,68 +2243,58 @@
   // ─── Render: Typing Indicator (Tactical Radar HUD & Telemetry) ───────────
   function renderTypingIndicator() {
     const div = document.createElement('div');
-    div.className = 'flex gap-3 sm:gap-4 items-start typing-indicator-row w-full min-w-0';
+    div.className = 'flex gap-2.5 sm:gap-4 items-start typing-indicator-row w-full min-w-0';
     div.innerHTML = `
-      <div class="tactical-radar-hud shrink-0" title="FRIDAY Neural Radar">
-        <div class="tactical-radar-ring-1"></div>
-        <div class="tactical-radar-ring-2"></div>
-        <div class="tactical-radar-crosshair-v"></div>
-        <div class="tactical-radar-crosshair-h"></div>
-        <div class="tactical-radar-sweep"></div>
-        <div class="tactical-radar-core"></div>
+      <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[#FF3038]/50 bg-[#121316] p-1 flex items-center justify-center shadow-[0_0_12px_rgba(255,48,56,0.25)] shrink-0 relative">
+        <img alt="FRIDAY AI" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcrt12zOQcu1F3t5EOzwK-rp1yIcJrvdOkVmBiOwevjii1-OjUzmyYh_FzsUdOuj5KX4SMPjW5eGF2UrVtixvPJMxUqjnUncXZI6Q4Qzue6eShB1fxdx8tEIfvF7qPyedJ5n0Zs4jsM9AoIvYdPA6EURCrdVjcWBBjqf0aZlrXGSWf030Aa1-vCTBTZ1bqFN1nP5HIFi96xXLH0DfCXVFS8wgFjvjKdkBfS2tXJs0PUEREhvDw4fiB27Rd-Iwl2H1VdA">
+        <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#FF3038] animate-pulse"></span>
       </div>
-      <div class="flex-1 flex flex-col max-w-2xl min-w-0 gap-2">
-        <div class="flex items-center gap-2 flex-wrap">
+      <div class="flex-1 flex flex-col max-w-full sm:max-w-xl min-w-0">
+        <div class="flex items-center gap-1.5 sm:gap-2 mb-1.5 flex-wrap">
           <span class="font-heading font-semibold text-xs text-[#F5F5F5]">friday Cyber Pro</span>
-          <span class="tactical-telemetry-badge">
-            <span class="w-1.5 h-1.5 rounded-full bg-[#FF3038] animate-ping"></span>
-            NEURAL RADAR
-          </span>
+          <span class="text-[9px] font-mono bg-[#FF3038]/20 text-[#FF3038] px-1.5 py-0.5 rounded font-bold">AI</span>
           <span class="text-[10px] font-mono text-[#71717A] ml-auto tactical-timer-badge" id="tactical-radar-timer">00:00</span>
         </div>
-        <div class="tactical-progress-container flex flex-col gap-2">
-          <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2 min-w-0">
-              <span class="material-symbols-outlined text-[15px] text-[#FF3038] animate-spin shrink-0">autorenew</span>
-              <span class="font-mono text-xs text-[#F5F5F5] font-medium tracking-wide truncate" id="tactical-status-label">Initializing Neural Matrix & Security Weights...</span>
+        <div class="thinking-bubble-card p-3 sm:p-3.5 rounded-2xl rounded-tl-sm bg-[#121214] border border-[#27272A] shadow-md flex flex-col gap-2 relative overflow-hidden">
+          <div class="thinking-shimmer-line"></div>
+          <div class="flex items-center gap-2.5">
+            <div class="thinking-icon-badge">
+              <span class="material-symbols-outlined text-[15px] text-[#FF3038] animate-spin shrink-0" id="thinking-status-icon">autorenew</span>
             </div>
-            <span class="text-[9px] font-mono text-[#71717A] shrink-0 font-bold uppercase tracking-wider hidden sm:inline">CPU 27B</span>
+            <div class="flex items-center gap-1 min-w-0 flex-1">
+              <span class="font-mono text-xs text-[#E4E4E7] font-medium tracking-wide truncate" id="tactical-status-label">Thinking</span>
+              <span class="thinking-bouncing-dots shrink-0">
+                <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+              </span>
+            </div>
           </div>
-          <div class="tactical-progress-bar-bg">
-            <div class="tactical-progress-bar-fill"></div>
-          </div>
-          <div class="flex items-center justify-between text-[10px] font-mono text-[#71717A]">
-            <span class="flex items-center gap-1.5 truncate">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              Deep CPU inference in progress (~2-3 mins). Model is computing full tactical response.
+          <div class="flex items-center justify-between text-[10px] font-mono text-[#71717A] pt-1.5 border-t border-[#1F1F23]">
+            <span class="truncate flex items-center gap-1.5" id="thinking-sub-note">
+              <span class="w-1.5 h-1.5 rounded-full bg-[#FF3038] animate-ping shrink-0"></span>
+              Gathering information...
             </span>
-            <span class="text-[9px] text-[#FF3038] font-bold shrink-0 uppercase tracking-wider">DO NOT REFRESH</span>
+            <span class="text-[9px] text-[#71717A] font-semibold shrink-0 uppercase tracking-wider hidden xs:inline">Please be patient</span>
           </div>
-        </div>
-        <div class="thinking-orb-wrap hidden" id="thinking-orb-wrap-${Date.now()}">
-          <div class="thinking-orb-box">
-            <div class="thinking-orb"></div>
-            <div class="thinking-orb-ring"></div>
-          </div>
-          <span class="thinking-label">Thinking…</span>
         </div>
       </div>
     `;
     conversationView.appendChild(div);
 
     const statusSequence = [
-      { at: 0, text: 'Initializing Neural Matrix & Security Weights...' },
-      { at: 8, text: 'Synthesizing Threat Vector Matrix & CVE Telemetry...' },
-      { at: 20, text: 'Engaging 27B Deep Reasoning Engine...' },
-      { at: 40, text: 'Deconstructing Target Attack Surface & Protocols...' },
-      { at: 70, text: 'Formulating Offensive Exploit Chains & Mitigations...' },
-      { at: 110, text: 'Neural Attention Optimization & Token Assembly...' },
-      { at: 150, text: 'Finalizing Structured Cyber Intelligence Payload...' },
+      { at: 0, text: 'Thinking', sub: 'Analyzing query & security context...', icon: 'autorenew' },
+      { at: 4, text: 'Searching', sub: 'Scanning vulnerability databases & attack vectors...', icon: 'search' },
+      { at: 9, text: 'Gathering information', sub: 'Collecting CVE intelligence & target footprints...', icon: 'hub' },
+      { at: 16, text: 'Executing analysis', sub: 'Evaluating exploit logic & mitigation protocols...', icon: 'terminal' },
+      { at: 26, text: 'Executing deep reasoning', sub: 'It will take some time for better results, please be patient...', icon: 'hourglass_top' },
+      { at: 42, text: 'Synthesizing verified solution', sub: 'Formulating precise commands & payload syntax...', icon: 'code' },
+      { at: 60, text: 'Finalizing response', sub: 'Streaming verified technical intelligence...', icon: 'auto_awesome' },
     ];
 
     let startSeconds = 0;
     const timerEl = div.querySelector('#tactical-radar-timer');
     const labelEl = div.querySelector('#tactical-status-label');
+    const subNoteEl = div.querySelector('#thinking-sub-note');
+    const iconEl = div.querySelector('#thinking-status-icon');
 
     const intervalId = setInterval(() => {
       startSeconds++;
@@ -2314,8 +2304,15 @@
 
       for (let i = statusSequence.length - 1; i >= 0; i--) {
         if (startSeconds >= statusSequence[i].at) {
-          if (labelEl && labelEl.textContent !== statusSequence[i].text) {
-            labelEl.textContent = statusSequence[i].text;
+          const step = statusSequence[i];
+          if (labelEl && labelEl.textContent !== step.text) {
+            labelEl.textContent = step.text;
+          }
+          if (subNoteEl) {
+            subNoteEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-[#FF3038] animate-ping shrink-0"></span> ${step.sub}`;
+          }
+          if (iconEl && step.icon) {
+            iconEl.textContent = step.icon;
           }
           break;
         }
