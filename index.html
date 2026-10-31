@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>FRIDAY AI — System Maintenance</title>
-  <meta name="description" content="FRIDAY AI is currently undergoing scheduled infrastructure upgrades and frontend modernization.">
+  <title>FRIDAY AI — Server Maintenance</title>
+  <meta name="description" content="FRIDAY AI is currently offline for scheduled infrastructure maintenance and upgrades. Resuming tomorrow.">
   <meta name="theme-color" content="#050507">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%230b0b0e' stroke='%23FF3038' stroke-width='6'/><text x='50' y='63' font-family='sans-serif' font-size='42' font-weight='bold' fill='%23FF3038' text-anchor='middle'>F</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -84,9 +84,9 @@
     </div>
 
     <!-- Active status pill -->
-    <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-[#121217] border border-[#FF3038]/30">
+    <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-[#160b0c] border border-[#FF3038]/40 shadow-[0_0_12px_rgba(255,48,56,0.2)]">
       <span class="w-2 h-2 rounded-full bg-[#FF3038] animate-ping"></span>
-      <span class="font-mono text-[11px] font-semibold text-[#FF3038] tracking-wider uppercase">MAINTENANCE MODE</span>
+      <span class="font-mono text-[11px] font-semibold text-[#FF3038] tracking-wider uppercase">SERVER MAINTENANCE ACTIVE</span>
     </div>
   </header>
 
@@ -98,24 +98,24 @@
       <div class="relative mb-8">
         <div class="absolute -inset-2 rounded-full bg-gradient-to-r from-[#FF3038]/30 to-[#990000]/20 blur-xl"></div>
         <div class="relative w-24 h-24 rounded-2xl bg-[#0b0b0e] border border-[#FF3038]/50 p-2 flex items-center justify-center shadow-[0_0_35px_rgba(255,48,56,0.35)] animate-pulse-ring">
-          <span class="material-symbols-outlined text-[48px] text-[#FF3038]">security_update_warning</span>
+          <span class="material-symbols-outlined text-[48px] text-[#FF3038]">lock</span>
         </div>
       </div>
 
       <!-- Badge -->
       <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#160b0c] border border-[#FF3038]/40 text-[#FF555D] text-xs font-mono font-medium mb-5 shadow-[0_0_15px_rgba(255,48,56,0.15)]">
-        <span class="material-symbols-outlined text-[14px]">lock_reset</span>
-        <span>CORE SYSTEM UPGRADE IN PROGRESS</span>
+        <span class="material-symbols-outlined text-[14px]">engineering</span>
+        <span>SCHEDULED INFRASTRUCTURE UPGRADE</span>
       </div>
 
       <!-- Main Headline -->
       <h1 class="font-heading text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-4">
-        Platform Temporarily Locked
+        Website Temporarily Locked
       </h1>
 
       <!-- Description -->
       <p class="text-sm sm:text-base text-[#A1A1AA] leading-relaxed max-w-md mb-8">
-        FRIDAY is undergoing scheduled infrastructure upgrades and frontend modernization. User sessions and chat interactions are temporarily suspended to protect session integrity.
+        We are performing scheduled maintenance and full system upgrades across all nodes. Chat sessions and operator consoles are locked. <strong class="text-white">We will be fully back online tomorrow.</strong>
       </p>
 
       <!-- Terminal Diagnostics Box -->
@@ -125,35 +125,35 @@
             <span class="w-2.5 h-2.5 rounded-full bg-[#FF3038]"></span>
             <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></span>
             <span class="w-2.5 h-2.5 rounded-full bg-zinc-700"></span>
-            <span class="text-[11px] text-[#71717A] ml-2 font-medium">CLUSTER_TELEMETRY.SYS</span>
+            <span class="text-[11px] text-[#71717A] ml-2 font-medium">MAINTENANCE_LOCKDOWN.SYS</span>
           </div>
-          <span class="text-[10px] text-[#52525B]">LOCKOUT: ACTIVE</span>
+          <span class="text-[10px] text-[#FF555D] font-bold">STATUS: LOCKED</span>
         </div>
 
-        <div class="space-y-1.5 text-[11px]">
+        <div class="space-y-2 text-[11px]">
           <div class="flex items-center justify-between">
-            <span class="text-[#71717A]">Inference Core:</span>
-            <span class="text-emerald-400 font-semibold">friday Cyber Cloud (Active)</span>
+            <span class="text-[#71717A]">Access Barrier:</span>
+            <span class="text-[#FF3038] font-semibold">100% Locked Out (Maintenance Mode)</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-[#71717A]">Frontend Layer:</span>
-            <span class="text-amber-400 font-semibold">React + Vite + Modern UI Migration</span>
+            <span class="text-[#71717A]">Operations Status:</span>
+            <span class="text-amber-400 font-semibold">Offline for Upgrades</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-[#71717A]">Security Barrier:</span>
-            <span class="text-[#FF3038] font-semibold">Inbound Traffic Paused</span>
+            <span class="text-[#71717A]">Resuming:</span>
+            <span class="text-emerald-400 font-semibold">Tomorrow</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-[#71717A]">Estimated Downtime:</span>
-            <span class="text-zinc-300">Brief / In Progress</span>
+            <span class="text-[#71717A]">Active Node:</span>
+            <span class="text-zinc-400">213.133.97.141</span>
           </div>
         </div>
 
         <!-- Progress Bar -->
         <div class="mt-4 pt-3 border-t border-[#1c1c22]">
           <div class="flex justify-between text-[10px] text-[#71717A] mb-1.5">
-            <span>MIGRATION PIPELINE</span>
-            <span id="pipeline-status">DEPLOYING NEW UI</span>
+            <span>UPGRADE PIPELINE</span>
+            <span class="text-zinc-400">IN PROGRESS &bull; RESUMING TOMORROW</span>
           </div>
           <div class="w-full h-1.5 bg-[#141419] rounded-full overflow-hidden relative">
             <div class="h-full bg-gradient-to-r from-[#FF3038] via-rose-500 to-[#FF3038] rounded-full animate-indeterminate"></div>
@@ -165,13 +165,13 @@
       <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
         <button id="refresh-btn" onclick="checkStatus()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#131318] hover:bg-[#1a1a22] border border-[#2b2b36] hover:border-[#FF3038]/60 text-xs font-mono font-semibold text-zinc-200 hover:text-white transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95">
           <span class="material-symbols-outlined text-[16px]" id="refresh-icon">sync</span>
-          <span id="refresh-text">Check Live Status</span>
+          <span id="refresh-text">Check Node Status</span>
         </button>
       </div>
 
       <!-- Toast Feedback -->
       <p id="status-message" class="text-[11px] font-mono text-[#71717A] mt-4 min-h-[18px]">
-        Auto-checking infrastructure health every 20 seconds.
+        Server maintenance active. All systems will resume tomorrow.
       </p>
 
     </div>
@@ -189,38 +189,33 @@
 
   <script>
     async function checkStatus() {
-      const btn = document.getElementById('refresh-btn');
       const icon = document.getElementById('refresh-icon');
       const text = document.getElementById('refresh-text');
       const msg = document.getElementById('status-message');
 
       icon.classList.add('animate-spin');
-      text.textContent = 'Verifying Nodes…';
-      msg.textContent = 'Contacting FRIDAY backend server…';
+      text.textContent = 'Checking Nodes…';
+      msg.textContent = 'Contacting server…';
 
       try {
         const res = await fetch('/health', { cache: 'no-store' });
         if (res.ok) {
-          const data = await res.json();
-          msg.textContent = `Backend online (${data.model || 'friday Cyber Cloud'}). Upgrades in progress.`;
-          msg.className = 'text-[11px] font-mono text-emerald-400 mt-4 min-h-[18px]';
-        } else {
-          msg.textContent = `Backend undergoing reconfiguration (HTTP ${res.status}).`;
+          msg.textContent = 'Server backend is online. Maintenance window active — resuming tomorrow.';
           msg.className = 'text-[11px] font-mono text-amber-400 mt-4 min-h-[18px]';
+        } else {
+          msg.textContent = 'Maintenance mode active. Upgrades in progress.';
+          msg.className = 'text-[11px] font-mono text-zinc-400 mt-4 min-h-[18px]';
         }
       } catch (err) {
-        msg.textContent = 'Maintenance window active. Server upgrade in progress.';
+        msg.textContent = 'Server maintenance active. All systems will resume tomorrow.';
         msg.className = 'text-[11px] font-mono text-zinc-400 mt-4 min-h-[18px]';
       } finally {
         setTimeout(() => {
           icon.classList.remove('animate-spin');
-          text.textContent = 'Check Live Status';
+          text.textContent = 'Check Node Status';
         }, 800);
       }
     }
-
-    // Auto-ping health every 20s
-    setInterval(checkStatus, 20000);
   </script>
 </body>
 </html>

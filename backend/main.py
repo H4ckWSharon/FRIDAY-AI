@@ -194,10 +194,24 @@ app.include_router(subscription_router)
 app.include_router(admin_router)
 
 
-# ─── Frontend Static Delivery ────────────────────────────────────────────────
+
+# ─── Frontend Delivery (React Production) ───────────────────────────────────
+dist_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "dist"))
+dist_assets_dir = os.path.join(dist_dir, "assets")
+if os.path.exists(dist_assets_dir):
+    app.mount("/assets", StaticFiles(directory=dist_assets_dir), name="assets")
+
 @app.get("/", include_in_schema=False)
 @app.get("/index.html", include_in_schema=False)
+@app.get("/app", include_in_schema=False)
 async def serve_index():
+    react_index = os.path.join(dist_dir, "index.html")
+    if os.path.exists(react_index):
+        resp = FileResponse(react_index, media_type="text/html")
+        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Expires"] = "0"
+        return resp
     index_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "index.html"))
     if os.path.exists(index_path):
         resp = FileResponse(index_path, media_type="text/html")
@@ -206,18 +220,3 @@ async def serve_index():
         resp.headers["Expires"] = "0"
         return resp
     return {"status": "ok", "message": "FRIDAY AI Engine Operational"}
-
-# ─── React Frontend Delivery ────────────────────────────────────────────────
-dist_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "dist"))
-dist_assets_dir = os.path.join(dist_dir, "assets")
-if os.path.exists(dist_assets_dir):
-    app.mount("/assets", StaticFiles(directory=dist_assets_dir), name="assets")
-
-@app.get("/app", include_in_schema=False)
-async def serve_react_app():
-    react_index = os.path.join(dist_dir, "index.html")
-    if os.path.exists(react_index):
-        resp = FileResponse(react_index, media_type="text/html")
-        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-        return resp
-    return {"status": "error", "message": "React build not found"}
