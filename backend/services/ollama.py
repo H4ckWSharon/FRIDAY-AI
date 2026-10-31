@@ -191,7 +191,7 @@ def _build_payload(messages: list[dict], model: str, stream: bool) -> dict:
             "temperature": 0.6,
             "top_p": 0.9,
             "top_k": 40,
-            "num_predict": 2048,
+            "num_predict": 160,
             "num_ctx": 4096,     # Optimized KV cache size (prevents 16k bloat on CPU RAM)
             "num_thread": 6,     # Match Intel i7-8700 6 physical cores to prevent thread thrashing
         },

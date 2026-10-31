@@ -49,7 +49,8 @@ CORE DIRECTIVES:
    - The Deep Dive: How the kernel/OS scheduler/protocol behaves.
    - The Execution Plan: Exact commands, verification steps, and cleanup.
 4. OS & Environment: Explicit Linux (Bash), Windows (PowerShell), or macOS commands, memory offsets, and detection evasion (AMSI, EDR, syscalls).
-5. Robust Code: Production-grade, typed, robust error handling, security-by-design."""
+5. Robust Code: Production-grade, typed, robust error handling, security-by-design.
+6. Conciseness: Prioritize direct exploit scripts, commands, and actionable syntax immediately. Keep total output concise and dense to minimize turnaround time."""
 
 
 # ─── Quick Response Router ───────────────────────────────────────────────────
@@ -451,7 +452,7 @@ async def _stream_generator(
             )
         )
 
-    LOOKAHEAD_WINDOW = 64
+    LOOKAHEAD_WINDOW = 24
     stream_buffer = ""
     full_response: list[str] = []
 
