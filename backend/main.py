@@ -48,11 +48,14 @@ async def lifespan(app: FastAPI):
     # Pre-warm model in background so user's first question has 0s load latency
     import asyncio
     from services.ollama import warmup_model, close_http_client
-    asyncio.create_task(warmup_model(settings.ollama_model))
+    from services.openrouter import close_openrouter_client
+    if not (settings.openrouter_api_key and settings.openrouter_api_key.strip()):
+        asyncio.create_task(warmup_model(settings.ollama_model))
 
     yield
 
     await close_http_client()
+    await close_openrouter_client()
     logger.info("FRIDAY AI backend shutting down.")
 
 
