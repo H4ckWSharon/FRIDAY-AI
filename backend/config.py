@@ -26,18 +26,18 @@ AVAILABLE_MODELS: list[dict[str, Any]] = [
 # OpenRouter Uncensored Cloud Models (active when OPENROUTER_API_KEY is configured in .env)
 OPENROUTER_MODELS: list[dict[str, Any]] = [
     {
-        "id": "cognitivecomputations/dolphin-2.9.2-qwen2-72b",
-        "name": "friday Cyber Cloud (Uncensored 72B)",
+        "id": "cognitivecomputations/dolphin-mistral-24b-venice-edition",
+        "name": "friday Cyber Cloud (Uncensored 24B)",
         "description": "Ultra-Fast Uncensored Red Team & Exploit Engine (Cloud GPU)",
         "tag": "Cloud Ultra",
         "is_default": False,
         "provider": "openrouter",
     },
     {
-        "id": "deepseek/deepseek-r1:free",
-        "name": "friday Cyber Reasoning (DeepSeek-R1)",
-        "description": "High-Density Reasoning & Exploit Chain Architecture (Free Cloud)",
-        "tag": "Cloud R1",
+        "id": "deepseek/deepseek-chat",
+        "name": "friday Cyber Reasoning (DeepSeek V3)",
+        "description": "State-of-the-Art Red Team Code & Exploit Architecture (Cloud GPU)",
+        "tag": "DeepSeek V3",
         "is_default": False,
         "provider": "openrouter",
     },
