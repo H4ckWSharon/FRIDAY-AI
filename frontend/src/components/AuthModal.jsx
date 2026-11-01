@@ -49,20 +49,29 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-      <div className="relative w-full max-w-sm rounded-2xl bg-[#0b0b0f] border border-[#22222d] p-6 shadow-2xl text-left">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md">
+      <div className="relative w-full max-w-sm rounded-2xl bg-[#0b0b0f] border border-[#22222d] p-5 sm:p-6 shadow-2xl text-left max-h-[90dvh] overflow-y-auto">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1 rounded-lg text-zinc-500 hover:text-white hover:bg-[#16161f] transition-colors"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-[#16161f] transition-colors cursor-pointer"
+          aria-label="Close Authentication Modal"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-9 h-9 rounded-xl bg-[#14141c] border border-[#FF3038]/50 flex items-center justify-center shadow-[0_0_12px_rgba(255,48,56,0.25)]">
-            <span className="font-heading font-black text-sm text-[#FF3038]">F</span>
+          <div className="w-9 h-9 rounded-full overflow-hidden border border-[#FF3038]/50 bg-[#0d0e11] p-0.5 flex items-center justify-center shadow-[0_0_12px_rgba(255,48,56,0.25)] shrink-0">
+            <img 
+              src="/logo.png" 
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAcN1eRjJArxV6rgrKmESKWs6pNIIgghz2t08lwPHUbguzKUi6_QBkU6zT2Alm2IBhnUq5gJooHVbDYG5riYM9mTAd0ESKoFB_W7ofJEOdvKes4PoKqQ6WVDiu1mvJFhvhPDnO_TLp6O9JInIaI90cgk4l-ucK4jUIi3tQs4KaRFKhTHD-RnluE92sypzaKlZKRApmkyQVRLZX1VjzzTnzvdQZqhmEdoOHihdVh4zvOOVtYyxb5yWK1azp9GQahS68FJg';
+              }}
+              alt="FRIDAY AI" 
+              className="w-full h-full object-cover rounded-full"
+            />
           </div>
           <div>
             <h3 className="font-heading font-bold text-base text-white">

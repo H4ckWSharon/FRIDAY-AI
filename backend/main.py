@@ -237,6 +237,41 @@ async def serve_logo():
         return FileResponse(frontend_logo, media_type="image/png")
     return JSONResponse(status_code=404, content={"detail": "Logo not found"})
 
+@app.get("/manifest.json", include_in_schema=False)
+@app.get("/manifest.webmanifest", include_in_schema=False)
+async def serve_manifest():
+    for p in [
+        os.path.join(dist_dir, "manifest.json"),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "public", "manifest.json")),
+    ]:
+        if os.path.exists(p):
+            return FileResponse(p, media_type="application/manifest+json")
+    return JSONResponse(status_code=404, content={"detail": "Manifest not found"})
+
+@app.get("/sw.js", include_in_schema=False)
+async def serve_sw():
+    for p in [
+        os.path.join(dist_dir, "sw.js"),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "public", "sw.js")),
+    ]:
+        if os.path.exists(p):
+            resp = FileResponse(p, media_type="application/javascript")
+            resp.headers["Service-Worker-Allowed"] = "/"
+            resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+            return resp
+    return JSONResponse(status_code=404, content={"detail": "Service worker not found"})
+
+@app.get("/icon-{icon_name}.png", include_in_schema=False)
+async def serve_pwa_icon(icon_name: str):
+    filename = f"icon-{icon_name}.png"
+    for p in [
+        os.path.join(dist_dir, filename),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "public", filename)),
+    ]:
+        if os.path.exists(p):
+            return FileResponse(p, media_type="image/png")
+    return JSONResponse(status_code=404, content={"detail": f"{filename} not found"})
+
 @app.get("/", include_in_schema=False)
 @app.get("/index.html", include_in_schema=False)
 @app.get("/app", include_in_schema=False)

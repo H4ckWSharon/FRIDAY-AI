@@ -29,25 +29,32 @@ export default function ChatInput({
   };
 
   return (
-    <div className="p-3 sm:p-4 bg-[#070709] border-t border-[#18181f] shrink-0">
+    <div className="p-2.5 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-[#070709] border-t border-[#18181f] shrink-0">
       <div className="max-w-3xl mx-auto flex flex-col gap-1.5">
-        <div className="relative rounded-2xl bg-[#0f0f14] border border-[#23232e] focus-within:border-[#FF3038]/60 transition-colors shadow-lg p-2.5 flex items-end gap-2">
+        <div className="relative rounded-2xl bg-[#0f0f14] border border-[#23232e] focus-within:border-[#FF3038]/60 transition-colors shadow-lg p-2 sm:p-2.5 flex items-end gap-2">
           <textarea
             ref={textareaRef}
             rows={1}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
+            onFocus={() => {
+              // Ensure input is visible above Android virtual keyboard
+              setTimeout(() => {
+                textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+              }, 250);
+            }}
             disabled={disabled}
             placeholder={isStreaming ? 'FRIDAY is generating exploit intelligence…' : 'State your target or offensive directive…'}
-            className="flex-1 bg-transparent border-0 resize-none text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none p-1.5 max-h-44 leading-relaxed font-sans"
+            className="flex-1 bg-transparent border-0 resize-none text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none p-1.5 max-h-40 leading-relaxed font-sans"
           />
 
           {isStreaming ? (
             <button
               onClick={onStopStreaming}
-              className="p-2 rounded-xl bg-[#1d1d26] hover:bg-[#252533] text-[#FF555D] hover:text-white transition-colors flex items-center justify-center shrink-0 active:scale-95"
+              className="w-10 h-10 sm:w-9 sm:h-9 rounded-xl bg-[#1d1d26] hover:bg-[#252533] text-[#FF555D] hover:text-white transition-colors flex items-center justify-center shrink-0 active:scale-95 cursor-pointer"
               title="Halt Generation"
+              aria-label="Stop generation"
             >
               <Square className="w-4 h-4 fill-current" />
             </button>
@@ -56,12 +63,13 @@ export default function ChatInput({
               onClick={onSendMessage}
               disabled={!input.trim() || disabled}
               className={`
-                p-2 rounded-xl flex items-center justify-center shrink-0 transition-all
+                w-10 h-10 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 transition-all cursor-pointer
                 ${input.trim() && !disabled
                   ? 'bg-[#FF3038] hover:bg-[#ff4d54] text-white shadow-[0_0_12px_rgba(255,48,56,0.35)] active:scale-95'
                   : 'bg-[#14141a] text-zinc-600 cursor-not-allowed'}
               `}
               title="Transmit Directive"
+              aria-label="Send message"
             >
               <Send className="w-4 h-4" />
             </button>
@@ -69,8 +77,8 @@ export default function ChatInput({
         </div>
 
         {/* Keyboard hints */}
-        <div className="flex items-center justify-between px-2 text-[10px] font-mono text-zinc-500">
-          <span>FRIDAY Cyber Intelligence &bull; Strictly Uncensored Red Team</span>
+        <div className="flex items-center justify-between px-1.5 text-[9px] sm:text-[10px] font-mono text-zinc-500">
+          <span className="truncate">FRIDAY Cyber Intelligence &bull; Red Team</span>
           <span className="hidden sm:inline">Return ↵ to transmit &bull; Shift+Return for newline</span>
         </div>
       </div>

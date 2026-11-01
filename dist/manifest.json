@@ -1,0 +1,61 @@
+{
+  "name": "FRIDAY AI — Autonomous Offensive Red Team Assistant",
+  "short_name": "FRIDAY AI",
+  "description": "Tactical AI Assistant for Offensive Security, Penetration Testing & Advanced Exploitation Mechanics.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#070709",
+  "theme_color": "#070709",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["utilities", "productivity", "developer tools"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Operation",
+      "short_name": "New Chat",
+      "description": "Start a fresh offensive directive session",
+      "url": "/?action=new",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Friday Cyber Pro",
+      "short_name": "Pro Compute",
+      "description": "View GPU infrastructure plans",
+      "url": "/?action=pricing",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

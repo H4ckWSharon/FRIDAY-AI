@@ -91,15 +91,16 @@ export default function PricingModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-      <div className="relative w-full max-w-md rounded-2xl bg-[#0b0b0f] border border-[#262633] p-6 shadow-2xl text-left overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md">
+      <div className="relative w-full max-w-md rounded-2xl bg-[#0b0b0f] border border-[#262633] p-5 sm:p-6 shadow-2xl text-left max-h-[90dvh] overflow-y-auto">
         {/* Subtle Crimson Glow */}
         <div className="absolute top-0 right-0 w-48 h-48 bg-[#FF3038]/10 blur-3xl pointer-events-none"></div>
 
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1 rounded-lg text-zinc-500 hover:text-white hover:bg-[#16161f] transition-colors"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-[#16161f] transition-colors cursor-pointer"
+          aria-label="Close Pricing Modal"
         >
           <X className="w-5 h-5" />
         </button>

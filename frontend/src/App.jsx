@@ -48,11 +48,65 @@ export default function App() {
   const [pricingModalOpen, setPricingModalOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
+  // Progressive Web App (PWA) / Android Install State
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+
   const abortControllerRef = useRef(null);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
+  };
+
+  // PWA Install Prompt & Standalone Mode Detection
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const checkStandalone = 
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true ||
+      document.referrer.includes('android-app://');
+    setIsStandalone(Boolean(checkStandalone));
+
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    const handleAppInstalled = () => {
+      setIsInstallable(false);
+      setDeferredPrompt(null);
+      setIsStandalone(true);
+      showToast('🎉 FRIDAY AI successfully installed to your home screen!', 'success');
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (deferredPrompt) {
+      try {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          setIsInstallable(false);
+          setDeferredPrompt(null);
+        }
+      } catch (err) {
+        console.warn('PWA install prompt error:', err);
+      }
+    } else {
+      showToast('Tap browser menu (⋮) -> "Install app" or "Add to Home screen"', 'info');
+    }
   };
 
   // 1. Subscribe to Firebase Auth
@@ -310,7 +364,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#070709] text-[#F5F5F5] font-sans stealth-glow">
+    <div className="flex h-[100dvh] max-h-[100dvh] w-screen overflow-hidden bg-[#070709] text-[#F5F5F5] font-sans stealth-glow">
       {/* Sidebar Navigation */}
       <Sidebar
         isOpen={sidebarOpen}
@@ -325,6 +379,9 @@ export default function App() {
         subscription={subscription}
         onOpenAuth={() => setAuthModalOpen(true)}
         onOpenPricing={() => setPricingModalOpen(true)}
+        onInstallApp={handleInstallApp}
+        isInstallable={isInstallable}
+        isStandalone={isStandalone}
         onLogout={async () => {
           await logoutUser();
           setCurrentUser(null);
@@ -340,6 +397,9 @@ export default function App() {
           subscription={subscription}
           onOpenPricing={() => setPricingModalOpen(true)}
           modelName="friday Cyber Cloud"
+          onInstallApp={handleInstallApp}
+          isInstallable={isInstallable}
+          isStandalone={isStandalone}
         />
 
         <ChatArea

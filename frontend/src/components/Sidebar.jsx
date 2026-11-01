@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, MessageSquare, Trash2, Edit2, Search, X, ShieldAlert, User, LogOut, Sparkles } from 'lucide-react';
+import { Plus, MessageSquare, Trash2, Edit2, Search, X, ShieldAlert, User, LogOut, Sparkles, Download, Smartphone } from 'lucide-react';
 
 export default function Sidebar({
   isOpen,
@@ -15,6 +15,9 @@ export default function Sidebar({
   onOpenAuth,
   onOpenPricing,
   onLogout,
+  onInstallApp,
+  isInstallable,
+  isStandalone,
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [editingId, setEditingId] = useState(null);
@@ -46,14 +49,14 @@ export default function Sidebar({
       {isOpen && (
         <div 
           onClick={onClose}
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-30 md:hidden"
+          className="fixed inset-0 bg-black/75 backdrop-blur-sm z-30 md:hidden"
         />
       )}
 
       {/* Sidebar Container */}
       <aside className={`
         fixed md:static inset-y-0 left-0 z-40
-        w-72 bg-[#09090c] border-r border-[#1c1c22] flex flex-col justify-between
+        w-[82vw] max-w-xs md:w-72 bg-[#09090c] border-r border-[#1c1c22] flex flex-col justify-between
         transition-all duration-200 ease-in-out shrink-0
         ${isOpen ? 'translate-x-0 md:ml-0' : '-translate-x-full md:-ml-72'}
       `}>
@@ -80,8 +83,9 @@ export default function Sidebar({
 
             <button 
               onClick={onClose}
-              className="p-1 rounded-lg text-zinc-500 hover:text-white"
+              className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-[#161622] transition-colors"
               title="Close Sidebar"
+              aria-label="Close Sidebar"
             >
               <X className="w-5 h-5" />
             </button>
@@ -89,7 +93,10 @@ export default function Sidebar({
 
           {/* New Chat Button */}
           <button
-            onClick={onNewChat}
+            onClick={() => {
+              onNewChat();
+              if (window.innerWidth < 768) onClose();
+            }}
             className="w-full py-2.5 px-3 rounded-xl bg-[#121217] hover:bg-[#1a1a22] border border-[#262633] hover:border-[#FF3038]/50 text-xs font-mono font-semibold text-zinc-200 hover:text-white flex items-center justify-center gap-2 transition-all shadow-sm active:scale-98"
           >
             <Plus className="w-4 h-4 text-[#FF3038]" />
@@ -183,8 +190,37 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* Bottom Profile / Account Pill */}
-        <div className="p-3 border-t border-[#18181f] bg-[#0b0b0e]">
+        {/* Install App & Profile Section */}
+        <div className="p-3 border-t border-[#18181f] bg-[#0b0b0e] space-y-2.5">
+          {/* Install App Button on Android / PWA */}
+          {!isStandalone ? (
+            <button
+              onClick={() => {
+                onInstallApp?.();
+                if (window.innerWidth < 768) onClose();
+              }}
+              className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-[#121422] to-[#171a2a] hover:from-[#17192b] hover:to-[#1e2238] border border-[#272b45] hover:border-cyan-500/50 text-xs font-heading font-medium text-zinc-200 hover:text-white flex items-center justify-between transition-all shadow-sm active:scale-98 group cursor-pointer"
+              title="Install FRIDAY AI Android / Native App"
+            >
+              <div className="flex items-center gap-2">
+                <Smartphone className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+                <span className="font-semibold text-zinc-100">Install Mobile App</span>
+              </div>
+              <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">
+                PWA / Android
+              </span>
+            </button>
+          ) : (
+            <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#0f1118] border border-[#1e2233] text-[11px] font-mono text-zinc-400">
+              <span className="flex items-center gap-1.5 text-cyan-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                Installed Native App
+              </span>
+              <span className="text-zinc-600 font-bold text-[9px]">v2.0</span>
+            </div>
+          )}
+
+          {/* Profile / Account Pill */}
           {currentUser ? (
             <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-[#121217] border border-[#1e1e24]">
               <div className="flex items-center gap-2.5 min-w-0">
@@ -213,14 +249,14 @@ export default function Sidebar({
             <div className="flex flex-col gap-2">
               <button
                 onClick={onOpenAuth}
-                className="w-full py-2 px-3 rounded-xl bg-[#13131a] hover:bg-[#191924] border border-[#22222e] text-xs font-heading font-medium text-zinc-200 flex items-center justify-center gap-2 transition-colors"
+                className="w-full py-2 px-3 rounded-xl bg-[#13131a] hover:bg-[#191924] border border-[#22222e] text-xs font-heading font-medium text-zinc-200 flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 <User className="w-3.5 h-3.5 text-[#FF3038]" />
                 <span>Operator Sign In</span>
               </button>
               <button
                 onClick={onOpenPricing}
-                className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-[#FF3038]/20 to-[#990000]/20 hover:from-[#FF3038]/30 hover:to-[#990000]/30 border border-[#FF3038]/40 text-xs font-heading font-semibold text-rose-300 flex items-center justify-center gap-1.5 transition-colors"
+                className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-[#FF3038]/20 to-[#990000]/20 hover:from-[#FF3038]/30 hover:to-[#990000]/30 border border-[#FF3038]/40 text-xs font-heading font-semibold text-rose-300 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#FF3038]" />
                 <span>Upgrade to Pro</span>

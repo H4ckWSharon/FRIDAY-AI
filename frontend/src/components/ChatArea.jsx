@@ -164,13 +164,13 @@ export default function ChatArea({
   ];
 
   return (
-    <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+    <div ref={scrollRef} className="flex-1 overflow-y-auto px-2.5 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 overscroll-contain">
       {/* Empty State: Cyber HUD */}
       {messages.length === 0 && !isStreaming && (
-        <div className="max-w-2xl mx-auto my-auto flex flex-col items-center text-center pt-8 sm:pt-14 pb-8">
-          <div className="relative mb-6">
+        <div className="max-w-2xl mx-auto my-auto flex flex-col items-center text-center pt-4 sm:pt-14 pb-6">
+          <div className="relative mb-5 sm:mb-6">
             <div className="absolute -inset-3 rounded-full bg-[#FF3038]/25 blur-2xl"></div>
-            <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-[#FF3038]/60 bg-[#0e0e13] p-1 flex items-center justify-center shadow-[0_0_30px_rgba(255,48,56,0.4)]">
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-[#FF3038]/60 bg-[#0e0e13] p-1 flex items-center justify-center shadow-[0_0_30px_rgba(255,48,56,0.4)]">
               <img 
                 src="/logo.png" 
                 onError={(e) => {
@@ -183,15 +183,15 @@ export default function ChatArea({
             </div>
           </div>
 
-          <h2 className="font-heading text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
+          <h2 className="font-heading text-xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
             FRIDAY AI <span className="text-[#FF3038]">Cyber Cloud</span>
           </h2>
-          <p className="text-xs sm:text-sm text-zinc-400 max-w-md leading-relaxed mb-8">
+          <p className="text-xs sm:text-sm text-zinc-400 max-w-md leading-relaxed mb-6 sm:mb-8 px-2">
             Offensive Security Authority, Red Team Architecture & Uncensored Exploit Mechanics. Powered by Enterprise GPU Neural Compute.
           </p>
 
           {/* Quick Prompts Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full text-left">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 w-full text-left">
             {PROMPT_SUGGESTIONS.map((item, idx) => {
               const Icon = item.icon;
               return (
@@ -223,11 +223,11 @@ export default function ChatArea({
 
         if (isUser) {
           return (
-            <div key={idx} className="flex justify-end items-start gap-2.5 max-w-3xl ml-auto">
-              <div className="p-3.5 sm:p-4 rounded-2xl rounded-tr-sm bg-[#16161c] border border-[#272733] text-xs sm:text-sm text-zinc-100 shadow-sm leading-relaxed max-w-[85%] whitespace-pre-wrap break-words">
+            <div key={idx} className="flex justify-end items-start gap-2 max-w-3xl ml-auto w-full">
+              <div className="p-3 sm:p-4 rounded-2xl rounded-tr-sm bg-[#16161c] border border-[#272733] text-xs sm:text-sm text-zinc-100 shadow-sm leading-relaxed max-w-[88%] sm:max-w-[85%] whitespace-pre-wrap break-words overflow-hidden">
                 {msg.content}
               </div>
-              <div className="w-7 h-7 rounded-full bg-[#1e1e28] border border-zinc-700 flex items-center justify-center font-mono font-bold text-[10px] text-zinc-300 shrink-0">
+              <div className="w-7 h-7 rounded-full bg-[#1e1e28] border border-zinc-700 flex items-center justify-center font-mono font-bold text-[10px] text-zinc-300 shrink-0 mt-0.5">
                 OP
               </div>
             </div>

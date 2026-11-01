@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Zap, Shield, Sparkles } from 'lucide-react';
+import { Menu, Zap, Shield, Sparkles, Download } from 'lucide-react';
 
 const OFFICIAL_LOGO_FALLBACK = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAcN1eRjJArxV6rgrKmESKWs6pNIIgghz2t08lwPHUbguzKUi6_QBkU6zT2Alm2IBhnUq5gJooHVbDYG5riYM9mTAd0ESKoFB_W7ofJEOdvKes4PoKqQ6WVDiu1mvJFhvhPDnO_TLp6O9JInIaI90cgk4l-ucK4jUIi3tQs4KaRFKhTHD-RnluE92sypzaKlZKRApmkyQVRLZX1VjzzTnzvdQZqhmEdoOHihdVh4zvOOVtYyxb5yWK1azp9GQahS68FJg';
 
@@ -8,13 +8,16 @@ export default function Header({
   subscription,
   onOpenPricing,
   modelName = 'friday Cyber Cloud',
+  onInstallApp,
+  isInstallable,
+  isStandalone,
 }) {
   const isUnlimited = subscription?.is_unlimited;
   const remaining = subscription?.chats_remaining ?? 5;
 
   return (
-    <header className="h-14 border-b border-[#1c1c22] bg-[#09090c]/90 backdrop-blur-md px-3 sm:px-4 flex items-center justify-between shrink-0 z-20">
-      <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+    <header className="h-14 border-b border-[#1c1c22] bg-[#09090c]/90 backdrop-blur-md px-2.5 sm:px-4 flex items-center justify-between shrink-0 z-20">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         {/* Hamburger Menu Button - Always visible on all screen sizes */}
         <button
           onClick={onToggleSidebar}
@@ -26,7 +29,7 @@ export default function Header({
         </button>
 
         {/* Official Brand Logo & Identity */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <div className="w-8 h-8 rounded-full overflow-hidden border border-[#FF3038]/50 bg-[#0d0e11] p-0.5 flex items-center justify-center shadow-[0_0_12px_rgba(255,48,56,0.35)] shrink-0">
             <img 
               src="/logo.png" 
@@ -49,12 +52,13 @@ export default function Header({
         </div>
 
         {/* Active Model Indicator Chip */}
-        <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#111116] border border-[#22222b] shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded-lg bg-[#111116] border border-[#22222b] shrink-0">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span className="font-heading font-semibold text-xs tracking-wide text-zinc-200">
-            {modelName}
+          <span className="font-heading font-semibold text-[11px] sm:text-xs tracking-wide text-zinc-200">
+            <span className="hidden xs:inline">{modelName}</span>
+            <span className="xs:hidden">Cyber Cloud</span>
           </span>
-          <span className="text-[9px] font-mono px-1.5 py-0.2 bg-[#FF3038]/20 text-[#FF3038] font-bold rounded">
+          <span className="text-[9px] font-mono px-1 sm:px-1.5 py-0.2 bg-[#FF3038]/20 text-[#FF3038] font-bold rounded">
             GPU
           </span>
         </div>
@@ -65,8 +69,21 @@ export default function Header({
         </div>
       </div>
 
-      {/* Right Actions: Quota & Upgrade */}
-      <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+      {/* Right Actions: Install App, Quota & Upgrade */}
+      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        {/* Install App Button on Android / PWA */}
+        {!isStandalone && (
+          <button
+            onClick={onInstallApp}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#121219] hover:bg-[#1a1a26] border border-[#262638] hover:border-cyan-500/50 text-zinc-300 hover:text-white text-xs font-mono transition-all active:scale-95 shadow-sm"
+            title="Install FRIDAY AI App on your device"
+            aria-label="Install App"
+          >
+            <Download className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+            <span className="hidden md:inline font-sans">Install App</span>
+          </button>
+        )}
+
         {/* Usage pill */}
         <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#101014] border border-[#1e1e24] text-xs font-mono">
           <Shield className="w-3.5 h-3.5 text-[#FF3038]" />
@@ -80,9 +97,9 @@ export default function Header({
         {!isUnlimited && (
           <button
             onClick={onOpenPricing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#FF3038] to-[#cc141c] hover:from-[#ff4d54] hover:to-[#e61a22] text-white text-xs font-heading font-semibold shadow-[0_0_15px_rgba(255,48,56,0.3)] transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#FF3038] to-[#cc141c] hover:from-[#ff4d54] hover:to-[#e61a22] text-white text-xs font-heading font-semibold shadow-[0_0_15px_rgba(255,48,56,0.3)] transition-all active:scale-95"
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            <Sparkles className="w-3.5 h-3.5 shrink-0" />
             <span className="hidden xs:inline">Get Cyber Pro</span>
             <span className="xs:hidden">Upgrade</span>
           </button>
