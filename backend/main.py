@@ -106,7 +106,7 @@ async def security_and_telemetry_middleware(request, call_next):
     request.state.request_id = req_id
 
     # 0. Global Maintenance Lockdown Gate
-    if getattr(settings, "maintenance_mode", True):
+    if getattr(settings, "maintenance_mode", False):
         p = request.url.path
         if p.startswith("/health"):
             return JSONResponse(

@@ -104,51 +104,15 @@ def get_current_user(authorization: Optional[str] = Header(None)) -> dict:
     Strict FastAPI dependency for protected routes (/api/chat, /api/conversations, /api/auth/me).
     Requires a valid, non-expired Firebase ID token in Authorization: Bearer <token>.
     Raises HTTP 401 Unauthorized on missing, malformed, or invalid tokens.
-    Uses in-memory cache to eliminate cloud DB queries on repeat requests.
     """
-    if not isinstance(authorization, str) or not authorization.startswith("Bearer "):
+    user = get_current_user_optional(authorization)
+    if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required. Please sign in with Google or Email.",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
-    token = authorization[7:].strip()
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication token cannot be empty.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    verified = verify_firebase_token(token)
-    if not verified or not verified.get("uid"):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired Firebase authentication token.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    uid = verified["uid"]
-    now_ts = time.time()
-    cached = _USER_CACHE.get(uid)
-    if cached and cached[0] > now_ts:
-        return cached[1]
-
-    email = verified.get("email") or f"{uid}@firebase.user"
-    name = verified.get("name") or "Operator"
-    picture = verified.get("picture")
-
-    user_record = dict(upsert_firebase_user(
-        user_id=uid,
-        email=email,
-        name=name,
-        avatar=picture,
-        provider="google-firebase",
-    ))
-    user_record["email_verified"] = bool(verified.get("email_verified", False))
-    _USER_CACHE[uid] = (now_ts + _USER_CACHE_TTL, user_record)
-    return user_record
+    return user
 
 
 # Backwards-compatible alias for routes

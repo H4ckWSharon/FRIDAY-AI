@@ -229,6 +229,7 @@ async def _handle_verify_payment(
 # ─── Step 1 Endpoints: Create Order ───────────────────────────────────────────
 
 @router.post("/api/create-order")
+@router.post("/api/subscription/create-order")
 async def create_order_endpoint(
     body: CreateOrderRequest,
     user: Optional[dict] = Depends(get_optional_current_user),
@@ -241,18 +242,10 @@ async def create_order_endpoint(
     return await _handle_create_order(body, user)
 
 
-@router.post("/api/subscription/create-order")
-async def create_subscription_order_endpoint(
-    body: CreateOrderRequest,
-    user: Optional[dict] = Depends(get_optional_current_user),
-):
-    """Alias for subscription order creation."""
-    return await _handle_create_order(body, user)
-
-
 # ─── Step 3 Endpoints: Verify Signature ───────────────────────────────────────
 
 @router.post("/api/verify-payment")
+@router.post("/api/subscription/verify")
 async def verify_payment_endpoint(
     body: VerifyPaymentRequest,
     user: Optional[dict] = Depends(get_optional_current_user),
@@ -262,15 +255,6 @@ async def verify_payment_endpoint(
     Verifies HMAC-SHA256(order_id + "|" + payment_id, KEY_SECRET).
     Returns success only if signatures match.
     """
-    return await _handle_verify_payment(body, user)
-
-
-@router.post("/api/subscription/verify")
-async def verify_subscription_payment_endpoint(
-    body: VerifyPaymentRequest,
-    user: Optional[dict] = Depends(get_optional_current_user),
-):
-    """Alias for subscription payment verification."""
     return await _handle_verify_payment(body, user)
 
 

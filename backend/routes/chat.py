@@ -241,11 +241,6 @@ def _sanitize_response(text: str) -> str:
     return cleaned.lstrip("\r\n ")
 
 
-def _is_advanced_pentester_model(model: str | None) -> bool:
-    """Deprecated: Retained for backward-compatibility; always returns False."""
-    return False
-
-
 def _quick_route(text: str, model: str | None = None) -> str | None:
     """
     Check if the message matches a quick-route pattern.

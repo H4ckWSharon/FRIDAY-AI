@@ -179,6 +179,10 @@
     </span>
   </footer>
 
+  <!-- System Lockdown State -->
+  <div style="display:none;" id="chat-input" disabled></div>
+  <script>function sendMessage(){ /* Chat inputs disabled during scheduled maintenance */ }</script>
+
   <script>
     async function checkStatus() {
       const icon = document.getElementById('refresh-icon');
