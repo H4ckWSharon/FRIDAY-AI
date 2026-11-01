@@ -37,8 +37,13 @@ export default function App() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [currentStreamText, setCurrentStreamText] = useState('');
   
-  // UI Controls
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // UI Controls (Sidebar open by default on desktop, closed on mobile)
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 768;
+    }
+    return true;
+  });
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [pricingModalOpen, setPricingModalOpen] = useState(false);
   const [toast, setToast] = useState(null);

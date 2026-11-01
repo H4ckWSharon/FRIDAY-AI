@@ -227,6 +227,16 @@ dist_assets_dir = os.path.join(dist_dir, "assets")
 if os.path.exists(dist_assets_dir):
     app.mount("/assets", StaticFiles(directory=dist_assets_dir), name="assets")
 
+@app.get("/logo.png", include_in_schema=False)
+async def serve_logo():
+    logo_path = os.path.join(dist_dir, "logo.png")
+    if os.path.exists(logo_path):
+        return FileResponse(logo_path, media_type="image/png")
+    frontend_logo = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "public", "logo.png"))
+    if os.path.exists(frontend_logo):
+        return FileResponse(frontend_logo, media_type="image/png")
+    return JSONResponse(status_code=404, content={"detail": "Logo not found"})
+
 @app.get("/", include_in_schema=False)
 @app.get("/index.html", include_in_schema=False)
 @app.get("/app", include_in_schema=False)

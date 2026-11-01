@@ -54,25 +54,34 @@ export default function Sidebar({
       <aside className={`
         fixed md:static inset-y-0 left-0 z-40
         w-72 bg-[#09090c] border-r border-[#1c1c22] flex flex-col justify-between
-        transform transition-transform duration-200 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        transition-all duration-200 ease-in-out shrink-0
+        ${isOpen ? 'translate-x-0 md:ml-0' : '-translate-x-full md:-ml-72'}
       `}>
         {/* Top Header */}
         <div className="p-3.5 flex flex-col gap-3 border-b border-[#18181f]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-[#121217] border border-[#FF3038]/50 flex items-center justify-center shadow-[0_0_10px_rgba(255,48,56,0.25)]">
-                <span className="font-heading font-black text-xs text-[#FF3038]">F</span>
+              <div className="w-8 h-8 rounded-full overflow-hidden border border-[#FF3038]/50 bg-[#0d0e11] p-0.5 flex items-center justify-center shadow-[0_0_12px_rgba(255,48,56,0.35)] shrink-0">
+                <img 
+                  src="/logo.png" 
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAcN1eRjJArxV6rgrKmESKWs6pNIIgghz2t08lwPHUbguzKUi6_QBkU6zT2Alm2IBhnUq5gJooHVbDYG5riYM9mTAd0ESKoFB_W7ofJEOdvKes4PoKqQ6WVDiu1mvJFhvhPDnO_TLp6O9JInIaI90cgk4l-ucK4jUIi3tQs4KaRFKhTHD-RnluE92sypzaKlZKRApmkyQVRLZX1VjzzTnzvdQZqhmEdoOHihdVh4zvOOVtYyxb5yWK1azp9GQahS68FJg';
+                  }}
+                  alt="FRIDAY AI Official Logo" 
+                  className="w-full h-full object-cover rounded-full"
+                />
               </div>
               <div className="flex flex-col">
-                <span className="font-heading font-bold text-sm tracking-wide text-zinc-100">FRIDAY AI</span>
+                <span className="font-heading font-black text-sm tracking-wide text-zinc-100">FRIDAY AI</span>
                 <span className="text-[10px] font-mono text-zinc-500">v2.0 Cyber Red Team</span>
               </div>
             </div>
 
             <button 
               onClick={onClose}
-              className="p-1 rounded-lg text-zinc-500 hover:text-white md:hidden"
+              className="p-1 rounded-lg text-zinc-500 hover:text-white"
+              title="Close Sidebar"
             >
               <X className="w-5 h-5" />
             </button>

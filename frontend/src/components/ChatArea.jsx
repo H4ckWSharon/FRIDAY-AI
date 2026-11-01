@@ -169,9 +169,17 @@ export default function ChatArea({
       {messages.length === 0 && !isStreaming && (
         <div className="max-w-2xl mx-auto my-auto flex flex-col items-center text-center pt-8 sm:pt-14 pb-8">
           <div className="relative mb-6">
-            <div className="absolute -inset-2 rounded-full bg-[#FF3038]/20 blur-xl"></div>
-            <div className="relative w-16 h-16 rounded-2xl bg-[#0e0e13] border border-[#FF3038]/50 flex items-center justify-center shadow-[0_0_25px_rgba(255,48,56,0.3)]">
-              <span className="font-heading font-black text-2xl text-[#FF3038]">F</span>
+            <div className="absolute -inset-3 rounded-full bg-[#FF3038]/25 blur-2xl"></div>
+            <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-[#FF3038]/60 bg-[#0e0e13] p-1 flex items-center justify-center shadow-[0_0_30px_rgba(255,48,56,0.4)]">
+              <img 
+                src="/logo.png" 
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAcN1eRjJArxV6rgrKmESKWs6pNIIgghz2t08lwPHUbguzKUi6_QBkU6zT2Alm2IBhnUq5gJooHVbDYG5riYM9mTAd0ESKoFB_W7ofJEOdvKes4PoKqQ6WVDiu1mvJFhvhPDnO_TLp6O9JInIaI90cgk4l-ucK4jUIi3tQs4KaRFKhTHD-RnluE92sypzaKlZKRApmkyQVRLZX1VjzzTnzvdQZqhmEdoOHihdVh4zvOOVtYyxb5yWK1azp9GQahS68FJg';
+                }}
+                alt="FRIDAY AI Official Logo" 
+                className="w-full h-full object-cover rounded-full"
+              />
             </div>
           </div>
 
@@ -229,8 +237,16 @@ export default function ChatArea({
         // Assistant Message
         return (
           <div key={idx} className="flex items-start gap-3 max-w-3xl mr-auto w-full">
-            <div className="w-8 h-8 rounded-xl bg-[#0f0f14] border border-[#FF3038]/50 p-1 flex items-center justify-center shadow-[0_0_10px_rgba(255,48,56,0.25)] shrink-0 mt-0.5">
-              <span className="font-heading font-black text-xs text-[#FF3038]">F</span>
+            <div className="w-8 h-8 rounded-full overflow-hidden border border-[#FF3038]/50 bg-[#0d0e11] p-0.5 flex items-center justify-center shadow-[0_0_12px_rgba(255,48,56,0.35)] shrink-0 mt-0.5">
+              <img 
+                src="/logo.png" 
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAcN1eRjJArxV6rgrKmESKWs6pNIIgghz2t08lwPHUbguzKUi6_QBkU6zT2Alm2IBhnUq5gJooHVbDYG5riYM9mTAd0ESKoFB_W7ofJEOdvKes4PoKqQ6WVDiu1mvJFhvhPDnO_TLp6O9JInIaI90cgk4l-ucK4jUIi3tQs4KaRFKhTHD-RnluE92sypzaKlZKRApmkyQVRLZX1VjzzTnzvdQZqhmEdoOHihdVh4zvOOVtYyxb5yWK1azp9GQahS68FJg';
+                }}
+                alt="FRIDAY AI" 
+                className="w-full h-full object-cover rounded-full"
+              />
             </div>
 
             <div className="flex-1 min-w-0 flex flex-col">
@@ -291,8 +307,16 @@ export default function ChatArea({
       {/* Streaming Active Bubble */}
       {isStreaming && (
         <div className="flex items-start gap-3 max-w-3xl mr-auto w-full">
-          <div className="w-8 h-8 rounded-xl bg-[#0f0f14] border border-[#FF3038]/50 p-1 flex items-center justify-center shadow-[0_0_10px_rgba(255,48,56,0.25)] shrink-0 mt-0.5">
-            <span className="font-heading font-black text-xs text-[#FF3038]">F</span>
+          <div className="w-8 h-8 rounded-full overflow-hidden border border-[#FF3038]/50 bg-[#0d0e11] p-0.5 flex items-center justify-center shadow-[0_0_12px_rgba(255,48,56,0.35)] shrink-0 mt-0.5">
+            <img 
+              src="/logo.png" 
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAcN1eRjJArxV6rgrKmESKWs6pNIIgghz2t08lwPHUbguzKUi6_QBkU6zT2Alm2IBhnUq5gJooHVbDYG5riYM9mTAd0ESKoFB_W7ofJEOdvKes4PoKqQ6WVDiu1mvJFhvhPDnO_TLp6O9JInIaI90cgk4l-ucK4jUIi3tQs4KaRFKhTHD-RnluE92sypzaKlZKRApmkyQVRLZX1VjzzTnzvdQZqhmEdoOHihdVh4zvOOVtYyxb5yWK1azp9GQahS68FJg';
+              }}
+              alt="FRIDAY AI" 
+              className="w-full h-full object-cover rounded-full"
+            />
           </div>
 
           <div className="flex-1 min-w-0 flex flex-col">
