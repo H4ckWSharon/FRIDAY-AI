@@ -1,7 +1,7 @@
 import { getAuthHeaders, getGuestId, auth } from './firebase';
 
 export function getBackendUrl() {
-  if (typeof window === 'undefined') return 'https://powerpoint-deal-loved-filling.trycloudflare.com';
+  if (typeof window === 'undefined') return '';
   
   // URL override (?backend=...)
   const params = new URLSearchParams(window.location.search);
@@ -17,6 +17,11 @@ export function getBackendUrl() {
   const stored = localStorage.getItem('friday_backend_url');
   if (stored) return stored;
 
+  // If page is served directly on VPS port 8008 or the VPS IP address
+  if (window.location.port === '8008' || window.location.hostname === '213.133.97.141') {
+    return window.location.origin;
+  }
+
   const isLocalHost = Boolean(
     window.location.hostname === 'localhost' ||
     window.location.hostname === '[::1]' ||
@@ -25,12 +30,18 @@ export function getBackendUrl() {
 
   if (isLocalHost) return 'http://127.0.0.1:8008';
 
-  // If running directly on backend domain / Cloudflare tunnel origin, use relative origin
+  // If running directly on Cloudflare tunnel origin
   if (window.location.origin.includes('trycloudflare.com')) {
     return window.location.origin;
   }
 
-  return 'https://powerpoint-deal-loved-filling.trycloudflare.com';
+  // If on Vercel preview/production without custom backend override
+  if (window.location.hostname.endsWith('.vercel.app')) {
+    return 'https://powerpoint-deal-loved-filling.trycloudflare.com';
+  }
+
+  // Default: same origin as current page (fastest, 0ms cross-origin overhead)
+  return window.location.origin;
 }
 
 export const BACKEND_URL = getBackendUrl();

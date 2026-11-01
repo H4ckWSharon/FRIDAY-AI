@@ -77,23 +77,55 @@ export default function App() {
   const loadConversations = async () => {
     try {
       const convs = await fetchConversations();
-      setConversations(convs || []);
+      if (Array.isArray(convs) && convs.length > 0) {
+        setConversations(convs);
+        localStorage.setItem('friday_cached_convs', JSON.stringify(convs));
+      } else {
+        const cached = localStorage.getItem('friday_cached_convs');
+        if (cached) {
+          try { setConversations(JSON.parse(cached)); } catch (_) {}
+        }
+      }
     } catch (err) {
-      console.warn('Conversations fetch warning:', err);
+      const cached = localStorage.getItem('friday_cached_convs');
+      if (cached) {
+        try { setConversations(JSON.parse(cached)); } catch (_) {}
+      }
     }
   };
 
-  // 2. Select / Load Conversation
+  // 2. Select / Load Conversation (Instant <1ms response + background sync)
   const handleSelectConversation = async (convId) => {
     if (convId === activeConvId) return;
     setActiveConvId(convId);
-    setSidebarOpen(false);
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
 
+    // 1. Instant local cache retrieval (<1ms)
+    let loadedFromCache = false;
+    const localCached = localStorage.getItem(`friday_conv_msgs_${convId}`);
+    if (localCached) {
+      try {
+        const parsed = JSON.parse(localCached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+          loadedFromCache = true;
+        }
+      } catch (_) {}
+    }
+
+    // 2. Background sync from server (if authenticated)
     try {
       const data = await fetchConversationMessages(convId);
-      setMessages(data.messages || []);
+      if (data && Array.isArray(data.messages)) {
+        setMessages(data.messages);
+        localStorage.setItem(`friday_conv_msgs_${convId}`, JSON.stringify(data.messages));
+      }
     } catch (err) {
-      showToast('Failed to load mission logs', 'error');
+      if (!loadedFromCache) {
+        console.warn('Could not load remote mission logs:', err);
+      }
     }
   };
 
@@ -103,20 +135,35 @@ export default function App() {
     setMessages([]);
     setInput('');
     setCurrentStreamText('');
-    setSidebarOpen(false);
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
   };
 
   // 4. Delete Conversation
   const handleDeleteConversation = async (convId) => {
+    localStorage.removeItem(`friday_conv_msgs_${convId}`);
     try {
       await deleteConversation(convId);
-      setConversations((prev) => prev.filter((c) => c.id !== convId));
+      setConversations((prev) => {
+        const updated = prev.filter((c) => c.id !== convId);
+        localStorage.setItem('friday_cached_convs', JSON.stringify(updated));
+        return updated;
+      });
       if (activeConvId === convId) {
         handleNewChat();
       }
       showToast('Operation record purged', 'success');
     } catch (err) {
-      showToast('Failed to purge operation', 'error');
+      setConversations((prev) => {
+        const updated = prev.filter((c) => c.id !== convId);
+        localStorage.setItem('friday_cached_convs', JSON.stringify(updated));
+        return updated;
+      });
+      if (activeConvId === convId) {
+        handleNewChat();
+      }
+      showToast('Operation removed', 'info');
     }
   };
 
@@ -124,12 +171,19 @@ export default function App() {
   const handleRenameConversation = async (convId, title) => {
     try {
       await renameConversation(convId, title);
-      setConversations((prev) =>
-        prev.map((c) => (c.id === convId ? { ...c, title } : c))
-      );
+      setConversations((prev) => {
+        const updated = prev.map((c) => (c.id === convId ? { ...c, title } : c));
+        localStorage.setItem('friday_cached_convs', JSON.stringify(updated));
+        return updated;
+      });
       showToast('Operation retitled', 'success');
     } catch (err) {
-      showToast('Failed to rename operation', 'error');
+      setConversations((prev) => {
+        const updated = prev.map((c) => (c.id === convId ? { ...c, title } : c));
+        localStorage.setItem('friday_cached_convs', JSON.stringify(updated));
+        return updated;
+      });
+      showToast('Operation title updated locally', 'info');
     }
   };
 
@@ -148,12 +202,23 @@ export default function App() {
       setActiveConvId(convId);
       try {
         await createConversation(convId, derivedTitle);
-        setConversations((prev) => [{ id: convId, title: derivedTitle }, ...prev]);
-      } catch (_) {}
+        setConversations((prev) => {
+          const updated = [{ id: convId, title: derivedTitle }, ...prev];
+          localStorage.setItem('friday_cached_convs', JSON.stringify(updated));
+          return updated;
+        });
+      } catch (_) {
+        setConversations((prev) => {
+          const updated = [{ id: convId, title: derivedTitle }, ...prev];
+          localStorage.setItem('friday_cached_convs', JSON.stringify(updated));
+          return updated;
+        });
+      }
     }
 
     const updatedMessages = [...messages, { role: 'user', content: textToSend }];
     setMessages(updatedMessages);
+    localStorage.setItem(`friday_conv_msgs_${convId}`, JSON.stringify(updatedMessages));
 
     // Optimistically update quota pill
     if (subscription && !subscription.is_unlimited && subscription.chats_remaining !== null) {
@@ -181,7 +246,9 @@ export default function App() {
       onDone: () => {
         setIsStreaming(false);
         if (fullStreamText.trim()) {
-          setMessages((prev) => [...prev, { role: 'assistant', content: fullStreamText }]);
+          const finalMessages = [...updatedMessages, { role: 'assistant', content: fullStreamText }];
+          setMessages(finalMessages);
+          localStorage.setItem(`friday_conv_msgs_${convId}`, JSON.stringify(finalMessages));
         }
         setCurrentStreamText('');
         loadSubscription();
