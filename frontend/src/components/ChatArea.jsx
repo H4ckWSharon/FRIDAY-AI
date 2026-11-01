@@ -6,20 +6,20 @@ import {
   Copy, 
   Check, 
   RotateCcw, 
-  ThumbsUp, 
-  ThumbsDown, 
   ShieldAlert, 
   Code, 
   Cpu, 
-  Flame, 
-  ArrowRight 
+  ArrowRight,
+  Flame,
+  Activity
 } from 'lucide-react';
 
-const THINKING_STEPS = [
-  'Interrogating neural weights…',
-  'Analyzing attack vector & protocol footprint…',
-  'Compiling exploit payload & evasion mechanics…',
-  'Structuring execution commands…',
+const THINKING_PHASES = [
+  { text: 'Thinking…', detail: 'Initializing neural engine & parsing directive' },
+  { text: 'Gathering information…', detail: 'Extracting target footprint, protocol mechanics & memory offsets' },
+  { text: 'Searching…', detail: 'Scanning attack surface, exploit logic & bypass signatures' },
+  { text: 'Executing…', detail: 'Compiling weaponization payload & step-by-step commands' },
+  { text: 'Optimizing output…', detail: 'It will take time for better results, please be patient…' },
 ];
 
 export default function ChatArea({
@@ -34,17 +34,28 @@ export default function ChatArea({
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [copiedCodeId, setCopiedCodeId] = useState(null);
   const [stepIdx, setStepIdx] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
-  // Rotating status message for thinking radar
+  // Rotating tactical status message and live elapsed timer while thinking
   useEffect(() => {
-    if (!isStreaming || currentStreamText) return;
-    const interval = setInterval(() => {
-      setStepIdx((prev) => (prev + 1) % THINKING_STEPS.length);
-    }, 1800);
-    return () => clearInterval(interval);
+    if (!isStreaming || currentStreamText) {
+      setElapsedSeconds(0);
+      setStepIdx(0);
+      return;
+    }
+    const timer = setInterval(() => {
+      setElapsedSeconds((prev) => +(prev + 0.5).toFixed(1));
+    }, 500);
+    const phraseInterval = setInterval(() => {
+      setStepIdx((prev) => (prev + 1) % THINKING_PHASES.length);
+    }, 2400);
+    return () => {
+      clearInterval(timer);
+      clearInterval(phraseInterval);
+    };
   }, [isStreaming, currentStreamText]);
 
-  // Smooth scroll to bottom
+  // Smooth auto-scroll
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -62,6 +73,68 @@ export default function ChatArea({
     setCopiedCodeId(id);
     setTimeout(() => setCopiedCodeId(null), 2000);
   };
+
+  const renderMarkdownComponents = (contextKey = 'msg') => ({
+    code({ node, inline, className, children, ...props }) {
+      const match = /language-(\w+)/.exec(className || '');
+      const codeText = String(children).replace(/\n$/, '');
+      const codeId = `code-${contextKey}-${codeText.slice(0, 16)}`;
+
+      if (!inline) {
+        const lang = match ? match[1] : 'bash';
+        return (
+          <div className="rounded-xl overflow-hidden border border-[#242430] bg-[#07070a] my-3 max-w-full shadow-inner">
+            <div className="flex items-center justify-between px-3.5 py-2 bg-[#101015] border-b border-[#1f1f2a] text-[11px] font-mono text-zinc-400">
+              <span className="flex items-center gap-2">
+                <Terminal className="w-3.5 h-3.5 text-[#FF3038]" />
+                <span className="uppercase text-[10px] tracking-widest text-zinc-300 font-bold">{lang}</span>
+              </span>
+              <button
+                onClick={() => handleCopyCode(codeText, codeId)}
+                className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400 hover:text-white px-2.5 py-1 rounded-md hover:bg-[#1a1a24] transition-all active:scale-95"
+                title="Copy snippet"
+              >
+                {copiedCodeId === codeId ? (
+                  <>
+                    <Check className="w-3 h-3 text-emerald-400" />
+                    <span className="text-emerald-400 font-semibold">Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3 h-3" />
+                    <span>Copy</span>
+                  </>
+                )}
+              </button>
+            </div>
+            <pre className="p-3.5 text-[11px] sm:text-xs font-mono text-zinc-200 overflow-x-auto leading-relaxed selection:bg-[#FF3038]/30">
+              <code>{codeText}</code>
+            </pre>
+          </div>
+        );
+      }
+      return (
+        <code className="px-1.5 py-0.5 rounded bg-[#161620] text-[#FF555D] font-mono text-[11px] border border-[#252535]" {...props}>
+          {children}
+        </code>
+      );
+    },
+    p({ children }) {
+      return <p className="mb-3.5 last:mb-0 leading-relaxed">{children}</p>;
+    },
+    ul({ children }) {
+      return <ul className="list-disc pl-5 mb-3.5 space-y-1.5 text-zinc-300">{children}</ul>;
+    },
+    ol({ children }) {
+      return <ol className="list-decimal pl-5 mb-3.5 space-y-1.5 text-zinc-300">{children}</ol>;
+    },
+    strong({ children }) {
+      return <strong className="font-bold text-white">{children}</strong>;
+    },
+    blockquote({ children }) {
+      return <blockquote className="border-l-2 border-[#FF3038] pl-3 italic text-zinc-400 my-2">{children}</blockquote>;
+    },
+  });
 
   const PROMPT_SUGGESTIONS = [
     {
@@ -163,7 +236,7 @@ export default function ChatArea({
             <div className="flex-1 min-w-0 flex flex-col">
               {/* Header Label */}
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="font-heading font-semibold text-xs text-white">friday Cyber Pro</span>
+                <span className="font-heading font-semibold text-xs text-white">friday Cyber Cloud</span>
                 <span className="text-[9px] font-mono px-1.5 py-0.2 bg-[#FF3038]/20 text-[#FF3038] font-bold rounded">
                   AI
                 </span>
@@ -173,62 +246,7 @@ export default function ChatArea({
               <div className="p-4 sm:p-5 rounded-2xl rounded-tl-sm bg-[#0d0d10] border border-[#1e1e24] text-xs sm:text-sm text-zinc-200 leading-relaxed shadow-md overflow-hidden">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
-                  components={{
-                    code({ node, inline, className, children, ...props }) {
-                      const match = /language-(\w+)/.exec(className || '');
-                      const codeText = String(children).replace(/\n$/, '');
-                      const codeId = `code-${idx}-${Math.random()}`;
-
-                      if (!inline && match) {
-                        return (
-                          <div className="rounded-xl overflow-hidden border border-[#262633] bg-[#070709] my-3 max-w-full">
-                            <div className="flex items-center justify-between px-3 py-1.5 bg-[#121217] border-b border-[#22222d] text-[11px] font-mono text-zinc-400">
-                              <span className="flex items-center gap-1.5">
-                                <Terminal className="w-3.5 h-3.5 text-[#FF3038]" />
-                                <span>{match[1]}</span>
-                              </span>
-                              <button
-                                onClick={() => handleCopyCode(codeText, codeId)}
-                                className="flex items-center gap-1 text-[10px] text-zinc-400 hover:text-white px-2 py-0.5 rounded hover:bg-[#1c1c24] transition-colors"
-                              >
-                                {copiedCodeId === codeId ? (
-                                  <>
-                                    <Check className="w-3 h-3 text-emerald-400" />
-                                    <span className="text-emerald-400">Copied</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Copy className="w-3 h-3" />
-                                    <span>Copy</span>
-                                  </>
-                                )}
-                              </button>
-                            </div>
-                            <pre className="p-3 text-[11px] sm:text-xs font-mono text-zinc-200 overflow-x-auto leading-normal">
-                              <code>{codeText}</code>
-                            </pre>
-                          </div>
-                        );
-                      }
-                      return (
-                        <code className="px-1.5 py-0.5 rounded bg-[#181820] text-[#FF555D] font-mono text-[11px]" {...props}>
-                          {children}
-                        </code>
-                      );
-                    },
-                    p({ children }) {
-                      return <p className="mb-3 last:mb-0">{children}</p>;
-                    },
-                    ul({ children }) {
-                      return <ul className="list-disc pl-5 mb-3 space-y-1">{children}</ul>;
-                    },
-                    ol({ children }) {
-                      return <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>;
-                    },
-                    strong({ children }) {
-                      return <strong className="font-bold text-white">{children}</strong>;
-                    },
-                  }}
+                  components={renderMarkdownComponents(idx)}
                 >
                   {msg.content}
                 </ReactMarkdown>
@@ -238,7 +256,7 @@ export default function ChatArea({
               <div className="flex items-center gap-1.5 mt-2 text-zinc-500 text-[11px] font-mono">
                 <button
                   onClick={() => handleCopyText(msg.content, idx)}
-                  className="flex items-center gap-1 px-2 py-1 rounded hover:bg-[#131318] hover:text-zinc-300 transition-colors"
+                  className="flex items-center gap-1 px-2.5 py-1 rounded hover:bg-[#131318] hover:text-zinc-300 transition-colors"
                   title="Copy response"
                 >
                   {copiedIndex === idx ? (
@@ -257,7 +275,7 @@ export default function ChatArea({
                 {idx === messages.length - 1 && (
                   <button
                     onClick={onRegenerate}
-                    className="flex items-center gap-1 px-2 py-1 rounded hover:bg-[#131318] hover:text-zinc-300 transition-colors"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded hover:bg-[#131318] hover:text-zinc-300 transition-colors"
                     title="Retry / Regenerate"
                   >
                     <RotateCcw className="w-3 h-3" />
@@ -279,7 +297,7 @@ export default function ChatArea({
 
           <div className="flex-1 min-w-0 flex flex-col">
             <div className="flex items-center gap-2 mb-1.5">
-              <span className="font-heading font-semibold text-xs text-white">friday Cyber Pro</span>
+              <span className="font-heading font-semibold text-xs text-white">friday Cyber Cloud</span>
               <span className="text-[9px] font-mono px-1.5 py-0.2 bg-[#FF3038]/20 text-[#FF3038] font-bold rounded">
                 AI
               </span>
@@ -289,25 +307,48 @@ export default function ChatArea({
               <div className="p-4 sm:p-5 rounded-2xl rounded-tl-sm bg-[#0d0d10] border border-[#1e1e24] text-xs sm:text-sm text-zinc-200 leading-relaxed shadow-md overflow-hidden">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
-                  components={{
-                    p({ children }) {
-                      return <p className="mb-3 last:mb-0">{children}</p>;
-                    },
-                    strong({ children }) {
-                      return <strong className="font-bold text-white">{children}</strong>;
-                    },
-                  }}
+                  components={renderMarkdownComponents('stream')}
                 >
                   {currentStreamText}
                 </ReactMarkdown>
               </div>
             ) : (
-              /* Thinking Indicator */
-              <div className="inline-flex items-center gap-2.5 px-3.5 py-2 rounded-full bg-[#0d0d12] border border-[#FF3038]/30 w-fit shadow-md">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#FF3038] animate-radar"></span>
-                <span className="font-mono text-xs text-zinc-300">
-                  {THINKING_STEPS[stepIdx]}
-                </span>
+              /* Tactical HUD Thinking Indicator */
+              <div className="p-4 sm:p-5 rounded-2xl rounded-tl-sm bg-[#0d0d12] border border-[#FF3038]/30 max-w-md shadow-[0_0_20px_rgba(255,48,56,0.08)] flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="relative flex items-center justify-center w-5 h-5">
+                      <span className="absolute inline-flex h-full w-full rounded-full bg-[#FF3038]/40 animate-ping"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FF3038]"></span>
+                    </div>
+                    <span className="font-heading font-semibold text-xs text-white tracking-wide">
+                      {THINKING_PHASES[stepIdx].text}
+                    </span>
+                  </div>
+                  <span className="font-mono text-[10px] text-zinc-400 bg-[#15151e] px-2 py-0.5 rounded border border-[#242433]">
+                    {elapsedSeconds}s elapsed
+                  </span>
+                </div>
+
+                <p className="font-mono text-[11px] text-zinc-400 leading-relaxed">
+                  {THINKING_PHASES[stepIdx].detail}
+                </p>
+
+                {/* Tactical Indeterminate Scan Bar */}
+                <div className="w-full bg-[#181822] h-1.5 rounded-full overflow-hidden relative">
+                  <div 
+                    className="h-full bg-gradient-to-r from-transparent via-[#FF3038] to-transparent animate-indeterminate"
+                    style={{ width: '40%' }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 pt-0.5">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Neural Engine Active</span>
+                  </span>
+                  <span>Phase {stepIdx + 1} of {THINKING_PHASES.length}</span>
+                </div>
               </div>
             )}
           </div>
@@ -316,4 +357,3 @@ export default function ChatArea({
     </div>
   );
 }
-

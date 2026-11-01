@@ -1,7 +1,7 @@
+import React, { useState, useEffect, useRef } from 'react';
 import MaintenanceView from './components/MaintenanceView';
 
-export const MAINTENANCE_LOCKDOWN = true;
-import React, { useState, useEffect, useRef } from 'react';
+export const MAINTENANCE_LOCKDOWN = false;
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';

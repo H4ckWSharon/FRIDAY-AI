@@ -57,3 +57,13 @@
 .stealth-glow {
   background: radial-gradient(circle at 50% 0%, rgba(255, 48, 56, 0.08) 0%, rgba(7, 7, 9, 0) 70%);
 }
+
+@keyframes indeterminate {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+  100% { transform: translateX(250%); }
+}
+
+.animate-indeterminate {
+  animation: indeterminate 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}

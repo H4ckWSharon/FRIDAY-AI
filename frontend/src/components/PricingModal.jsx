@@ -15,8 +15,8 @@ export default function PricingModal({
 
   if (!isOpen) return null;
 
-  const planId = billingCycle === 'yearly' ? 'friday_cyber_pro_yearly' : 'friday_cyber_pro_monthly';
-  const priceDisplay = billingCycle === 'yearly' ? '₹2,999' : '₹299';
+  const planId = billingCycle === 'yearly' ? 'cyber_pro_yearly' : 'cyber_pro_monthly';
+  const priceDisplay = billingCycle === 'yearly' ? '₹35,000' : '₹3,500';
   const pricePeriod = billingCycle === 'yearly' ? '/year' : '/month';
 
   const handleCheckout = async () => {
